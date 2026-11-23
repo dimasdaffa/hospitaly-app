@@ -11,7 +11,7 @@ import SwiftUI
 struct HospitalyApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            DoctorListView()
         }
     }
 }
