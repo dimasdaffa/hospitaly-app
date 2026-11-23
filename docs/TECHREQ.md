@@ -4,7 +4,7 @@
 
 ## 1. Product scope and sources
 
-Hospitaly is a SwiftUI patient app for the RS Permata Sehat learning project. The app starts with patient sign-in and opens a signed-in shell with Profile and Doctors. The profile reads from Vapor. The directory, slot selection, visit form, booking confirmation, and appointments still use local demo data.
+Hospitaly is a SwiftUI patient app for the RS Permata Sehat learning project. The signed-in shell has Home, Doctors, Chat, and Profile tabs with a central Quick Access button. Profile reads from Vapor. The directory, booking, and appointments use local demo data. Home and Chat show placeholders.
 
 | Question | Source of truth |
 | --- | --- |
@@ -21,7 +21,7 @@ The mockup folder, iOS repo, and Vapor repo are siblings in the current workspac
 | Area | Current configuration |
 | --- | --- |
 | Xcode | The `Hospitaly` app target uses bundle ID `com.dimasdaffa.Hospitaly` and an iOS 27.2 deployment target. The project sets `SWIFT_VERSION = 5.0`, `MainActor` default isolation, and approachable concurrency. The configured language mode and installed compiler are separate settings. [Project file](../Hospitaly.xcodeproj/project.xcproj) |
-| Presentation | SwiftUI, Observation through `@Observable`, typed navigation, and local `#Preview` fixtures. |
+| Presentation | SwiftUI, Observation through `@Observable`, typed navigation, a custom tab bar, and local `#Preview` fixtures. |
 | Networking | [APIClient.swift](../Hospitaly/Core/Networking/APIClient.swift) sends HTTP requests using `URLSession`, adds Bearer authorization when requested, and decodes JSON responses. Session tokens are stored in Keychain per API base URL. |
 | Local backend | Vapor and MySQL behind Nginx. Docker Compose publishes the API at `http://localhost:8081`, the default for the Debug build in Simulator. [Compose configuration](../../be-rumahsakit-swift/docker-compose.yml) |
 | Local design system | `Theme.swift` holds semantic colors. `ClinicDate.swift` formats clinic dates and times in `Asia/Jakarta`. Bundled sample portraits live in the app asset catalog. |
@@ -44,7 +44,12 @@ Hospitaly/                                  # iOS repository root
 │   │   ├── AppConfig.swift                   # Resolve the API base URL
 │   │   ├── RootView.swift                    # Restore, sign in, or open the signed-in tabs
 │   │   ├── SessionStore.swift                # Patient session and Keychain lifecycle
-│   │   └── SessionError.swift                # Sign-in and patient-role errors
+│   │   ├── SessionError.swift                # Sign-in and patient-role errors
+│   │   └── Navigation/
+│   │       ├── MainTab.swift                # Tab destinations, labels, and symbols
+│   │       ├── MainTabView.swift            # Signed-in tabs, doctor navigation, and modal state
+│   │       ├── MainTabBar.swift             # Custom tabs and center Quick Access button
+│   │       └── QuickAccessSheet.swift       # Shortcut cards and Quick Book button
 │   ├── Assets.xcassets/                     # App assets and bundled demo portraits
 │   ├── Core/
 │   │   ├── Networking/
@@ -110,11 +115,12 @@ Hospitaly/                                  # iOS repository root
 | --- | --- | --- |
 | Sign in and restore the session | [RootView.swift](../Hospitaly/App/RootView.swift) | [SessionStore.swift](../Hospitaly/App/SessionStore.swift) owns sign-in, the loaded profile, and Keychain restoration. [LoginViewModel.swift](../Hospitaly/Features/Auth/ViewModels/LoginViewModel.swift) owns the form state and request feedback. |
 | Show the patient identity and log out | [ProfileView.swift](../Hospitaly/Features/Profile/Views/ProfileView.swift) | [ProfileService.swift](../Hospitaly/Features/Profile/Services/ProfileService.swift) fetches the profile. The session store provides it and clears the token at logout. |
-| Navigate the Doctors demo | Doctors tab in [RootView.swift](../Hospitaly/App/RootView.swift) | [DoctorListView.swift](../Hospitaly/Features/Doctors/Views/DoctorListView.swift) owns the navigation path and in-memory appointment collection. |
+| Open tabs and Quick Access | [MainTabBar.swift](../Hospitaly/App/Navigation/MainTabBar.swift) | [MainTabView.swift](../Hospitaly/App/Navigation/MainTabView.swift) owns the selected tab, the Doctors navigation path, and [QuickAccessSheet.swift](../Hospitaly/App/Navigation/QuickAccessSheet.swift) presentation. The custom bar appears at tab roots. |
+| Navigate the Doctors demo | Doctors tab or Quick Access in [MainTabView.swift](../Hospitaly/App/Navigation/MainTabView.swift) | [DoctorListView.swift](../Hospitaly/Features/Doctors/Views/DoctorListView.swift) uses the shared navigation path and owns the in-memory appointment collection. |
 | Search, filter, and favorite doctors | [DoctorListView.swift](../Hospitaly/Features/Doctors/Views/DoctorListView.swift) | [DoctorListViewModel.swift](../Hospitaly/Features/Doctors/ViewModels/DoctorListViewModel.swift) owns the filters and favorites. [Doctor.swift](../Hospitaly/Features/Doctors/Models/Doctor.swift) provides the fixtures. |
 | Pick a date and slot | [DoctorDetailView.swift](../Hospitaly/Features/Doctors/Views/DoctorDetailView.swift) | [DoctorDetailViewModel.swift](../Hospitaly/Features/Doctors/ViewModels/DoctorDetailViewModel.swift) derives demo availability, blocks occupied slots and clears the selected slot when the day changes. [DoctorAvatarView.swift](../Hospitaly/Features/Doctors/Views/Components/DoctorAvatarView.swift) applies grayscale in both list and detail when a doctor is unavailable. |
 | Submit a booking request | [BookingFormView.swift](../Hospitaly/Features/Appointments/Views/BookingFormView.swift) | The form owns input and validation. The directory's navigation host creates the pending local appointment and passes it to [BookingConfirmationView.swift](../Hospitaly/Features/Appointments/Views/BookingConfirmationView.swift). |
-| View appointments again | [MyAppointmentsView.swift](../Hospitaly/Features/Appointments/Views/MyAppointmentsView.swift) | The view groups demo appointments by status and time. It opens from confirmation or the calendar button in the directory. |
+| View appointments again | [MyAppointmentsView.swift](../Hospitaly/Features/Appointments/Views/MyAppointmentsView.swift) | The view groups demo appointments by status and time. It opens from confirmation, the directory calendar, or Quick Access. |
 
 ## 4. Planned source additions
 
@@ -123,9 +129,6 @@ Every path below is **planned**. These are proposed names and ownership boundari
 ```text
 Hospitaly/
 ├── Hospitaly/
-│   ├── App/
-│   │   ├── MainTabView.swift                   # Home, Doctors, Chat, and Profile
-│   │   └── QuickAccessSheet.swift              # Local shortcuts to patient features
 │   ├── Features/
 │   │   ├── Profile/
 │   │   │   ├── Views/PersonalInfoView.swift    # Edit personal information
@@ -202,11 +205,12 @@ Hospitaly/
 | Doctor directory and details | [Search](<../../RS Permata Sehat/Doctor Search List.png>) · [Available](<../../RS Permata Sehat/Doctor Details.png>) · [Full](<../../RS Permata Sehat/Doctor Details Not Avail.png>) | Local prototype with search, filters, favorites, available/full states, and date and slot selection. |
 | Booking and history | [Visit form](<../../RS Permata Sehat/Appointment Details.png>) · [Confirmation](<../../RS Permata Sehat/Make Appointment.png>) · [My Appointments](<../../RS Permata Sehat/Manage Appointment.png>) | Local prototype. A booking creates a pending appointment in memory and carries the chosen slot across screens. |
 | Reschedule and cancellation | [Dashboard action](<../../RS Permata Sehat/Patient Dashboard.png>) · [Cancellation form](<../../RS Permata Sehat/Cancel Appointment.png>) · [Cancellation alert](<../../RS Permata Sehat/Cancellation Alert.png>) | Design references and backend available. Client actions are planned. |
-| Dashboard, care plan, and shortcuts | [Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) · [Quick Access](<../../RS Permata Sehat/Quick Access.png>) | Design references and backend available for patient data. Quick Access will use local navigation. |
+| Dashboard and care plan | [Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) | Home shows a placeholder. The dashboard and care plan are planned. |
+| Tab bar and shortcuts | [Quick Access](<../../RS Permata Sehat/Quick Access.png>) | Custom bar and bottom sheet are implemented. Appointments opens the existing appointment list. Find Doctors and Quick Book open the directory. Profile opens the account tab. Messages opens the Chat placeholder. Health Tracker and Records are disabled until their screens exist. |
 | Medical records and lab | [Records](<../../RS Permata Sehat/Medical Record List.png>) · [Diagnosis](<../../RS Permata Sehat/Diagnosis Details.png>) · [Lab](<../../RS Permata Sehat/Lab Result.png>) | Design references and backend available. The lab PDF comes from a staff-published attachment. |
 | Patient documents and BPJS | [Documents](<../../RS Permata Sehat/Document Screen.png>) · [Upload](<../../RS Permata Sehat/Upload Docs.png>) | Design references and backend available for document CRUD, history, multipart upload, and private downloads. |
 | Health tracker and vital entry | [Blood pressure](<../../RS Permata Sehat/My Health.png>) · [Weight](<../../RS Permata Sehat/My Health-1.png>) · [Heart rate](<../../RS Permata Sehat/My Health-2.png>) · [BP entry](<../../RS Permata Sehat/Entry BP.png>) · [Weight entry](<../../RS Permata Sehat/Entry Weight.png>) · [Heart rate entry](<../../RS Permata Sehat/Entry Heart Rate.png>) | Design references and backend available. The client will build chart summaries from readings. |
-| Messages | [Messages](<../../RS Permata Sehat/Message Doctor.png>) | Design reference and backend available. iOS implementation is planned. |
+| Messages | [Messages](<../../RS Permata Sehat/Message Doctor.png>) | Chat shows a placeholder. The inbox and conversation screens are planned. |
 | Profile | [Profile Settings](<../../RS Permata Sehat/Profile Screen.png>) | Basic patient identity and logout are integrated in source. Personal information edits, security, and notification preferences are planned. |
 | Authentication | Sign-in uses the app theme. | Patient login, session restoration, and Debug reachability are integrated in source. Registration UI is planned. |
 

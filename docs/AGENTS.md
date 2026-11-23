@@ -14,6 +14,7 @@ Read this guide and [TECHREQ.md](TECHREQ.md) before working on Hospitaly UI, mod
 
 - Use feature-first MVVM–Service. Put feature types under `Hospitaly/Features/<Feature>/` in `Models/`, `ViewModels/`, `Views/`, or `Services/`. Keep feature-only UI components in `Views/Components/`. Create folders as the feature needs them.
 - Views own presentation and input. ViewModels own observable feature state and actions. Services own feature-specific HTTP operations and mapping. Put shared HTTP mechanics under `Hospitaly/Core/Networking/` and app-wide session/navigation composition under `Hospitaly/App/`.
+- Keep tab destinations and the views that present them in `Hospitaly/App/Navigation/`. Keep routes owned by a single feature with that feature.
 - Reuse existing components. Keep cross-feature UI and formatting in `Hospitaly/Shared/`. Add semantic colors to [Theme.swift](../Hospitaly/Shared/Theme.swift). Follow the project's Observation and concurrency settings.
 - Include a `#Preview` in every new SwiftUI View file. Use synthetic local data and give screens with materially different states a preview for each condition. Use local Preview state for interactive controls as needed.
 - Defer dedicated accessibility work during the current slicing phase as requested by the user. Preserve the project target and dependency choices unless the task calls for a change.

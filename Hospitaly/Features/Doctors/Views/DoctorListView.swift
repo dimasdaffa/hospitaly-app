@@ -9,8 +9,9 @@ import SwiftUI
 
 struct DoctorListView: View {
     @State private var viewModel = DoctorListViewModel(doctors: Doctor.samples)
-    @State private var path: [DoctorRoute] = []
     @State private var appointments = Appointment.samples
+
+    @Binding var path: [DoctorRoute]
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -111,5 +112,6 @@ struct DoctorListView: View {
 }
 
 #Preview {
-    DoctorListView()
+    @Previewable @State var path: [DoctorRoute] = []
+    DoctorListView(path: $path)
 }

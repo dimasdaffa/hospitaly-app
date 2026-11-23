@@ -9,13 +9,6 @@ import Foundation
 import SwiftUI
 
 struct RootView: View {
-    private enum AppTab: Hashable {
-        case doctors
-        case profile
-    }
-
-    @State private var selectedTab: AppTab = .profile
-
     let session: SessionStore
 
     var body: some View {
@@ -27,14 +20,11 @@ struct RootView: View {
                 restoreError(message)
             case .signedOut:
                 LoginView(
-                    onSignIn: { request in
-                        try await session.signIn(request)
-                        selectedTab = .profile
-                    },
+                    onSignIn: session.signIn,
                     onCheckConnection: session.checkConnection
                 )
             case .signedIn(let profile):
-                signedInTabs(profile)
+                MainTabView(profile: profile, onSignOut: session.signOut)
             }
         }
         .tint(.themePrimary)
@@ -57,20 +47,6 @@ struct RootView: View {
             .buttonStyle(.borderedProminent)
 
             Button("Sign In Again", action: session.discardSavedSession)
-        }
-    }
-
-    private func signedInTabs(_ profile: UserProfile) -> some View {
-        TabView(selection: $selectedTab) {
-            Tab("Doctors", systemImage: "stethoscope", value: AppTab.doctors) {
-                DoctorListView()
-            }
-
-            Tab("Profile", systemImage: "person", value: AppTab.profile) {
-                NavigationStack {
-                    ProfileView(profile: profile, onSignOut: session.signOut)
-                }
-            }
         }
     }
 }

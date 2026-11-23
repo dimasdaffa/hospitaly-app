@@ -37,6 +37,10 @@ extension Color {
     static let themeExperienceBackground = Color(hex: 0xEDF4FF)
     static let themePurpleAccent = Color(hex: 0xA55EF5)
     static let themePurpleBackground = Color(hex: 0xF7EFFF)
+
+    static let themeRecordsAccent = Color(hex: 0xDA5210)
+    static let themeRecordsBackground = Color(hex: 0xFFF3E6)
+    static let themeQuickBook = Color(hex: 0xFFBD09)
 }
 
 // MARK: - Convenience Initializers
