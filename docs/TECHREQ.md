@@ -4,7 +4,7 @@
 
 ## 1. Product scope and sources
 
-Hospitaly is a SwiftUI patient app for the RS Permata Sehat learning project. The signed-in shell opens on Home and has Doctors, Chat, and Profile tabs with a central Quick Access button. Profile, doctor search, slot selection, appointment management, and the notification inbox connect to Vapor. Home shows the patient greeting, Book Now, and the next appointment. Chat shows a placeholder.
+Hospitaly is a SwiftUI patient app for the RS Permata Sehat learning project. The signed-in shell opens on Home and has Doctors, Chat, and Profile tabs with a central Quick Access button. Profile, doctor search, slot selection, appointment management, the notification inbox, and the care plan connect to Vapor. Home shows the patient greeting, Book Now, the next appointment, and today's scheduled doses. Chat shows a placeholder.
 
 | Question | Source of truth |
 | --- | --- |
@@ -121,9 +121,16 @@ Hospitaly/                                  # iOS repository root
 │   │   │           ├── AppointmentStatusBadge.swift # Status styling
 │   │   │           └── AppointmentSummaryView.swift # Doctor and chosen time
 │   │   ├── Home/
-│   │   │   ├── ViewModels/HomeViewModel.swift         # Load and select the next appointment
+│   │   │   ├── Models/
+│   │   │   │   ├── CarePlanActions.swift              # Authenticated reads and dose updates
+│   │   │   │   └── CarePlanEntry.swift                # Scheduled medication dose and taken time
+│   │   │   ├── Services/CarePlanService.swift         # Fetch daily plan and record doses
+│   │   │   ├── ViewModels/
+│   │   │   │   ├── HomeViewModel.swift                # Load and select the next appointment
+│   │   │   │   └── CarePlanViewModel.swift            # Daily loading, error, and saving state
 │   │   │   └── Views/
 │   │   │       ├── HomeView.swift                    # Greeting, notifications, booking, and next visit
+│   │   │       ├── CarePlanView.swift                # Scheduled doses and Mark as Taken
 │   │   │       └── Components/HomeAppointmentCardView.swift # Next visit date, status, and actions
 │   │   └── Notifications/
 │   │       ├── Models/PatientNotification.swift       # Notification identity, event, and read state
@@ -152,6 +159,7 @@ Hospitaly/                                  # iOS repository root
 | Change an appointment | Actions on upcoming cards or in [Appointment Details](../Hospitaly/Features/Appointments/Views/AppointmentDetailView.swift) after tapping a card | [RescheduleView.swift](../Hospitaly/Features/Appointments/Views/RescheduleView.swift) loads replacement times. [CancelAppointmentView.swift](../Hospitaly/Features/Appointments/Views/CancelAppointmentView.swift) collects the reason and shows the submission result. [AppointmentsViewModel.swift](../Hospitaly/Features/Appointments/ViewModels/AppointmentsViewModel.swift) applies the returned appointment by ID. |
 | Read appointment updates | Bell on Home in [MainTabView.swift](../Hospitaly/App/Navigation/MainTabView.swift) | [NotificationsViewModel.swift](../Hospitaly/Features/Notifications/ViewModels/NotificationsViewModel.swift) shares unread and loading state between the bell and [NotificationsView.swift](../Hospitaly/Features/Notifications/Views/NotificationsView.swift). |
 | Open the dashboard and next visit | [HomeView.swift](../Hospitaly/Features/Home/Views/HomeView.swift) | [HomeViewModel.swift](../Hospitaly/Features/Home/ViewModels/HomeViewModel.swift) selects the earliest upcoming start from patient appointments. The card opens existing appointment details or reschedule. See All opens My Appointments. |
+| View today's care plan and record a dose | [CarePlanView.swift](../Hospitaly/Features/Home/Views/CarePlanView.swift) on Home | [CarePlanViewModel.swift](../Hospitaly/Features/Home/ViewModels/CarePlanViewModel.swift) loads the clinic's current day and applies the response for the same scheduled dose. [CarePlanService.swift](../Hospitaly/Features/Home/Services/CarePlanService.swift) calls Vapor. |
 
 ## 4. Planned source additions
 
@@ -165,10 +173,6 @@ Hospitaly/
 │   │   │   ├── Views/PersonalInfoView.swift    # Edit personal information
 │   │   │   ├── Views/SecuritySettingsView.swift # Change password form
 │   │   │   └── ViewModels/ProfileViewModel.swift # Personal information edits
-│   │   ├── Home/                                       # Daily care plan
-│   │   │   ├── Views/CarePlanView.swift                 # Today's doses and Mark as Taken
-│   │   │   ├── Models/CarePlanEntry.swift               # Scheduled dose
-│   │   │   └── Services/CarePlanService.swift           # Daily plan and taken-dose updates
 │   │   ├── HealthTracker/
 │   │   │   ├── Views/HealthTrackerView.swift            # Blood pressure, weight, and heart rate tabs
 │   │   │   ├── Views/LogVitalView.swift                 # Enter one vital measurement
@@ -219,7 +223,7 @@ Hospitaly/
 | Booking and history | [Visit form](<../../RS Permata Sehat/Appointment Details.png>) · [Confirmation](<../../RS Permata Sehat/Make Appointment.png>) · [My Appointments](<../../RS Permata Sehat/Manage Appointment.png>) | Booking and appointment history are wired to Vapor. Confirmation uses server identity, status, and reference. My Appointments groups server results into Upcoming and History, with empty and failed states. A slot conflict offers a return to refreshed availability. |
 | Reschedule and cancellation | [Dashboard action](<../../RS Permata Sehat/Patient Dashboard.png>) · [Cancellation form](<../../RS Permata Sehat/Cancel Appointment.png>) · [Cancellation alert](<../../RS Permata Sehat/Cancellation Alert.png>) | Upcoming Pending and Approved cards offer both actions, and Home can open reschedule for the next eligible visit. The replacement picker handles empty schedules and conflicts. Cancellation shows the requested state until hospital review. |
 | Appointment notifications | Bell in [Patient Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) | The Home bell shows an unread dot. The inbox supports refresh, retry, empty state, and marking an item as read. |
-| Dashboard and care plan | [Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) | Home shows the signed-in patient, notification bell, Book Now, and the next appointment from `GET /api/appointments`. The appointment section supports pull to refresh, an empty state, and Retry. The daily care plan is planned. |
+| Dashboard and care plan | [Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) | Home shows the signed-in patient, notification bell, Book Now, the next appointment, and the daily care plan. Both data sections support pull to refresh, empty states, and Retry. A dose shows Taken after Vapor confirms the update. |
 | Tab bar and shortcuts | [Quick Access](<../../RS Permata Sehat/Quick Access.png>) | Custom bar and bottom sheet are implemented. Appointments opens the existing appointment list. Find Doctors and Quick Book open the directory. Profile opens the account tab. Messages opens the Chat placeholder. Health Tracker and Records are disabled until their screens exist. |
 | Medical records and lab | [Records](<../../RS Permata Sehat/Medical Record List.png>) · [Diagnosis](<../../RS Permata Sehat/Diagnosis Details.png>) · [Lab](<../../RS Permata Sehat/Lab Result.png>) | Design references and backend available. The lab PDF comes from a staff-published attachment. |
 | Patient documents and BPJS | [Documents](<../../RS Permata Sehat/Document Screen.png>) · [Upload](<../../RS Permata Sehat/Upload Docs.png>) | Design references and backend available for document CRUD, history, multipart upload, and private downloads. |
@@ -241,6 +245,7 @@ Use the [patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-apl
 | Appointment changes | A future appointment with status `pending` or `approved` can be changed. Reschedule reads 14 days of doctor availability and submits a new `date` and `time` via `PATCH /api/appointments/:id`. The updated appointment normally returns to `pending`. Cancellation sends `reason` and optional `note` via `POST /api/appointments/:id/cancellation-requests`. It displays `cancellation_requested` while staff reviews the request. Approval produces `cancelled`. |
 | Status handling | Recognize `pending`, `approved`, `rejected`, `completed`, `cancellation_requested`, and `cancelled`. Render a neutral fallback for an unfamiliar status. Appointment updates are available through the in-app notification feed. |
 | Notifications | Fetch `GET /api/notifications` when selecting Home and opening the inbox, or use Refresh. Derive the unread dot from `readAt`. Mark an item as read using `PUT /api/notifications/:id/read` and update the unread state after the server acknowledges the request. Vapor emits `approved`, `rejected`, `cancelled`, and `cancellation_declined` events. |
+| Daily care plan | Fetch `GET /api/care-plan?date=…` using today's date in `Asia/Jakarta`. Track each dose by `recordId`, medication ID, date, and scheduled time. `PUT /api/care-plan/:recordId/:medicationId/taken` sends that entry's `date` and `time` and returns the saved `takenAt` in ISO 8601. Repeating the same request preserves the original intake timestamp. |
 | Private documents and lab | Upload patient documents as multipart PDF, JPEG, or PNG with a maximum file size of 5 MiB. Use authorized download endpoints for private files. Show the lab PDF action when the published result includes its download path. |
 | Presentation states | API-backed lists need loading, data, empty, and recoverable error states. Use API dates, availability, currency, statuses, and identifiers when the feature is integrated. Carry the server-created appointment from confirmation into refreshed history. |
 
@@ -249,7 +254,7 @@ Use the [patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-apl
 1. **Establish an authenticated connection.** API configuration, the shared client, sign-in, Keychain persistence, and a basic patient profile are integrated in source. iOS runtime verification is pending.
 2. **Integrate Doctors and booking.** Directory, details, slot lookup, booking, and appointment history are wired in source. Verify on device that the server-created appointment appears in My Appointments with the same doctor, time, status, and reference shown in confirmation.
 3. **Complete appointment management.** Rescheduling, cancellation requests, and the in-app notification inbox are wired in source. Device verification is pending.
-4. **Expand patient features.** The dashboard greeting and next appointment are wired in source. Add the daily care plan, then Health Tracker, records and lab, documents, chat, and profile settings according to user priority.
+4. **Expand patient features.** The dashboard and daily care plan are wired in source. Continue with Health Tracker, records and lab, documents, chat, and profile settings according to user priority.
 
 When verification is requested, cover both doctor states, date changes, disabled slots, a blank visit reason, and a new appointment appearing in Upcoming. During API integration, also cover expired sessions, a conflicting slot, and document access boundaries. The Hurl suite verifies backend behavior. Record iOS build, Simulator, Preview, or device evidence separately with the revision and environment.
 

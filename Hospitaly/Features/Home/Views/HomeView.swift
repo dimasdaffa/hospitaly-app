@@ -10,6 +10,7 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var viewModel = HomeViewModel()
+    @State private var carePlan = CarePlanViewModel()
 
     let patientName: String
     let isActive: Bool
@@ -19,6 +20,7 @@ struct HomeView: View {
     let onSeeAll: () -> Void
     let onOpenAppointment: (AppointmentPresentation) -> Void
     let onOpenNotifications: (() -> Void)?
+    var carePlanActions: CarePlanActions? = nil
 
     var body: some View {
         ScrollView {
@@ -26,6 +28,16 @@ struct HomeView: View {
                 header
                 bookingBanner
                 nextAppointment
+
+                if let carePlanActions {
+                    CarePlanView(
+                        viewModel: carePlan,
+                        onRetry: { Task { await carePlan.load(using: carePlanActions.load) } },
+                        onMarkTaken: { entry in
+                            Task { await carePlan.markTaken(entry, using: carePlanActions.markTaken) }
+                        }
+                    )
+                }
             }
             .frame(maxWidth: 540)
             .padding(16)
@@ -161,7 +173,7 @@ struct HomeView: View {
                 } description: {
                     Text(error)
                 } actions: {
-                    Button("Retry", action: retry)
+                    Button("Retry", action: retryAppointment)
                         .buttonStyle(.borderedProminent)
                 }
                 .background(Color.themeSurface, in: .rect(cornerRadius: 20))
@@ -169,12 +181,16 @@ struct HomeView: View {
         }
     }
 
-    private func retry() {
-        Task { await refresh() }
+    private func retryAppointment() {
+        Task { await viewModel.loadNextAppointment(using: loadAppointments) }
     }
 
     private func refresh() async {
-        await viewModel.loadNextAppointment(using: loadAppointments)
+        async let appointmentRefresh: Void = viewModel.loadNextAppointment(using: loadAppointments)
+        if let carePlanActions {
+            await carePlan.load(using: carePlanActions.load)
+        }
+        _ = await appointmentRefresh
     }
 }
 
@@ -182,7 +198,8 @@ struct HomeView: View {
     HomeView(
         patientName: "Demo Patient", isActive: true, hasUnreadNotifications: true,
         loadAppointments: { Appointment.samples },
-        onBook: {}, onSeeAll: {}, onOpenAppointment: { _ in }, onOpenNotifications: {}
+        onBook: {}, onSeeAll: {}, onOpenAppointment: { _ in }, onOpenNotifications: {},
+        carePlanActions: .preview
     )
     .tint(.themePrimary)
 }

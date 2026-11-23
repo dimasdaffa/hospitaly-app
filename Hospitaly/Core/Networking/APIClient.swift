@@ -63,6 +63,13 @@ struct APIClient: Sendable {
         _ = try await send(path, method: "PUT", token: token)
     }
 
+    func put<Body: Encodable, Response: Decodable>(
+        _ path: String, body: Body, token: String
+    ) async throws -> Response {
+        let data = try await send(path, method: "PUT", token: token, body: JSONEncoder().encode(body))
+        return try decode(data)
+    }
+
     private func send(
         _ path: String, method: String, token: String? = nil, body: Data? = nil,
         query: [URLQueryItem] = [], idempotencyKey: UUID? = nil

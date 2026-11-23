@@ -24,6 +24,7 @@ struct MainTabView: View {
     var appointmentManagement: AppointmentManagement? = nil
     var loadNotifications: (@MainActor () async throws -> [PatientNotification])? = nil
     var markNotificationRead: (@MainActor (UUID) async throws -> Void)? = nil
+    var carePlanActions: CarePlanActions? = nil
 
     var body: some View {
         TabView(selection: $selection) {
@@ -84,7 +85,8 @@ struct MainTabView: View {
             onBook: { openTab(.doctors) },
             onSeeAll: { openAppointments() },
             onOpenAppointment: { openAppointments(presenting: $0) },
-            onOpenNotifications: canOpenNotifications ? { isNotificationsPresented = true } : nil
+            onOpenNotifications: canOpenNotifications ? { isNotificationsPresented = true } : nil,
+            carePlanActions: carePlanActions
         )
         .sheet(isPresented: $isNotificationsPresented) {
             if let loadNotifications, let markNotificationRead {
@@ -135,6 +137,7 @@ struct MainTabView: View {
         loadDoctors: { Doctor.samples },
         appointmentManagement: .preview,
         loadNotifications: { [.sample] },
-        markNotificationRead: { _ in }
+        markNotificationRead: { _ in },
+        carePlanActions: .preview
     )
 }
