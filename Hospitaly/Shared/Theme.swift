@@ -8,9 +8,28 @@
 import SwiftUI
 
 extension Color {
-    
-    // MARK: - Brand & Accent Colors
-    static let themePrimary     = Color(hex: 0xDB143C) // Crimson Red
+    static let themePrimary = Color(hex: 0xDB143C)
+    static let themeCanvas = Color(hex: 0xF7F5F5)
+    static let themeSurface = Color.white
+    static let themeSubtleSurface = Color(hex: 0xF3F4F6)
+
+    static let themeText = Color(hex: 0x131C2C)
+    static let themeSecondaryText = Color(hex: 0x536074)
+    static let themeMutedText = Color(hex: 0x93A2B7)
+
+    static let themeOutline = Color(hex: 0xDCE4F1)
+    static let themeDivider = Color(hex: 0xECEEF1)
+    static let themeCardBorder = Color(hex: 0xEFEDF0)
+    static let themeCardShadow = Color(hex: 0x0F172A, opacity: 0.12)
+
+    static let themeAvailableText = Color(hex: 0x138344)
+    static let themeAvailableDot = Color(hex: 0x19BE66)
+    static let themeAvailableBackground = Color(hex: 0xDDFBE8)
+
+    static let themeRatingAccent = Color(hex: 0xEEA800)
+    static let themeRatingBackground = Color(hex: 0xFFF9E4)
+    static let themeExperienceAccent = Color(hex: 0x4D8DFB)
+    static let themeExperienceBackground = Color(hex: 0xEDF4FF)
 }
 
 // MARK: - Convenience Initializers
