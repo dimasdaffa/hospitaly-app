@@ -19,6 +19,7 @@ struct MainTabView: View {
     var loadDoctorDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)? = nil
     var loadAppointments: (@MainActor () async throws -> [Appointment])? = nil
     var bookAppointment: (@MainActor (BookingRequest, Doctor) async throws -> Appointment)? = nil
+    var appointmentManagement: AppointmentManagement? = nil
 
     var body: some View {
         TabView(selection: $selection) {
@@ -30,7 +31,8 @@ struct MainTabView: View {
             Tab(MainTab.doctors.title, systemImage: MainTab.doctors.symbol, value: MainTab.doctors) {
                 DoctorListView(
                     path: $doctorPath, loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails,
-                    loadAppointments: loadAppointments, bookAppointment: bookAppointment
+                    loadAppointments: loadAppointments, bookAppointment: bookAppointment,
+                    appointmentManagement: appointmentManagement
                 )
                     .toolbarVisibility(.hidden, for: .tabBar)
             }
@@ -91,6 +93,7 @@ struct MainTabView: View {
             role: "patient", patientNumber: "PS-DEMO"
         ),
         onSignOut: {},
-        loadDoctors: { Doctor.samples }
+        loadDoctors: { Doctor.samples },
+        appointmentManagement: .preview
     )
 }

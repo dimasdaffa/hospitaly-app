@@ -29,7 +29,10 @@ struct RootView: View {
                 MainTabView(
                     profile: profile, onSignOut: session.signOut,
                     loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails,
-                    loadAppointments: loadAppointments, bookAppointment: bookAppointment
+                    loadAppointments: loadAppointments, bookAppointment: bookAppointment,
+                    appointmentManagement: AppointmentManagement(
+                        loadSlots: loadReplacementSlots, reschedule: rescheduleAppointment, cancel: cancelAppointment
+                    )
                 )
             }
         }
@@ -62,6 +65,26 @@ struct RootView: View {
     private func bookAppointment(_ booking: BookingRequest, doctor: Doctor) async throws -> Appointment {
         try await session.withPatientToken { token in
             try await appointmentService.book(booking, doctor: doctor, token: token)
+        }
+    }
+
+    private func loadReplacementSlots(
+        for appointment: Appointment, range: ClosedRange<Date>
+    ) async throws -> [AppointmentSlot] {
+        try await session.withPatientToken { token in
+            try await doctorService.availability(id: appointment.doctor.id, range: range, token: token)
+        }
+    }
+
+    private func rescheduleAppointment(_ appointment: Appointment, slot: AppointmentSlot) async throws -> Appointment {
+        try await session.withPatientToken { token in
+            try await appointmentService.reschedule(appointment, to: slot, token: token)
+        }
+    }
+
+    private func cancelAppointment(_ appointment: Appointment, request: CancellationRequest) async throws -> Appointment {
+        try await session.withPatientToken { token in
+            try await appointmentService.cancel(appointment, request: request, token: token)
         }
     }
 

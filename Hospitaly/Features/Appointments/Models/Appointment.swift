@@ -55,6 +55,10 @@ struct Appointment: Identifiable, Hashable, Sendable {
         }
     }
 
+    var canBeChanged: Bool {
+        slot.start > .now && (status == .pending || status == .approved)
+    }
+
     static let sample = Appointment(
         doctor: Doctor.samples[0], slot: .sample(), reason: "General checkup", complaints: ""
     )

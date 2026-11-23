@@ -18,6 +18,7 @@ struct DoctorListView: View {
     var loadDoctorDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)? = nil
     var loadAppointments: (@MainActor () async throws -> [Appointment])? = nil
     var bookAppointment: (@MainActor (BookingRequest, Doctor) async throws -> Appointment)? = nil
+    var appointmentManagement: AppointmentManagement? = nil
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -88,7 +89,8 @@ struct DoctorListView: View {
                 case .appointments(let confirmed):
                     MyAppointmentsView(
                         appointments: loadAppointments == nil ? demoAppointments : (confirmed.map { [$0] } ?? []),
-                        loadAppointments: loadAppointments
+                        loadAppointments: loadAppointments,
+                        management: appointmentManagement
                     )
                 }
             }

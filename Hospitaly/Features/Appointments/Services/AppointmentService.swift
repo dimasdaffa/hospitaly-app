@@ -8,6 +8,11 @@
 import Foundation
 
 struct AppointmentService {
+    private struct RescheduleRequest: Encodable {
+        let date: String
+        let time: String
+    }
+
     let client: APIClient
 
     func book(_ booking: BookingRequest, doctor: Doctor, token: String) async throws -> Appointment {
@@ -24,6 +29,25 @@ struct AppointmentService {
     func list(token: String) async throws -> [Appointment] {
         let response: [AppointmentResponse] = try await client.get("api/appointments", token: token)
         return try response.map { try appointment(from: $0) }
+    }
+
+    func reschedule(_ appointment: Appointment, to slot: AppointmentSlot, token: String) async throws -> Appointment {
+        let body = RescheduleRequest(
+            date: ClinicDate.dayString(slot.start), time: ClinicDate.clockString(slot.start)
+        )
+        let response: AppointmentResponse = try await client.patch(
+            "api/appointments/\(appointment.id.uuidString)", body: body, token: token
+        )
+        guard response.id == appointment.id else { throw APIError.invalidPayload }
+        return try self.appointment(from: response, fallbackDoctor: appointment.doctor)
+    }
+
+    func cancel(_ appointment: Appointment, request: CancellationRequest, token: String) async throws -> Appointment {
+        let response: AppointmentResponse = try await client.post(
+            "api/appointments/\(appointment.id.uuidString)/cancellation-requests", body: request, token: token
+        )
+        guard response.id == appointment.id else { throw APIError.invalidPayload }
+        return try self.appointment(from: response, fallbackDoctor: appointment.doctor)
     }
 
     private func appointment(from response: AppointmentResponse, fallbackDoctor: Doctor? = nil) throws -> Appointment {

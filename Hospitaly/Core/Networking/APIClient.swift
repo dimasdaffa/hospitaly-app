@@ -52,6 +52,13 @@ struct APIClient: Sendable {
         return try decode(data)
     }
 
+    func patch<Body: Encodable, Response: Decodable>(
+        _ path: String, body: Body, token: String
+    ) async throws -> Response {
+        let data = try await send(path, method: "PATCH", token: token, body: JSONEncoder().encode(body))
+        return try decode(data)
+    }
+
     private func send(
         _ path: String, method: String, token: String? = nil, body: Data? = nil,
         query: [URLQueryItem] = [], idempotencyKey: UUID? = nil

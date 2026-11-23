@@ -5,19 +5,38 @@
 //  Created by DIMAS DAFFA ERNANDA on 23/11/26.
 //
 
+import Foundation
 import SwiftUI
 
 struct MyAppointmentsView: View {
+    private enum Change: Identifiable {
+        case details(Appointment)
+        case reschedule(Appointment)
+        case cancel(Appointment)
+
+        var id: String {
+            switch self {
+            case .details(let appointment): "details-\(appointment.id.uuidString)"
+            case .reschedule(let appointment): "reschedule-\(appointment.id.uuidString)"
+            case .cancel(let appointment): "cancel-\(appointment.id.uuidString)"
+            }
+        }
+    }
+
     let loadAppointments: (@MainActor () async throws -> [Appointment])?
+    let management: AppointmentManagement?
 
     @State private var viewModel: AppointmentsViewModel
     @State private var showsHistory = false
+    @State private var change: Change?
 
     init(
         appointments: [Appointment],
-        loadAppointments: (@MainActor () async throws -> [Appointment])? = nil
+        loadAppointments: (@MainActor () async throws -> [Appointment])? = nil,
+        management: AppointmentManagement? = nil
     ) {
         self.loadAppointments = loadAppointments
+        self.management = management
         _viewModel = State(initialValue: AppointmentsViewModel(
             appointments: appointments, loadsFromAPI: loadAppointments != nil
         ))
@@ -70,7 +89,7 @@ struct MyAppointmentsView: View {
                 ScrollView {
                     LazyVStack(spacing: 14) {
                         ForEach(visibleAppointments) { appointment in
-                            AppointmentCardView(appointment: appointment)
+                            appointmentCard(appointment)
                         }
                     }
                     .padding(.horizontal, 16)
@@ -96,6 +115,54 @@ struct MyAppointmentsView: View {
                 await viewModel.load(using: loadAppointments)
             }
         }
+        .sheet(item: $change) { change in
+            NavigationStack {
+                switch change {
+                case .details(let appointment):
+                    appointmentDetails(appointment)
+                case .reschedule(let appointment):
+                    if let management {
+                        RescheduleView(
+                            appointment: appointment, management: management,
+                            onUpdated: viewModel.apply, onRefresh: viewModel.reload
+                        )
+                    }
+                case .cancel(let appointment):
+                    if let management {
+                        CancelAppointmentView(
+                            appointment: appointment, submit: management.cancel,
+                            onUpdated: viewModel.apply, onRefresh: viewModel.reload
+                        )
+                    }
+                }
+            }
+            .tint(Color.themePrimary)
+        }
+    }
+
+    private func appointmentCard(_ appointment: Appointment) -> AppointmentCardView {
+        let showsActions = canManage(appointment)
+        return AppointmentCardView(
+            appointment: appointment,
+            onOpen: { change = .details(appointment) },
+            onReschedule: showsActions ? { change = .reschedule(appointment) } : nil,
+            onCancel: showsActions ? { change = .cancel(appointment) } : nil
+        )
+    }
+
+    private func appointmentDetails(_ appointment: Appointment) -> AppointmentDetailView {
+        let latest = viewModel.appointments.first { $0.id == appointment.id }
+        let current = latest ?? appointment
+        let showsActions = latest != nil && canManage(current)
+        return AppointmentDetailView(
+            appointment: current,
+            onReschedule: showsActions ? { change = .reschedule(current) } : nil,
+            onCancel: showsActions ? { change = .cancel(current) } : nil
+        )
+    }
+
+    private func canManage(_ appointment: Appointment) -> Bool {
+        management != nil && viewModel.phase == .loaded && appointment.canBeChanged
     }
 
     private func tab(
@@ -123,9 +190,9 @@ struct MyAppointmentsView: View {
     }
 }
 
-#Preview {
+#Preview("Manage Appointments") {
     NavigationStack {
-        MyAppointmentsView(appointments: [.sample] + Appointment.samples)
+        MyAppointmentsView(appointments: [.sample] + Appointment.samples, management: .preview)
     }
 }
 

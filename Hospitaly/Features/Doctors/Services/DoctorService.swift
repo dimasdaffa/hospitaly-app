@@ -27,28 +27,15 @@ struct DoctorService {
     func details(id: String, range: ClosedRange<Date>, token: String) async throws -> DoctorDetailData {
         guard let doctorID = UUID(uuidString: id) else { throw APIError.invalidPayload }
         let path = "api/doctors/\(doctorID.uuidString)"
-        let rangeQuery = [
-            URLQueryItem(name: "from", value: ClinicDate.dayString(range.lowerBound)),
-            URLQueryItem(name: "to", value: ClinicDate.dayString(range.upperBound))
-        ]
 
         async let profileRequest: DoctorResponse = client.get(path, token: token)
-        async let slotsRequest: [DoctorResponse.Slot] = client.get(
-            "\(path)/availability", token: token, query: rangeQuery
-        )
+        async let slotsRequest: [AppointmentSlot] = availability(id: id, range: range, token: token)
         async let hoursRequest: [DoctorDetailData.WeeklyHours] = client.get(
             "api/schedules", token: token, query: [URLQueryItem(name: "doctorId", value: doctorID.uuidString)]
         )
 
-        let (profile, slotRows, hours) = try await (profileRequest, slotsRequest, hoursRequest)
+        let (profile, slots, hours) = try await (profileRequest, slotsRequest, hoursRequest)
         let now = Date.now
-        let slots = try slotRows.map { row in
-            guard let start = ClinicDate.date(day: row.date, time: row.time),
-                  let end = ClinicDate.date(day: row.date, time: row.endTime),
-                  end > start else { throw APIError.invalidPayload }
-            return AppointmentSlot(start: start, end: end, isAvailable: row.available && start > now)
-        }.sorted { $0.start < $1.start }
-
         let next = slots.first(where: \.isAvailable).map { slotLabel($0.start, relativeTo: now) }
         return DoctorDetailData(
             doctor: displayDoctor(profile, nextAvailable: next),
@@ -57,6 +44,24 @@ struct DoctorService {
                 ($0.dayOrder, $0.startTime) < ($1.dayOrder, $1.startTime)
             }
         )
+    }
+
+    func availability(id: String, range: ClosedRange<Date>, token: String) async throws -> [AppointmentSlot] {
+        guard let doctorID = UUID(uuidString: id) else { throw APIError.invalidPayload }
+        let query = [
+            URLQueryItem(name: "from", value: ClinicDate.dayString(range.lowerBound)),
+            URLQueryItem(name: "to", value: ClinicDate.dayString(range.upperBound))
+        ]
+        let slotRows: [DoctorResponse.Slot] = try await client.get(
+            "api/doctors/\(doctorID.uuidString)/availability", token: token, query: query
+        )
+        let now = Date.now
+        return try slotRows.map { row in
+            guard let start = ClinicDate.date(day: row.date, time: row.time),
+                  let end = ClinicDate.date(day: row.date, time: row.endTime),
+                  end > start else { throw APIError.invalidPayload }
+            return AppointmentSlot(start: start, end: end, isAvailable: row.available && start > now)
+        }.sorted { $0.start < $1.start }
     }
 
     func displayDoctor(_ doctor: DoctorResponse, nextAvailable: String? = nil) -> Doctor {

@@ -119,7 +119,7 @@ struct DoctorDetailView: View {
     @ViewBuilder
     private var scheduleContent: some View {
         if viewModel.doctor.canBookDemoSlot {
-            DoctorScheduleView(viewModel: viewModel)
+            slotPicker
         } else if viewModel.doctor.usesDemoSchedule {
             DoctorWeeklyScheduleView()
         } else {
@@ -139,13 +139,21 @@ struct DoctorDetailView: View {
                 }
             case .loaded:
                 if viewModel.hasScheduledSlots {
-                    DoctorScheduleView(viewModel: viewModel)
+                    slotPicker
                 }
                 if !viewModel.hasBookableSlots {
                     DoctorWeeklyScheduleView(weeklyHours: viewModel.weeklyHours)
                 }
             }
         }
+    }
+
+    private var slotPicker: some View {
+        @Bindable var model = viewModel
+        return AppointmentSlotPicker(
+            days: model.days, dateRange: model.dateRange, selectedDate: $model.selectedDate,
+            slots: model.slots, selectedSlot: model.selectedSlot, onSelectSlot: model.selectSlot
+        )
     }
 }
 

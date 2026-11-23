@@ -33,16 +33,30 @@ final class AppointmentsViewModel {
 
     func load(using request: @MainActor () async throws -> [Appointment]) async {
         guard phase == .loading, !Task.isCancelled else { return }
+        let attempt = loadAttempt
         do {
             let result = try await request()
             try Task.checkCancellation()
+            guard attempt == loadAttempt else { return }
             appointments = result
             phase = .loaded
         } catch is CancellationError {
             return
         } catch {
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, attempt == loadAttempt else { return }
             phase = .failed(error.localizedDescription)
+        }
+    }
+
+    func apply(_ appointment: Appointment) {
+        if let index = appointments.firstIndex(where: { $0.id == appointment.id }) {
+            appointments[index] = appointment
+        } else {
+            appointments.append(appointment)
+        }
+
+        if phase == .loading {
+            loadAttempt += 1
         }
     }
 }
