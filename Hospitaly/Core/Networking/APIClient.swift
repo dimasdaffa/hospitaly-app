@@ -26,6 +26,16 @@ struct APIClient {
         _ = try await send("health", method: "GET")
     }
 
+    func publicImageURL(_ path: String) -> URL? {
+        guard let url = URL(string: path, relativeTo: baseURL)?.absoluteURL,
+              url.host != nil, url.user == nil, url.password == nil else { return nil }
+
+        if url.scheme == "https" { return url }
+        let isLocalAPI = url.scheme == "http" && baseURL.scheme == "http"
+            && url.host == baseURL.host && url.port == baseURL.port
+        return isLocalAPI ? url : nil
+    }
+
     func get<Response: Decodable>(_ path: String, token: String) async throws -> Response {
         let data = try await send(path, method: "GET", token: token)
         return try decode(data)

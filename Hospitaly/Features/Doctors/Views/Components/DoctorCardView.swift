@@ -63,7 +63,7 @@ struct DoctorCardView: View {
                         .tracking(0.5)
                         .foregroundStyle(Color.themeSecondaryText)
 
-                    Text(doctor.nextAvailable ?? "Full Today")
+                    Text(doctor.nextAvailable ?? (doctor.usesDemoSchedule ? "Full Today" : "No upcoming slots"))
                         .font(.subheadline.bold())
                         .foregroundStyle(Color.themeText)
                 }
@@ -71,7 +71,7 @@ struct DoctorCardView: View {
                 Spacer(minLength: 0)
 
                 Button(action: onOpenDoctor) {
-                    Text(doctor.isAvailable ? "Book" : "Details")
+                    Text(doctor.canBookDemoSlot ? "Book" : "Details")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(doctor.isAvailable ? Color.themeSurface : Color.themeSecondaryText)
                         .frame(minWidth: doctor.isAvailable ? 83 : 95, minHeight: 40)

@@ -107,6 +107,23 @@ final class SessionStore {
         try await authService.checkConnection()
     }
 
+    func withPatientToken<Response>(_ request: @MainActor (String) async throws -> Response) async throws -> Response {
+        guard case .signedIn = phase else { throw APIError.httpStatus(401) }
+        guard let token = try tokenStore.read() else {
+            discardSavedSession()
+            throw APIError.httpStatus(401)
+        }
+
+        do {
+            return try await request(token)
+        } catch APIError.httpStatus(401) {
+            if !Task.isCancelled, (try? tokenStore.read()) == token {
+                discardSavedSession()
+            }
+            throw APIError.httpStatus(401)
+        }
+    }
+
     private func patientProfile(token: String) async throws -> UserProfile {
         let profile = try await profileService.currentUser(token: token)
         guard profile.role == "patient" else { throw SessionError.patientAccountRequired }

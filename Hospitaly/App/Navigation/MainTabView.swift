@@ -15,6 +15,7 @@ struct MainTabView: View {
 
     let profile: UserProfile
     let onSignOut: @MainActor () throws -> Void
+    let loadDoctors: @MainActor () async throws -> [Doctor]
 
     var body: some View {
         TabView(selection: $selection) {
@@ -24,7 +25,7 @@ struct MainTabView: View {
             }
 
             Tab(MainTab.doctors.title, systemImage: MainTab.doctors.symbol, value: MainTab.doctors) {
-                DoctorListView(path: $doctorPath)
+                DoctorListView(path: $doctorPath, loadDoctors: loadDoctors)
                     .toolbarVisibility(.hidden, for: .tabBar)
             }
 
@@ -83,6 +84,7 @@ struct MainTabView: View {
             id: UUID(), name: "Demo Patient", email: "patient@example.test",
             role: "patient", patientNumber: "PS-DEMO"
         ),
-        onSignOut: {}
+        onSignOut: {},
+        loadDoctors: { Doctor.samples }
     )
 }

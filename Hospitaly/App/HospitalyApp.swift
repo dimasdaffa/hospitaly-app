@@ -10,21 +10,22 @@ import SwiftUI
 
 @main
 struct HospitalyApp: App {
-    @State private var launch: Result<SessionStore, Error> = Result {
+    @State private var launch: Result<(session: SessionStore, doctorService: DoctorService), Error> = Result {
         let baseURL = try AppConfig.apiBaseURL()
         let client = APIClient(baseURL: baseURL)
-        return SessionStore(
+        let session = SessionStore(
             authService: AuthService(client: client),
             profileService: ProfileService(client: client),
             tokenStore: TokenStore(account: baseURL.absoluteString)
         )
+        return (session, DoctorService(client: client))
     }
 
     var body: some Scene {
         WindowGroup {
             switch launch {
-            case .success(let session):
-                RootView(session: session)
+            case .success(let dependencies):
+                RootView(session: dependencies.session, doctorService: dependencies.doctorService)
             case .failure(let error):
                 ContentUnavailableView(
                     "API Configuration Required",

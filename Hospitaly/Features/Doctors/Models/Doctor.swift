@@ -5,26 +5,35 @@
 //  Created by DIMAS DAFFA ERNANDA on 23/11/26.
 //
 
+import Foundation
+
 struct Doctor: Identifiable, Hashable, Sendable {
     let id: String
     let name: String
     let specialty: String
     let hospital: String
-    let portraitName: String
+    var portraitName: String?
     let rating: Double
-    let reviewCount: Int
+    let reviewCount: Int?
     let experienceYears: Int
     let nextAvailable: String?
-    let license: String
+    let license: String?
     let patientCount: Int
-    let bio: String
+    let bio: String?
     let practiceLocation: String
-    let consultationFee: Int
+    let consultationFee: Int?
     var firstBookableDayOffset = 0
     var firstBookableHour = 9
+    var avatarURL: URL?
+    var isFavorite = false
+    var usesDemoSchedule = true
 
     var isAvailable: Bool {
         nextAvailable != nil
+    }
+
+    var canBookDemoSlot: Bool {
+        usesDemoSchedule && isAvailable
     }
 }
 

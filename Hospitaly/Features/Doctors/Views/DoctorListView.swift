@@ -8,10 +8,11 @@
 import SwiftUI
 
 struct DoctorListView: View {
-    @State private var viewModel = DoctorListViewModel(doctors: Doctor.samples)
+    @State private var viewModel = DoctorListViewModel()
     @State private var appointments = Appointment.samples
 
     @Binding var path: [DoctorRoute]
+    let loadDoctors: @MainActor () async throws -> [Doctor]
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -54,24 +55,7 @@ struct DoctorListView: View {
                 .padding(.top, 24)
 
                 ScrollView {
-                    if viewModel.filteredDoctors.isEmpty {
-                        ContentUnavailableView("No doctors found", systemImage: "magnifyingglass")
-                            .foregroundStyle(Color.themeSecondaryText)
-                    } else {
-                        LazyVStack(spacing: 16) {
-                            ForEach(viewModel.filteredDoctors) { doctor in
-                                DoctorCardView(
-                                    doctor: doctor,
-                                    isFavorite: viewModel.favoriteDoctorIDs.contains(doctor.id),
-                                    onFavorite: { viewModel.toggleFavorite(doctor.id) },
-                                    onOpenDoctor: { path.append(.detail(doctor)) }
-                                )
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 24)
-                        .padding(.bottom, 20)
-                    }
+                    directoryContent
                 }
                 .scrollIndicators(.hidden)
                 .scrollDismissesKeyboard(.interactively)
@@ -102,6 +86,61 @@ struct DoctorListView: View {
             }
         }
         .tint(Color.themePrimary)
+        .task(id: viewModel.loadAttempt) { await viewModel.load(using: loadDoctors) }
+    }
+
+    @ViewBuilder
+    private var directoryContent: some View {
+        switch viewModel.phase {
+        case .loading:
+            ProgressView("Loading doctors…")
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 48)
+        case .failed(let message):
+            ContentUnavailableView {
+                Label("Couldn’t Load Doctors", systemImage: "exclamationmark.circle")
+            } description: {
+                Text(message)
+            } actions: {
+                Button("Retry", action: viewModel.retry)
+                    .buttonStyle(.borderedProminent)
+            }
+        case .loaded:
+            let doctors = viewModel.filteredDoctors
+            if viewModel.doctors.isEmpty {
+                ContentUnavailableView {
+                    Label("No Doctors Listed", systemImage: "stethoscope")
+                } description: {
+                    Text("The clinic hasn’t added any doctors yet.")
+                } actions: {
+                    Button("Refresh", action: viewModel.retry)
+                        .buttonStyle(.bordered)
+                }
+            } else if doctors.isEmpty {
+                ContentUnavailableView {
+                    Label("No Matching Doctors", systemImage: "magnifyingglass")
+                } description: {
+                    Text("Try a different search or clear your filters.")
+                } actions: {
+                    Button("Clear Filters", action: viewModel.resetFilters)
+                        .buttonStyle(.bordered)
+                }
+            } else {
+                LazyVStack(spacing: 16) {
+                    ForEach(doctors) { doctor in
+                        DoctorCardView(
+                            doctor: doctor,
+                            isFavorite: viewModel.favoriteDoctorIDs.contains(doctor.id),
+                            onFavorite: { viewModel.toggleFavorite(doctor.id) },
+                            onOpenDoctor: { path.append(.detail(doctor)) }
+                        )
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.top, 24)
+                .padding(.bottom, 20)
+            }
+        }
     }
 
     private func confirmBooking(doctor: Doctor, slot: AppointmentSlot, reason: String, complaints: String) {
@@ -111,7 +150,17 @@ struct DoctorListView: View {
     }
 }
 
-#Preview {
+#Preview("Directory") {
     @Previewable @State var path: [DoctorRoute] = []
-    DoctorListView(path: $path)
+    DoctorListView(path: $path, loadDoctors: { Doctor.samples })
+}
+
+#Preview("Empty Directory") {
+    @Previewable @State var path: [DoctorRoute] = []
+    DoctorListView(path: $path, loadDoctors: { [] })
+}
+
+#Preview("Request Failed") {
+    @Previewable @State var path: [DoctorRoute] = []
+    DoctorListView(path: $path, loadDoctors: { throw APIError.connectionFailed })
 }

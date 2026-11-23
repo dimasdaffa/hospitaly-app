@@ -10,6 +10,7 @@ import SwiftUI
 
 struct RootView: View {
     let session: SessionStore
+    let doctorService: DoctorService
 
     var body: some View {
         Group {
@@ -24,7 +25,7 @@ struct RootView: View {
                     onCheckConnection: session.checkConnection
                 )
             case .signedIn(let profile):
-                MainTabView(profile: profile, onSignOut: session.signOut)
+                MainTabView(profile: profile, onSignOut: session.signOut, loadDoctors: loadDoctors)
             }
         }
         .tint(.themePrimary)
@@ -32,6 +33,12 @@ struct RootView: View {
             if session.phase == .restoring {
                 await session.restore()
             }
+        }
+    }
+
+    private func loadDoctors() async throws -> [Doctor] {
+        try await session.withPatientToken { token in
+            try await doctorService.list(token: token)
         }
     }
 
@@ -58,7 +65,7 @@ struct RootView: View {
         profileService: ProfileService(client: client),
         tokenStore: TokenStore(account: "preview"),
         phase: .signedOut
-    ))
+    ), doctorService: DoctorService(client: client))
 }
 
 #Preview("Restore Failed") {
@@ -68,5 +75,5 @@ struct RootView: View {
         profileService: ProfileService(client: client),
         tokenStore: TokenStore(account: "preview"),
         phase: .restoreFailed("Could not reach the server. Check your connection and try again.")
-    ))
+    ), doctorService: DoctorService(client: client))
 }

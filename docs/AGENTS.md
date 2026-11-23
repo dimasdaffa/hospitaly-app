@@ -17,6 +17,7 @@ Read this guide and [TECHREQ.md](TECHREQ.md) before working on Hospitaly UI, mod
 - Keep tab destinations and the views that present them in `Hospitaly/App/Navigation/`. Keep routes owned by a single feature with that feature.
 - Reuse existing components. Keep cross-feature UI and formatting in `Hospitaly/Shared/`. Add semantic colors to [Theme.swift](../Hospitaly/Shared/Theme.swift). Follow the project's Observation and concurrency settings.
 - Include a `#Preview` in every new SwiftUI View file. Use synthetic local data and give screens with materially different states a preview for each condition. Use local Preview state for interactive controls as needed.
+- Give every data-driven screen an empty state and preview. Distinguish an empty collection from loading, request failures, and filtered results. Use a fallback when an optional image is missing or fails to load. When a records list is empty, show a message that explains what records would appear there.
 - Defer dedicated accessibility work during the current slicing phase as requested by the user. Preserve the project target and dependency choices unless the task calls for a change.
 
 Use this header on every new Swift file. Substitute the filename and creation date in `dd/MM/yy` using `Asia/Jakarta`.

@@ -34,9 +34,11 @@ struct DoctorCardMetricsView: View {
                 .font(.system(size: 12, weight: .bold))
                 .foregroundStyle(Color.themeText)
 
-            Text("(\(doctor.reviewCount))")
-                .font(.system(size: 10))
-                .foregroundStyle(Color.themeMutedText)
+            if let count = doctor.reviewCount {
+                Text("(\(count))")
+                    .font(.system(size: 10))
+                    .foregroundStyle(Color.themeMutedText)
+            }
         }
         .padding(.horizontal, 8)
         .frame(height: 24)

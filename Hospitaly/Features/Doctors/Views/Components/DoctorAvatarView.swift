@@ -14,9 +14,7 @@ struct DoctorAvatarView: View {
 
     var body: some View {
         VStack(spacing: -14) {
-            Image(doctor.portraitName)
-                .resizable()
-                .scaledToFill()
+            portrait
                 .frame(width: size, height: size)
                 .grayscale(doctor.isAvailable ? 0 : 1)
                 .background(Color.themeSubtleSurface)
@@ -43,6 +41,31 @@ struct DoctorAvatarView: View {
             }
         }
     }
+
+    @ViewBuilder
+    private var portrait: some View {
+        if let name = doctor.portraitName {
+            Image(name)
+                .resizable()
+                .scaledToFill()
+        } else if let url = doctor.avatarURL {
+            AsyncImage(url: url) { phase in
+                if let image = phase.image {
+                    image.resizable().scaledToFill()
+                } else {
+                    placeholder
+                }
+            }
+        } else {
+            placeholder
+        }
+    }
+
+    private var placeholder: some View {
+        Image(systemName: "person.crop.circle")
+            .font(.system(size: size * 0.45, weight: .medium))
+            .foregroundStyle(Color.themeMutedText)
+    }
 }
 
 #Preview {
@@ -53,4 +76,15 @@ struct DoctorAvatarView: View {
     }
     .padding()
     .background(Color.themeCanvas)
+}
+
+#Preview("Missing Portrait") {
+    let doctor = {
+        var doctor = Doctor.samples[0]
+        doctor.portraitName = nil
+        return doctor
+    }()
+
+    DoctorAvatarView(doctor: doctor)
+        .padding()
 }

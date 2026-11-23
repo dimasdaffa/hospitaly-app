@@ -4,7 +4,7 @@
 
 ## 1. Product scope and sources
 
-Hospitaly is a SwiftUI patient app for the RS Permata Sehat learning project. The signed-in shell has Home, Doctors, Chat, and Profile tabs with a central Quick Access button. Profile reads from Vapor. The directory, booking, and appointments use local demo data. Home and Chat show placeholders.
+Hospitaly is a SwiftUI patient app for the RS Permata Sehat learning project. The signed-in shell has Home, Doctors, Chat, and Profile tabs with a central Quick Access button. Profile and the doctor directory read from Vapor. Doctor details use the directory payload. Scheduling, booking, and appointment history are at the prototype stage. Home and Chat show placeholders.
 
 | Question | Source of truth |
 | --- | --- |
@@ -73,9 +73,11 @@ Hospitaly/                                  # iOS repository root
 │   │   ├── Doctors/
 │   │   │   ├── Models/
 │   │   │   │   ├── Doctor.swift             # Doctor display model and local fixtures
+│   │   │   │   ├── DoctorResponse.swift     # Decode the Vapor directory payload
 │   │   │   │   └── DoctorRoute.swift        # Doctor and appointment destinations
+│   │   │   ├── Services/DoctorService.swift # Fetch the directory and map doctor cards
 │   │   │   ├── ViewModels/
-│   │   │   │   ├── DoctorListViewModel.swift   # Search, filters, and local favorites
+│   │   │   │   ├── DoctorListViewModel.swift   # Loading, search, filters, and local favorites
 │   │   │   │   └── DoctorDetailViewModel.swift # Dates, demo slots, and selection
 │   │   │   └── Views/
 │   │   │       ├── DoctorListView.swift     # Directory, navigation, and demo appointments
@@ -116,8 +118,8 @@ Hospitaly/                                  # iOS repository root
 | Sign in and restore the session | [RootView.swift](../Hospitaly/App/RootView.swift) | [SessionStore.swift](../Hospitaly/App/SessionStore.swift) owns sign-in, the loaded profile, and Keychain restoration. [LoginViewModel.swift](../Hospitaly/Features/Auth/ViewModels/LoginViewModel.swift) owns the form state and request feedback. |
 | Show the patient identity and log out | [ProfileView.swift](../Hospitaly/Features/Profile/Views/ProfileView.swift) | [ProfileService.swift](../Hospitaly/Features/Profile/Services/ProfileService.swift) fetches the profile. The session store provides it and clears the token at logout. |
 | Open tabs and Quick Access | [MainTabBar.swift](../Hospitaly/App/Navigation/MainTabBar.swift) | [MainTabView.swift](../Hospitaly/App/Navigation/MainTabView.swift) owns the selected tab, the Doctors navigation path, and [QuickAccessSheet.swift](../Hospitaly/App/Navigation/QuickAccessSheet.swift) presentation. The custom bar appears at tab roots. |
-| Navigate the Doctors demo | Doctors tab or Quick Access in [MainTabView.swift](../Hospitaly/App/Navigation/MainTabView.swift) | [DoctorListView.swift](../Hospitaly/Features/Doctors/Views/DoctorListView.swift) uses the shared navigation path and owns the in-memory appointment collection. |
-| Search, filter, and favorite doctors | [DoctorListView.swift](../Hospitaly/Features/Doctors/Views/DoctorListView.swift) | [DoctorListViewModel.swift](../Hospitaly/Features/Doctors/ViewModels/DoctorListViewModel.swift) owns the filters and favorites. [Doctor.swift](../Hospitaly/Features/Doctors/Models/Doctor.swift) provides the fixtures. |
+| Navigate Doctors | Doctors tab or Quick Access in [MainTabView.swift](../Hospitaly/App/Navigation/MainTabView.swift) | [DoctorListView.swift](../Hospitaly/Features/Doctors/Views/DoctorListView.swift) uses the shared navigation path and owns the in-memory appointment collection. |
+| Load, search, filter, and favorite doctors | [DoctorListView.swift](../Hospitaly/Features/Doctors/Views/DoctorListView.swift) | [DoctorService.swift](../Hospitaly/Features/Doctors/Services/DoctorService.swift) maps `GET /api/doctors`. [DoctorListViewModel.swift](../Hospitaly/Features/Doctors/ViewModels/DoctorListViewModel.swift) owns loading, filters, and session-local favorite changes. |
 | Pick a date and slot | [DoctorDetailView.swift](../Hospitaly/Features/Doctors/Views/DoctorDetailView.swift) | [DoctorDetailViewModel.swift](../Hospitaly/Features/Doctors/ViewModels/DoctorDetailViewModel.swift) derives demo availability, blocks occupied slots and clears the selected slot when the day changes. [DoctorAvatarView.swift](../Hospitaly/Features/Doctors/Views/Components/DoctorAvatarView.swift) applies grayscale in both list and detail when a doctor is unavailable. |
 | Submit a booking request | [BookingFormView.swift](../Hospitaly/Features/Appointments/Views/BookingFormView.swift) | The form owns input and validation. The directory's navigation host creates the pending local appointment and passes it to [BookingConfirmationView.swift](../Hospitaly/Features/Appointments/Views/BookingConfirmationView.swift). |
 | View appointments again | [MyAppointmentsView.swift](../Hospitaly/Features/Appointments/Views/MyAppointmentsView.swift) | The view groups demo appointments by status and time. It opens from confirmation, the directory calendar, or Quick Access. |
@@ -134,9 +136,6 @@ Hospitaly/
 │   │   │   ├── Views/PersonalInfoView.swift    # Edit personal information
 │   │   │   ├── Views/SecuritySettingsView.swift # Change password form
 │   │   │   └── ViewModels/ProfileViewModel.swift # Personal information edits
-│   │   ├── Doctors/
-│   │   │   ├── Models/DoctorResponse.swift     # Decode the Vapor doctor and map to the UI
-│   │   │   └── Services/DoctorService.swift    # Directory, details, availability, and favorites
 │   │   ├── Appointments/
 │   │   │   ├── Views/RescheduleView.swift              # Select a replacement slot
 │   │   │   ├── Views/CancelAppointmentView.swift       # Cancellation reason and optional note
@@ -202,8 +201,8 @@ Hospitaly/
 
 | Flow | Design references | iOS status |
 | --- | --- | --- |
-| Doctor directory and details | [Search](<../../RS Permata Sehat/Doctor Search List.png>) · [Available](<../../RS Permata Sehat/Doctor Details.png>) · [Full](<../../RS Permata Sehat/Doctor Details Not Avail.png>) | Local prototype with search, filters, favorites, available/full states, and date and slot selection. |
-| Booking and history | [Visit form](<../../RS Permata Sehat/Appointment Details.png>) · [Confirmation](<../../RS Permata Sehat/Make Appointment.png>) · [My Appointments](<../../RS Permata Sehat/Manage Appointment.png>) | Local prototype. A booking creates a pending appointment in memory and carries the chosen slot across screens. |
+| Doctor directory and details | [Search](<../../RS Permata Sehat/Doctor Search List.png>) · [Available](<../../RS Permata Sehat/Doctor Details.png>) · [Full](<../../RS Permata Sehat/Doctor Details Not Avail.png>) | The directory is integrated in source, with loading, empty, filtered-empty, and retry states. Photos fall back to a placeholder. Details use the directory payload and show a scheduling placeholder for API doctors. |
+| Booking and history | [Visit form](<../../RS Permata Sehat/Appointment Details.png>) · [Confirmation](<../../RS Permata Sehat/Make Appointment.png>) · [My Appointments](<../../RS Permata Sehat/Manage Appointment.png>) | The booking prototype uses fixture doctors. My Appointments displays in-memory demo data. |
 | Reschedule and cancellation | [Dashboard action](<../../RS Permata Sehat/Patient Dashboard.png>) · [Cancellation form](<../../RS Permata Sehat/Cancel Appointment.png>) · [Cancellation alert](<../../RS Permata Sehat/Cancellation Alert.png>) | Design references and backend available. Client actions are planned. |
 | Dashboard and care plan | [Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) | Home shows a placeholder. The dashboard and care plan are planned. |
 | Tab bar and shortcuts | [Quick Access](<../../RS Permata Sehat/Quick Access.png>) | Custom bar and bottom sheet are implemented. Appointments opens the existing appointment list. Find Doctors and Quick Book open the directory. Profile opens the account tab. Messages opens the Chat placeholder. Health Tracker and Records are disabled until their screens exist. |
@@ -220,7 +219,7 @@ Use the [patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-apl
 
 | Area | Client requirement |
 | --- | --- |
-| Session | Debug reachability uses `GET /health`. Sign-in calls `POST /api/auth/login`, then `GET /api/users/me` with Bearer authorization. Save the JWT in Keychain after confirming the account has the patient role. Vapor issues a JWT with a 24-hour expiry. During restore, a `401` clears the saved session. Temporary failures offer a retry. Logout clears the local token and works offline. Extend session expiry handling to future protected calls when those flows are integrated. [Auth handler](../../be-rumahsakit-swift/Sources/rumahsakit/Controllers/AuthController.swift) |
+| Session | Debug reachability uses `GET /health`. Sign-in calls `POST /api/auth/login`, then `GET /api/users/me` with Bearer authorization. Save the JWT in Keychain after confirming the account has the patient role. Vapor issues a JWT with a 24-hour expiry. During restoration or a directory fetch, a `401` clears the rejected session. Temporary failures offer a retry. Logout clears the local token and works offline. [Auth handler](../../be-rumahsakit-swift/Sources/rumahsakit/Controllers/AuthController.swift) |
 | Doctor payload | Demo doctor IDs and availability labels are UI values. Vapor provides UUIDs and an optional `nextAvailable` slot object. Handle optional profile fields and practice metadata. Use the doctor `id` for doctor details, schedules, and booking. Use the doctor `userId` as chat `receiverId`. [Doctor DTO](../../be-rumahsakit-swift/Sources/rumahsakit/DTOs/DoctorDTOs.swift#L25) |
 | Schedules | Read weekly hours from `GET /api/schedules?doctorId=…`. Read actual slots from `GET /api/doctors/:id/availability?from=…&to=…`. The server accepts an inclusive range of up to 31 days and returns 30-minute slots with an `available` flag. Clinic days and clock times are `YYYY-MM-DD` and `HH:mm` in `Asia/Jakarta`. JSON timestamps use ISO 8601. |
 | Booking | Send `doctorId`, `date`, `time`, `reason`, and optional `complaints` to `POST /api/appointments`. Display the server's status, ID, and reference number. Reuse an `Idempotency-Key` when retrying the same booking submission. On `409`, reload availability and let the patient choose a different slot. [Appointment DTO](../../be-rumahsakit-swift/Sources/rumahsakit/DTOs/AppointmentDTOs.swift) |
@@ -232,10 +231,10 @@ Use the [patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-apl
 ## 7. Delivery sequence and verification
 
 1. **Establish an authenticated connection.** API configuration, the shared client, sign-in, Keychain persistence, and a basic patient profile are integrated in source. iOS runtime verification is pending.
-2. **Integrate Doctors and booking.** Replace directory and detail fixtures, then connect slot lookup and booking. The server-created appointment must appear in My Appointments with the same doctor, time, status, and reference shown in confirmation.
+2. **Integrate Doctors and booking.** The directory fetch is wired in source. Device verification, the detail endpoint, slot lookup, and booking are pending. The server-created appointment must appear in My Appointments with the same doctor, time, status, and reference shown in confirmation.
 3. **Complete appointment management.** Connect rescheduling, cancellation requests, history, and in-app notification status.
 4. **Expand patient features.** Add the dashboard and care plan, then Health Tracker, records and lab, documents, chat, and profile settings according to user priority.
 
 When verification is requested, cover both doctor states, date changes, disabled slots, a blank visit reason, and a new appointment appearing in Upcoming. During API integration, also cover expired sessions, a conflicting slot, and document access boundaries. The Hurl suite verifies backend behavior. Record iOS build, Simulator, Preview, or device evidence separately with the revision and environment.
 
-Doctor schedules, prices, portraits, and references are demo values. New appointments and favorites live in memory for the app session. Builds, tests, debugging, Simulator runs, and Preview rendering require a user request. [Agent guide](AGENTS.md#verification-and-handoff)
+Appointment history and the booking prototype use demo values. The directory reads favorite status from Vapor and keeps toggle changes in memory for the app session. Builds, tests, debugging, Simulator runs, and Preview rendering require a user request. [Agent guide](AGENTS.md#verification-and-handoff)

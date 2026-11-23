@@ -30,18 +30,24 @@ struct DoctorDetailView: View {
                         .font(.title3.bold())
                         .foregroundStyle(Color.themeText)
 
-                    Text(doctor.bio)
-                        .font(.subheadline)
-                        .foregroundStyle(Color.themeSecondaryText)
-                        .lineSpacing(4)
-                        .lineLimit(showsFullBio ? nil : 3)
+                    if let bio = doctor.bio {
+                        Text(bio)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.themeSecondaryText)
+                            .lineSpacing(4)
+                            .lineLimit(showsFullBio ? nil : 3)
 
-                    Button(showsFullBio ? "Read less" : "Read more") {
-                        showsFullBio.toggle()
+                        Button(showsFullBio ? "Read less" : "Read more") {
+                            showsFullBio.toggle()
+                        }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.themePrimary)
+                        .buttonStyle(.plain)
+                    } else {
+                        Text("No biography has been added yet.")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.themeSecondaryText)
                     }
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.themePrimary)
-                    .buttonStyle(.plain)
                 }
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -61,9 +67,11 @@ struct DoctorDetailView: View {
                                 .font(.headline)
                                 .foregroundStyle(Color.themeText)
 
-                            Text(doctor.practiceLocation)
-                                .font(.footnote)
-                                .foregroundStyle(Color.themeSecondaryText)
+                            if !doctor.practiceLocation.isEmpty {
+                                Text(doctor.practiceLocation)
+                                    .font(.footnote)
+                                    .foregroundStyle(Color.themeSecondaryText)
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -71,10 +79,15 @@ struct DoctorDetailView: View {
                     .background(Color.themeSurface, in: .rect(cornerRadius: 16))
                 }
 
-                if doctor.isAvailable {
+                if doctor.canBookDemoSlot {
                     DoctorScheduleView(viewModel: viewModel)
-                } else {
+                } else if doctor.usesDemoSchedule {
                     DoctorWeeklyScheduleView()
+                } else {
+                    ContentUnavailableView(
+                        "Online Scheduling", systemImage: "calendar",
+                        description: Text("Online scheduling is coming soon.")
+                    )
                 }
             }
             .frame(maxWidth: 508)
@@ -84,8 +97,8 @@ struct DoctorDetailView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if doctor.isAvailable {
-                DoctorBookingBar(slot: viewModel.selectedSlot, fee: doctor.consultationFee, onContinue: onContinue)
+            if doctor.canBookDemoSlot, let fee = doctor.consultationFee {
+                DoctorBookingBar(slot: viewModel.selectedSlot, fee: fee, onContinue: onContinue)
             }
         }
         .background(Color.themeDetailCanvas.ignoresSafeArea())

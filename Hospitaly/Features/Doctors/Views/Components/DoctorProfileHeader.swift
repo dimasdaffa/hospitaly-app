@@ -19,9 +19,11 @@ struct DoctorProfileHeader: View {
                     .font(.title2.bold())
                     .foregroundStyle(Color.themeText)
 
-                Text("STR/SIP: \(doctor.license)")
-                    .font(.caption)
-                    .foregroundStyle(Color.themeSecondaryText)
+                if let license = doctor.license {
+                    Text("STR/SIP: \(license)")
+                        .font(.caption)
+                        .foregroundStyle(Color.themeSecondaryText)
+                }
 
                 Text("\(doctor.specialty) Specialist")
                     .font(.subheadline.weight(.semibold))
