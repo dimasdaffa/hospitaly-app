@@ -8,11 +8,23 @@
 import SwiftUI
 
 struct MyAppointmentsView: View {
-    let appointments: [Appointment]
+    let loadAppointments: (@MainActor () async throws -> [Appointment])?
 
+    @State private var viewModel: AppointmentsViewModel
     @State private var showsHistory = false
 
+    init(
+        appointments: [Appointment],
+        loadAppointments: (@MainActor () async throws -> [Appointment])? = nil
+    ) {
+        self.loadAppointments = loadAppointments
+        _viewModel = State(initialValue: AppointmentsViewModel(
+            appointments: appointments, loadsFromAPI: loadAppointments != nil
+        ))
+    }
+
     var body: some View {
+        let appointments = viewModel.appointments
         let upcoming = appointments.filter(\.isUpcoming).sorted { $0.slot.start < $1.slot.start }
         let history = appointments.filter { !$0.isUpcoming }.sorted { $0.slot.start > $1.slot.start }
         let visibleAppointments = showsHistory ? history : upcoming
@@ -31,13 +43,30 @@ struct MyAppointmentsView: View {
             .padding(.horizontal, 16)
             .padding(.top, 12)
 
-            if visibleAppointments.isEmpty {
+            if case .failed(let message) = viewModel.phase {
+                ContentUnavailableView {
+                    Label("Couldn’t Load Appointments", systemImage: "exclamationmark.circle")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Retry", action: viewModel.reload)
+                        .buttonStyle(.borderedProminent)
+                }
+            }
+
+            if viewModel.phase == .loading && visibleAppointments.isEmpty {
+                ProgressView("Loading appointments…")
+                    .padding(.vertical, 32)
+            } else if visibleAppointments.isEmpty && viewModel.phase == .loaded {
                 ContentUnavailableView(
                     showsHistory ? "No appointment history" : "No upcoming appointments",
-                    systemImage: "calendar"
+                    systemImage: "calendar",
+                    description: showsHistory
+                        ? Text("Past, cancelled, and rejected appointments will appear here.")
+                        : Text("Your upcoming appointments will appear here after you request a visit.")
                 )
                 .foregroundStyle(Color.themeSecondaryText)
-            } else {
+            } else if !visibleAppointments.isEmpty {
                 ScrollView {
                     LazyVStack(spacing: 14) {
                         ForEach(visibleAppointments) { appointment in
@@ -55,6 +84,18 @@ struct MyAppointmentsView: View {
         .background(Color.themeCanvas.ignoresSafeArea())
         .navigationTitle("My Appointments")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if loadAppointments != nil && viewModel.phase == .loaded {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Refresh", systemImage: "arrow.clockwise", action: viewModel.reload)
+                }
+            }
+        }
+        .task(id: viewModel.loadAttempt) {
+            if let loadAppointments {
+                await viewModel.load(using: loadAppointments)
+            }
+        }
     }
 
     private func tab(
@@ -85,5 +126,17 @@ struct MyAppointmentsView: View {
 #Preview {
     NavigationStack {
         MyAppointmentsView(appointments: [.sample] + Appointment.samples)
+    }
+}
+
+#Preview("Empty Appointments") {
+    NavigationStack {
+        MyAppointmentsView(appointments: [])
+    }
+}
+
+#Preview("Request Failed") {
+    NavigationStack {
+        MyAppointmentsView(appointments: [], loadAppointments: { throw APIError.connectionFailed })
     }
 }

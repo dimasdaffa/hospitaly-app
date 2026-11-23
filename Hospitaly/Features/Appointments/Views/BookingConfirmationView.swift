@@ -62,13 +62,15 @@ struct BookingConfirmationView: View {
                 .background(Color.themeAvailableBackground.opacity(0.60), in: Circle())
                 .padding(.bottom, 4)
 
-            Text("Appointment Requested!")
+            Text(appointment.status == .pending ? "Appointment Requested!" : "Appointment Details")
                 .font(.largeTitle.bold())
                 .foregroundStyle(Color.themeText)
 
-            Text("Your request is pending approval.")
-                .font(.body)
-                .foregroundStyle(Color.themeSecondaryText)
+            if appointment.status == .pending {
+                Text("Your request is pending approval.")
+                    .font(.body)
+                    .foregroundStyle(Color.themeSecondaryText)
+            }
         }
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
@@ -83,12 +85,7 @@ struct BookingConfirmationView: View {
 
                 Spacer()
 
-                Text("Pending Approval")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.themePendingText)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color.themePendingBackground, in: Capsule())
+                AppointmentStatusBadge(status: appointment.status)
             }
 
             HStack(spacing: 14) {
@@ -98,9 +95,11 @@ struct BookingConfirmationView: View {
                     Text(appointment.doctor.name)
                         .font(.headline)
 
-                    Text(appointment.doctor.specialty)
-                        .font(.subheadline)
-                        .foregroundStyle(Color.themeSecondaryText)
+                    if !appointment.doctor.specialty.isEmpty {
+                        Text(appointment.doctor.specialty)
+                            .font(.subheadline)
+                            .foregroundStyle(Color.themeSecondaryText)
+                    }
                 }
             }
 
@@ -112,7 +111,7 @@ struct BookingConfirmationView: View {
             )
             row(
                 "LOCATION", value: appointment.doctor.hospital, icon: "mappin",
-                subtitle: appointment.doctor.practiceLocation
+                subtitle: appointment.doctor.practiceLocation.isEmpty ? nil : appointment.doctor.practiceLocation
             )
             row("REFERENCE ID", value: appointment.referenceNumber, icon: "doc.text")
         }

@@ -12,7 +12,7 @@ struct DoctorBookingBar: View {
     let slot: AppointmentSlot?
     let fee: Int?
     var currency: String? = "IDR"
-    let onContinue: ((AppointmentSlot) -> Void)?
+    let onContinue: (AppointmentSlot) -> Void
 
     var body: some View {
         VStack(spacing: 12) {
@@ -52,17 +52,10 @@ struct DoctorBookingBar: View {
                 }
             }
 
-            if let onContinue {
-                PrimaryActionButton(title: "Continue to Reason", icon: "arrow.right") {
-                    if let slot { onContinue(slot) }
-                }
-                .disabled(slot == nil)
-            } else {
-                Text("Online booking is coming soon.")
-                    .font(.footnote)
-                    .foregroundStyle(Color.themeSecondaryText)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            PrimaryActionButton(title: "Continue to Reason", icon: "arrow.right") {
+                if let slot { onContinue(slot) }
             }
+            .disabled(slot == nil)
         }
         .frame(maxWidth: 508)
         .padding(.horizontal, 20)
@@ -87,6 +80,6 @@ struct DoctorBookingBar: View {
 }
 
 #Preview("Fee Unavailable") {
-    DoctorBookingBar(slot: .sample(), fee: nil, onContinue: nil)
+    DoctorBookingBar(slot: .sample(), fee: nil, onContinue: { _ in })
         .background(Color.themeDetailCanvas)
 }

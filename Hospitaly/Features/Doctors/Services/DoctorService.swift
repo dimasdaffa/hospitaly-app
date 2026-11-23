@@ -59,7 +59,7 @@ struct DoctorService {
         )
     }
 
-    private func displayDoctor(_ doctor: DoctorResponse, nextAvailable: String?) -> Doctor {
+    func displayDoctor(_ doctor: DoctorResponse, nextAvailable: String? = nil) -> Doctor {
         Doctor(
             id: doctor.id.uuidString,
             name: doctor.name,

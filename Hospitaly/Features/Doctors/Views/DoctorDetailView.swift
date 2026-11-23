@@ -13,13 +13,13 @@ struct DoctorDetailView: View {
     @State private var showsFullBio = false
 
     let loadDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)?
-    let onContinue: (AppointmentSlot) -> Void
+    let onContinue: (Doctor, AppointmentSlot) -> Void
 
     init(
         doctor: Doctor,
         appointments: [Appointment],
         loadDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)? = nil,
-        onContinue: @escaping (AppointmentSlot) -> Void
+        onContinue: @escaping (Doctor, AppointmentSlot) -> Void
     ) {
         _viewModel = State(initialValue: DoctorDetailViewModel(doctor: doctor, appointments: appointments))
         self.loadDetails = loadDetails
@@ -96,12 +96,12 @@ struct DoctorDetailView: View {
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if doctor.canBookDemoSlot || viewModel.selectedSlot != nil {
+            if doctor.canBookDemoSlot || viewModel.hasBookableSlots {
                 DoctorBookingBar(
                     slot: viewModel.selectedSlot,
                     fee: doctor.consultationFee,
                     currency: doctor.consultationCurrency,
-                    onContinue: doctor.canBookDemoSlot ? onContinue : nil
+                    onContinue: { slot in onContinue(doctor, slot) }
                 )
             }
         }
@@ -151,13 +151,13 @@ struct DoctorDetailView: View {
 
 #Preview("Available") {
     NavigationStack {
-        DoctorDetailView(doctor: Doctor.samples[0], appointments: []) { _ in }
+        DoctorDetailView(doctor: Doctor.samples[0], appointments: []) { _, _ in }
     }
 }
 
 #Preview("Full Today") {
     NavigationStack {
-        DoctorDetailView(doctor: Doctor.samples[1], appointments: []) { _ in }
+        DoctorDetailView(doctor: Doctor.samples[1], appointments: []) { _, _ in }
     }
 }
 
@@ -173,7 +173,7 @@ struct DoctorDetailView: View {
             doctor: doctor,
             appointments: [],
             loadDetails: { _, _ in DoctorDetailData(doctor: doctor, slots: [], weeklyHours: []) },
-            onContinue: { _ in }
+            onContinue: { _, _ in }
         )
     }
 }
@@ -194,7 +194,7 @@ struct DoctorDetailView: View {
             doctor: doctor,
             appointments: [],
             loadDetails: { _, _ in DoctorDetailData(doctor: doctor, slots: [available, occupied], weeklyHours: []) },
-            onContinue: { _ in }
+            onContinue: { _, _ in }
         )
     }
 }

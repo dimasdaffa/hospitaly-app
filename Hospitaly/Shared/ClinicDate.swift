@@ -36,6 +36,10 @@ enum ClinicDate {
         dayFormatter.string(from: date)
     }
 
+    static func clockString(_ date: Date) -> String {
+        String(format: "%02d:%02d", calendar.component(.hour, from: date), calendar.component(.minute, from: date))
+    }
+
     static func date(day: String, time: String) -> Date? {
         slotFormatter.date(from: "\(day) \(time)")
     }

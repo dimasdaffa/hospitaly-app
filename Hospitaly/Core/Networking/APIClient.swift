@@ -43,14 +43,18 @@ struct APIClient: Sendable {
         return try decode(data)
     }
 
-    func post<Body: Encodable, Response: Decodable>(_ path: String, body: Body) async throws -> Response {
-        let data = try await send(path, method: "POST", body: JSONEncoder().encode(body))
+    func post<Body: Encodable, Response: Decodable>(
+        _ path: String, body: Body, token: String? = nil, idempotencyKey: UUID? = nil
+    ) async throws -> Response {
+        let data = try await send(
+            path, method: "POST", token: token, body: JSONEncoder().encode(body), idempotencyKey: idempotencyKey
+        )
         return try decode(data)
     }
 
     private func send(
         _ path: String, method: String, token: String? = nil, body: Data? = nil,
-        query: [URLQueryItem] = []
+        query: [URLQueryItem] = [], idempotencyKey: UUID? = nil
     ) async throws -> Data {
         let url = baseURL.appending(path: path)
         var request = URLRequest(url: query.isEmpty ? url : url.appending(queryItems: query))
@@ -59,6 +63,10 @@ struct APIClient: Sendable {
 
         if let token {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        if let idempotencyKey {
+            request.setValue(idempotencyKey.uuidString, forHTTPHeaderField: "Idempotency-Key")
         }
 
         if let body {

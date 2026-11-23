@@ -20,10 +20,12 @@ struct AppointmentCardView: View {
                         .font(.headline)
                         .foregroundStyle(Color.themeText)
 
-                    Text(appointment.doctor.specialty)
-                        .font(.caption.weight(.semibold))
-                        .textCase(.uppercase)
-                        .foregroundStyle(Color.themePrimary)
+                    if !appointment.doctor.specialty.isEmpty {
+                        Text(appointment.doctor.specialty)
+                            .font(.caption.weight(.semibold))
+                            .textCase(.uppercase)
+                            .foregroundStyle(Color.themePrimary)
+                    }
 
                     Label("\(appointment.slot.dateLabel) · \(appointment.slot.timeLabel)", systemImage: "calendar")
                         .font(.footnote)
@@ -36,12 +38,10 @@ struct AppointmentCardView: View {
 
             Divider()
 
-            HStack {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(appointment.reason)
                     .font(.subheadline)
                     .foregroundStyle(Color.themeText)
-
-                Spacer(minLength: 10)
 
                 Text(appointment.referenceNumber)
                     .font(.caption)

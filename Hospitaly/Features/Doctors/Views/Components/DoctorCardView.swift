@@ -71,7 +71,7 @@ struct DoctorCardView: View {
                 Spacer(minLength: 0)
 
                 Button(action: onOpenDoctor) {
-                    Text(doctor.canBookDemoSlot ? "Book" : "Details")
+                    Text(doctor.isAvailable ? "Book" : "Details")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(doctor.isAvailable ? Color.themeSurface : Color.themeSecondaryText)
                         .frame(minWidth: doctor.isAvailable ? 83 : 95, minHeight: 40)

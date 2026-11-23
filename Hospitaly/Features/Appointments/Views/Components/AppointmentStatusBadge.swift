@@ -11,7 +11,7 @@ struct AppointmentStatusBadge: View {
     let status: Appointment.Status
 
     var body: some View {
-        Text(status.rawValue)
+        Text(status.title)
             .font(.caption.weight(.semibold))
             .foregroundStyle(foreground)
             .padding(.horizontal, 10)
@@ -21,17 +21,19 @@ struct AppointmentStatusBadge: View {
 
     private var foreground: Color {
         switch status {
-        case .pending: .themePendingText
+        case .pending, .cancellationRequested: .themePendingText
         case .approved: .themeAvailableText
-        case .completed: .themeSecondaryText
+        case .rejected, .cancelled: .themePrimary
+        case .completed, .unknown: .themeSecondaryText
         }
     }
 
     private var background: Color {
         switch status {
-        case .pending: .themePendingBackground
+        case .pending, .cancellationRequested: .themePendingBackground
         case .approved: .themeAvailableBackground
-        case .completed: .themeSubtleSurface
+        case .rejected, .cancelled: .themePrimary.opacity(0.08)
+        case .completed, .unknown: .themeSubtleSurface
         }
     }
 }

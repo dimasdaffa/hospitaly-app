@@ -9,5 +9,5 @@ enum DoctorRoute: Hashable {
     case detail(Doctor)
     case booking(Doctor, AppointmentSlot)
     case confirmation(Appointment)
-    case appointments
+    case appointments(confirmed: Appointment?)
 }

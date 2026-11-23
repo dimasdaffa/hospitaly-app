@@ -9,24 +9,50 @@ import Foundation
 
 struct Appointment: Identifiable, Hashable, Sendable {
     enum Status: String, Hashable, Sendable {
-        case pending = "Pending"
-        case approved = "Approved"
-        case completed = "Completed"
+        case pending, approved, completed, rejected, cancelled, unknown
+        case cancellationRequested = "cancellation_requested"
+
+        var title: String {
+            switch self {
+            case .pending: "Pending Approval"
+            case .approved: "Approved"
+            case .completed: "Completed"
+            case .rejected: "Rejected"
+            case .cancelled: "Cancelled"
+            case .cancellationRequested: "Cancellation Requested"
+            case .unknown: "Status Unavailable"
+            }
+        }
     }
 
-    let id = UUID()
+    let id: UUID
     let doctor: Doctor
     let slot: AppointmentSlot
     let reason: String
     let complaints: String
-    var status: Status = .pending
+    let status: Status
+    let referenceNumber: String
 
-    var referenceNumber: String {
-        "REF-\(id.uuidString.prefix(8))"
+    init(
+        id: UUID = UUID(), doctor: Doctor, slot: AppointmentSlot, reason: String,
+        complaints: String, status: Status = .pending, referenceNumber: String? = nil
+    ) {
+        self.id = id
+        self.doctor = doctor
+        self.slot = slot
+        self.reason = reason
+        self.complaints = complaints
+        self.status = status
+        self.referenceNumber = referenceNumber ?? "REF-\(id.uuidString.prefix(8))"
     }
 
     var isUpcoming: Bool {
-        status != .completed && slot.end > .now
+        switch status {
+        case .completed, .cancelled, .rejected:
+            false
+        case .pending, .approved, .cancellationRequested, .unknown:
+            slot.end > .now
+        }
     }
 
     static let sample = Appointment(

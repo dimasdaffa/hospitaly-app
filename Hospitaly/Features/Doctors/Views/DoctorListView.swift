@@ -10,11 +10,14 @@ import SwiftUI
 
 struct DoctorListView: View {
     @State private var viewModel = DoctorListViewModel()
-    @State private var appointments = Appointment.samples
+    @State private var demoAppointments = Appointment.samples
+    @State private var availabilityRevision = 0
 
     @Binding var path: [DoctorRoute]
     let loadDoctors: @MainActor () async throws -> [Doctor]
     var loadDoctorDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)? = nil
+    var loadAppointments: (@MainActor () async throws -> [Appointment])? = nil
+    var bookAppointment: (@MainActor (BookingRequest, Doctor) async throws -> Appointment)? = nil
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -26,7 +29,7 @@ struct DoctorListView: View {
                     .background(Color.themeSurface, ignoresSafeAreaEdges: .top)
                     .overlay(alignment: .trailing) {
                         Button {
-                            path.append(.appointments)
+                            path.append(.appointments(confirmed: nil))
                         } label: {
                             Image(systemName: "calendar")
                                 .font(.system(size: 19, weight: .medium))
@@ -69,23 +72,24 @@ struct DoctorListView: View {
             .navigationDestination(for: DoctorRoute.self) { route in
                 switch route {
                 case .detail(let doctor):
-                    DoctorDetailView(doctor: doctor, appointments: appointments, loadDetails: loadDoctorDetails) { slot in
-                        if doctor.usesDemoSchedule {
-                            path.append(.booking(doctor, slot))
-                        }
+                    DoctorDetailView(doctor: doctor, appointments: demoAppointments, loadDetails: loadDoctorDetails) {
+                        updatedDoctor, slot in
+                        path.append(.booking(updatedDoctor, slot))
                     }
+                    .id(availabilityRevision)
                 case .booking(let doctor, let slot):
-                    BookingFormView(doctor: doctor, slot: slot) { reason, complaints in
-                        confirmBooking(doctor: doctor, slot: slot, reason: reason, complaints: complaints)
-                    }
+                    bookingForm(doctor: doctor, slot: slot)
                 case .confirmation(let appointment):
                     BookingConfirmationView(
                         appointment: appointment,
-                        onViewAppointments: { path = [.appointments] },
+                        onViewAppointments: { path = [.appointments(confirmed: appointment)] },
                         onBackToDoctors: { path.removeAll() }
                     )
-                case .appointments:
-                    MyAppointmentsView(appointments: appointments)
+                case .appointments(let confirmed):
+                    MyAppointmentsView(
+                        appointments: loadAppointments == nil ? demoAppointments : (confirmed.map { [$0] } ?? []),
+                        loadAppointments: loadAppointments
+                    )
                 }
             }
         }
@@ -147,10 +151,34 @@ struct DoctorListView: View {
         }
     }
 
-    private func confirmBooking(doctor: Doctor, slot: AppointmentSlot, reason: String, complaints: String) {
-        let appointment = Appointment(doctor: doctor, slot: slot, reason: reason, complaints: complaints)
-        appointments.append(appointment)
-        path = [.confirmation(appointment)]
+    private func bookingForm(doctor: Doctor, slot: AppointmentSlot) -> BookingFormView {
+        BookingFormView(
+            doctor: doctor,
+            slot: slot,
+            submitBooking: { booking in try await submit(booking, doctor: doctor, slot: slot) },
+            onBooked: { appointment in
+                guard path.last == .booking(doctor, slot) else { return }
+                path = [.confirmation(appointment)]
+            },
+            onChooseAnotherTime: {
+                guard path.last == .booking(doctor, slot) else { return }
+                availabilityRevision += 1
+                path.removeLast()
+            }
+        )
+    }
+
+    private func submit(_ booking: BookingRequest, doctor: Doctor, slot: AppointmentSlot) async throws -> Appointment {
+        if doctor.usesDemoSchedule {
+            let appointment = Appointment(
+                doctor: doctor, slot: slot, reason: booking.reason, complaints: booking.complaints ?? ""
+            )
+            demoAppointments.append(appointment)
+            return appointment
+        }
+
+        guard let bookAppointment else { throw APIError.invalidConfiguration }
+        return try await bookAppointment(booking, doctor)
     }
 }
 

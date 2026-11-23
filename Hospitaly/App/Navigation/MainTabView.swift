@@ -17,6 +17,8 @@ struct MainTabView: View {
     let onSignOut: @MainActor () throws -> Void
     let loadDoctors: @MainActor () async throws -> [Doctor]
     var loadDoctorDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)? = nil
+    var loadAppointments: (@MainActor () async throws -> [Appointment])? = nil
+    var bookAppointment: (@MainActor (BookingRequest, Doctor) async throws -> Appointment)? = nil
 
     var body: some View {
         TabView(selection: $selection) {
@@ -26,7 +28,10 @@ struct MainTabView: View {
             }
 
             Tab(MainTab.doctors.title, systemImage: MainTab.doctors.symbol, value: MainTab.doctors) {
-                DoctorListView(path: $doctorPath, loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails)
+                DoctorListView(
+                    path: $doctorPath, loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails,
+                    loadAppointments: loadAppointments, bookAppointment: bookAppointment
+                )
                     .toolbarVisibility(.hidden, for: .tabBar)
             }
 
@@ -73,7 +78,7 @@ struct MainTabView: View {
     }
 
     private func openAppointmentsFromMenu() {
-        doctorPath = [.appointments]
+        doctorPath = [.appointments(confirmed: nil)]
         selection = .doctors
         isQuickAccessPresented = false
     }

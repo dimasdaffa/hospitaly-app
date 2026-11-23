@@ -11,6 +11,7 @@ import SwiftUI
 struct RootView: View {
     let session: SessionStore
     let doctorService: DoctorService
+    let appointmentService: AppointmentService
 
     var body: some View {
         Group {
@@ -27,7 +28,8 @@ struct RootView: View {
             case .signedIn(let profile):
                 MainTabView(
                     profile: profile, onSignOut: session.signOut,
-                    loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails
+                    loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails,
+                    loadAppointments: loadAppointments, bookAppointment: bookAppointment
                 )
             }
         }
@@ -48,6 +50,18 @@ struct RootView: View {
     private func loadDoctorDetails(id: String, range: ClosedRange<Date>) async throws -> DoctorDetailData {
         try await session.withPatientToken { token in
             try await doctorService.details(id: id, range: range, token: token)
+        }
+    }
+
+    private func loadAppointments() async throws -> [Appointment] {
+        try await session.withPatientToken { token in
+            try await appointmentService.list(token: token)
+        }
+    }
+
+    private func bookAppointment(_ booking: BookingRequest, doctor: Doctor) async throws -> Appointment {
+        try await session.withPatientToken { token in
+            try await appointmentService.book(booking, doctor: doctor, token: token)
         }
     }
 
@@ -74,7 +88,7 @@ struct RootView: View {
         profileService: ProfileService(client: client),
         tokenStore: TokenStore(account: "preview"),
         phase: .signedOut
-    ), doctorService: DoctorService(client: client))
+    ), doctorService: DoctorService(client: client), appointmentService: AppointmentService(client: client))
 }
 
 #Preview("Restore Failed") {
@@ -84,5 +98,5 @@ struct RootView: View {
         profileService: ProfileService(client: client),
         tokenStore: TokenStore(account: "preview"),
         phase: .restoreFailed("Could not reach the server. Check your connection and try again.")
-    ), doctorService: DoctorService(client: client))
+    ), doctorService: DoctorService(client: client), appointmentService: AppointmentService(client: client))
 }
