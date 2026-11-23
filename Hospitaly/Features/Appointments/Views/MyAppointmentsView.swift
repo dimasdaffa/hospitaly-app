@@ -9,34 +9,22 @@ import Foundation
 import SwiftUI
 
 struct MyAppointmentsView: View {
-    private enum Change: Identifiable {
-        case details(Appointment)
-        case reschedule(Appointment)
-        case cancel(Appointment)
-
-        var id: String {
-            switch self {
-            case .details(let appointment): "details-\(appointment.id.uuidString)"
-            case .reschedule(let appointment): "reschedule-\(appointment.id.uuidString)"
-            case .cancel(let appointment): "cancel-\(appointment.id.uuidString)"
-            }
-        }
-    }
-
     let loadAppointments: (@MainActor () async throws -> [Appointment])?
     let management: AppointmentManagement?
 
     @State private var viewModel: AppointmentsViewModel
     @State private var showsHistory = false
-    @State private var change: Change?
+    @State private var change: AppointmentPresentation?
 
     init(
         appointments: [Appointment],
         loadAppointments: (@MainActor () async throws -> [Appointment])? = nil,
-        management: AppointmentManagement? = nil
+        management: AppointmentManagement? = nil,
+        presenting: AppointmentPresentation? = nil
     ) {
         self.loadAppointments = loadAppointments
         self.management = management
+        _change = State(initialValue: presenting)
         _viewModel = State(initialValue: AppointmentsViewModel(
             appointments: appointments, loadsFromAPI: loadAppointments != nil
         ))

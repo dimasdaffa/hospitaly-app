@@ -30,7 +30,7 @@ struct DoctorListView: View {
                     .background(Color.themeSurface, ignoresSafeAreaEdges: .top)
                     .overlay(alignment: .trailing) {
                         Button {
-                            path.append(.appointments(confirmed: nil))
+                            path.append(.appointments(seed: nil))
                         } label: {
                             Image(systemName: "calendar")
                                 .font(.system(size: 19, weight: .medium))
@@ -83,14 +83,14 @@ struct DoctorListView: View {
                 case .confirmation(let appointment):
                     BookingConfirmationView(
                         appointment: appointment,
-                        onViewAppointments: { path = [.appointments(confirmed: appointment)] },
+                        onViewAppointments: { path = [.appointments(seed: appointment)] },
                         onBackToDoctors: { path.removeAll() }
                     )
-                case .appointments(let confirmed):
+                case .appointments(let seed, let presentation):
                     MyAppointmentsView(
-                        appointments: loadAppointments == nil ? demoAppointments : (confirmed.map { [$0] } ?? []),
+                        appointments: loadAppointments == nil ? demoAppointments : (seed.map { [$0] } ?? []),
                         loadAppointments: loadAppointments,
-                        management: appointmentManagement
+                        management: appointmentManagement, presenting: presentation
                     )
                 }
             }

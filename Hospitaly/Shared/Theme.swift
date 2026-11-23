@@ -10,6 +10,7 @@ import SwiftUI
 extension Color {
     static let themePrimary = Color(hex: 0xDB143C)
     static let themePrimaryHighlight = Color(hex: 0xF04143)
+    static let themeDashboardHeroEnd = Color(hex: 0xFF859A)
     static let themeDetailCanvas = Color(hex: 0xF5F7F9)
     static let themeCanvas = Color(hex: 0xF7F5F5)
     static let themeSurface = Color.white

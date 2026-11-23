@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct MainTabView: View {
-    @State private var selection: MainTab = .profile
+    @State private var selection: MainTab = .home
     @State private var doctorPath: [DoctorRoute] = []
     @State private var isQuickAccessPresented = false
     @State private var isNotificationsPresented = false
@@ -62,7 +62,7 @@ struct MainTabView: View {
         }
         .sheet(isPresented: $isQuickAccessPresented) {
             QuickAccessSheet(
-                onOpenTab: openTabFromMenu,
+                onOpenTab: openTab,
                 onOpenAppointments: openAppointmentsFromMenu
             )
         }
@@ -74,32 +74,18 @@ struct MainTabView: View {
     }
 
     private var home: some View {
-        NavigationStack {
-            ContentUnavailableView("Dashboard Coming Soon", systemImage: "house")
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.themeCanvas.ignoresSafeArea())
-                .navigationTitle("Home")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    if loadNotifications != nil, markNotificationRead != nil {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            Button {
-                                isNotificationsPresented = true
-                            } label: {
-                                Label("Notifications", systemImage: "bell")
-                                    .labelStyle(.iconOnly)
-                                    .overlay(alignment: .topTrailing) {
-                                        if notifications.hasUnread {
-                                            Circle()
-                                                .fill(Color.themePrimary)
-                                                .frame(width: 7, height: 7)
-                                        }
-                                    }
-                            }
-                        }
-                    }
-                }
-        }
+        let canOpenNotifications = loadNotifications != nil && markNotificationRead != nil
+
+        return HomeView(
+            patientName: profile.name,
+            isActive: selection == .home,
+            hasUnreadNotifications: notifications.hasUnread,
+            loadAppointments: loadAppointments ?? { [] },
+            onBook: { openTab(.doctors) },
+            onSeeAll: { openAppointments() },
+            onOpenAppointment: { openAppointments(presenting: $0) },
+            onOpenNotifications: canOpenNotifications ? { isNotificationsPresented = true } : nil
+        )
         .sheet(isPresented: $isNotificationsPresented) {
             if let loadNotifications, let markNotificationRead {
                 NavigationStack {
@@ -119,7 +105,7 @@ struct MainTabView: View {
             .background(Color.themeCanvas.ignoresSafeArea())
     }
 
-    private func openTabFromMenu(_ tab: MainTab) {
+    private func openTab(_ tab: MainTab) {
         if tab == .doctors {
             doctorPath.removeAll()
         }
@@ -129,9 +115,13 @@ struct MainTabView: View {
     }
 
     private func openAppointmentsFromMenu() {
-        doctorPath = [.appointments(confirmed: nil)]
-        selection = .doctors
         isQuickAccessPresented = false
+        openAppointments()
+    }
+
+    private func openAppointments(presenting presentation: AppointmentPresentation? = nil) {
+        doctorPath = [.appointments(seed: presentation?.appointment, presenting: presentation)]
+        selection = .doctors
     }
 }
 
