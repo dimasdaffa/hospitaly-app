@@ -9,6 +9,8 @@ import SwiftUI
 
 extension Color {
     static let themePrimary = Color(hex: 0xDB143C)
+    static let themePrimaryHighlight = Color(hex: 0xF04143)
+    static let themeDetailCanvas = Color(hex: 0xF5F7F9)
     static let themeCanvas = Color(hex: 0xF7F5F5)
     static let themeSurface = Color.white
     static let themeSubtleSurface = Color(hex: 0xF3F4F6)
@@ -26,10 +28,15 @@ extension Color {
     static let themeAvailableDot = Color(hex: 0x19BE66)
     static let themeAvailableBackground = Color(hex: 0xDDFBE8)
 
+    static let themePendingText = Color(hex: 0x9C6208)
+    static let themePendingBackground = Color(hex: 0xFFF5CD)
+
     static let themeRatingAccent = Color(hex: 0xEEA800)
     static let themeRatingBackground = Color(hex: 0xFFF9E4)
     static let themeExperienceAccent = Color(hex: 0x4D8DFB)
     static let themeExperienceBackground = Color(hex: 0xEDF4FF)
+    static let themePurpleAccent = Color(hex: 0xA55EF5)
+    static let themePurpleBackground = Color(hex: 0xF7EFFF)
 }
 
 // MARK: - Convenience Initializers

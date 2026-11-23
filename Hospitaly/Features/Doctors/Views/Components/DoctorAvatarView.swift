@@ -10,6 +10,7 @@ import SwiftUI
 struct DoctorAvatarView: View {
     let doctor: Doctor
     var size: CGFloat = 80
+    var showsAvailability = true
 
     var body: some View {
         VStack(spacing: -14) {
@@ -21,7 +22,7 @@ struct DoctorAvatarView: View {
                 .background(Color.themeSubtleSurface)
                 .clipShape(.rect(cornerRadius: 23))
 
-            if doctor.isAvailable {
+            if showsAvailability && doctor.isAvailable {
                 HStack(spacing: 4) {
                     Circle()
                         .fill(Color.themeAvailableDot)

@@ -9,16 +9,29 @@ import SwiftUI
 
 struct DoctorListView: View {
     @State private var viewModel = DoctorListViewModel(doctors: Doctor.samples)
-    @State private var selectedDoctor: Doctor?
+    @State private var path: [DoctorRoute] = []
+    @State private var appointments = Appointment.samples
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             VStack(spacing: 0) {
                 Text("Our Specialists")
                     .font(.title3.bold())
                     .foregroundStyle(Color.themeText)
                     .frame(maxWidth: .infinity, minHeight: 60)
                     .background(Color.themeSurface, ignoresSafeAreaEdges: .top)
+                    .overlay(alignment: .trailing) {
+                        Button {
+                            path.append(.appointments)
+                        } label: {
+                            Image(systemName: "calendar")
+                                .font(.system(size: 19, weight: .medium))
+                                .foregroundStyle(Color.themePrimary)
+                                .frame(width: 44, height: 44)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.trailing, 10)
+                    }
                     .overlay(alignment: .bottom) {
                         Rectangle()
                             .fill(Color.themeDivider)
@@ -50,7 +63,7 @@ struct DoctorListView: View {
                                     doctor: doctor,
                                     isFavorite: viewModel.favoriteDoctorIDs.contains(doctor.id),
                                     onFavorite: { viewModel.toggleFavorite(doctor.id) },
-                                    onOpenDoctor: { selectedDoctor = doctor }
+                                    onOpenDoctor: { path.append(.detail(doctor)) }
                                 )
                             }
                         }
@@ -66,11 +79,34 @@ struct DoctorListView: View {
             .frame(maxWidth: .infinity)
             .background(Color.themeCanvas.ignoresSafeArea())
             .toolbarVisibility(.hidden, for: .navigationBar)
-            .navigationDestination(item: $selectedDoctor) { doctor in
-                DoctorDetailView(doctor: doctor)
+            .navigationDestination(for: DoctorRoute.self) { route in
+                switch route {
+                case .detail(let doctor):
+                    DoctorDetailView(doctor: doctor, appointments: appointments) { slot in
+                        path.append(.booking(doctor, slot))
+                    }
+                case .booking(let doctor, let slot):
+                    BookingFormView(doctor: doctor, slot: slot) { reason, complaints in
+                        confirmBooking(doctor: doctor, slot: slot, reason: reason, complaints: complaints)
+                    }
+                case .confirmation(let appointment):
+                    BookingConfirmationView(
+                        appointment: appointment,
+                        onViewAppointments: { path = [.appointments] },
+                        onBackToDoctors: { path.removeAll() }
+                    )
+                case .appointments:
+                    MyAppointmentsView(appointments: appointments)
+                }
             }
         }
         .tint(Color.themePrimary)
+    }
+
+    private func confirmBooking(doctor: Doctor, slot: AppointmentSlot, reason: String, complaints: String) {
+        let appointment = Appointment(doctor: doctor, slot: slot, reason: reason, complaints: complaints)
+        appointments.append(appointment)
+        path = [.confirmation(appointment)]
     }
 }
 

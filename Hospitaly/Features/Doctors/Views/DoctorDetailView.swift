@@ -8,68 +8,101 @@
 import SwiftUI
 
 struct DoctorDetailView: View {
-    let doctor: Doctor
+    @State private var viewModel: DoctorDetailViewModel
+    @State private var showsFullBio = false
+
+    let onContinue: (AppointmentSlot) -> Void
+
+    init(doctor: Doctor, appointments: [Appointment], onContinue: @escaping (AppointmentSlot) -> Void) {
+        _viewModel = State(initialValue: DoctorDetailViewModel(doctor: doctor, appointments: appointments))
+        self.onContinue = onContinue
+    }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 24) {
-                VStack(spacing: 10) {
-                    DoctorAvatarView(doctor: doctor, size: 112)
+        let doctor = viewModel.doctor
 
-                    Text(doctor.name)
-                        .font(.title2.bold())
+        ScrollView {
+            VStack(alignment: .leading, spacing: 28) {
+                DoctorProfileHeader(doctor: doctor)
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("About Doctor")
+                        .font(.title3.bold())
                         .foregroundStyle(Color.themeText)
 
-                    Text(doctor.specialty)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.themePrimary)
+                    Text(doctor.bio)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.themeSecondaryText)
+                        .lineSpacing(4)
+                        .lineLimit(showsFullBio ? nil : 3)
 
-                    DoctorCardMetricsView(doctor: doctor)
-                        .padding(.top, 4)
-                }
-                .frame(maxWidth: .infinity)
-
-                VStack(alignment: .leading, spacing: 16) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Practice Location")
-                            .font(.headline)
-
-                        Label(doctor.hospital, systemImage: "mappin")
-                            .font(.subheadline)
-                            .foregroundStyle(Color.themeSecondaryText)
+                    Button(showsFullBio ? "Read less" : "Read more") {
+                        showsFullBio.toggle()
                     }
-
-                    Rectangle()
-                        .fill(Color.themeDivider)
-                        .frame(height: 1)
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(doctor.isAvailable ? "Next Available" : "Availability")
-                            .font(.headline)
-
-                        Text(doctor.nextAvailable ?? "Full Today")
-                            .font(.subheadline)
-                            .foregroundStyle(Color.themeSecondaryText)
-                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.themePrimary)
+                    .buttonStyle(.plain)
                 }
-                .foregroundStyle(Color.themeText)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(18)
-                .background(Color.themeSurface, in: .rect(cornerRadius: 18))
+
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Practice Location")
+                        .font(.title3.bold())
+                        .foregroundStyle(Color.themeText)
+
+                    HStack(spacing: 14) {
+                        Image(systemName: "cross.case.fill")
+                            .font(.title3)
+                            .foregroundStyle(Color.themePrimary)
+                            .frame(width: 48, height: 48)
+                            .background(Color.themePrimary.opacity(0.08), in: .rect(cornerRadius: 14))
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(doctor.hospital)
+                                .font(.headline)
+                                .foregroundStyle(Color.themeText)
+
+                            Text(doctor.practiceLocation)
+                                .font(.footnote)
+                                .foregroundStyle(Color.themeSecondaryText)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(Color.themeSurface, in: .rect(cornerRadius: 16))
+                }
+
+                if doctor.isAvailable {
+                    DoctorScheduleView(viewModel: viewModel)
+                } else {
+                    DoctorWeeklyScheduleView()
+                }
             }
             .frame(maxWidth: 508)
-            .padding(16)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 24)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.themeCanvas.ignoresSafeArea())
+        .scrollIndicators(.hidden)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if doctor.isAvailable {
+                DoctorBookingBar(slot: viewModel.selectedSlot, fee: doctor.consultationFee, onContinue: onContinue)
+            }
+        }
+        .background(Color.themeDetailCanvas.ignoresSafeArea())
         .navigationTitle("Doctor Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarVisibility(.visible, for: .navigationBar)
     }
 }
 
-#Preview {
+#Preview("Available") {
     NavigationStack {
-        DoctorDetailView(doctor: Doctor.samples[0])
+        DoctorDetailView(doctor: Doctor.samples[0], appointments: []) { _ in }
+    }
+}
+
+#Preview("Full Today") {
+    NavigationStack {
+        DoctorDetailView(doctor: Doctor.samples[1], appointments: []) { _ in }
     }
 }
