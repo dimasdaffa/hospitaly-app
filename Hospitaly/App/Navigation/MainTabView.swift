@@ -12,6 +12,8 @@ struct MainTabView: View {
     @State private var selection: MainTab = .profile
     @State private var doctorPath: [DoctorRoute] = []
     @State private var isQuickAccessPresented = false
+    @State private var isNotificationsPresented = false
+    @State private var notifications = NotificationsViewModel()
 
     let profile: UserProfile
     let onSignOut: @MainActor () throws -> Void
@@ -20,11 +22,13 @@ struct MainTabView: View {
     var loadAppointments: (@MainActor () async throws -> [Appointment])? = nil
     var bookAppointment: (@MainActor (BookingRequest, Doctor) async throws -> Appointment)? = nil
     var appointmentManagement: AppointmentManagement? = nil
+    var loadNotifications: (@MainActor () async throws -> [PatientNotification])? = nil
+    var markNotificationRead: (@MainActor (UUID) async throws -> Void)? = nil
 
     var body: some View {
         TabView(selection: $selection) {
             Tab(MainTab.home.title, systemImage: MainTab.home.symbol, value: MainTab.home) {
-                placeholder(.home, message: "The patient dashboard is coming soon.")
+                home
                     .toolbarVisibility(.hidden, for: .tabBar)
             }
 
@@ -62,6 +66,51 @@ struct MainTabView: View {
                 onOpenAppointments: openAppointmentsFromMenu
             )
         }
+        .task(id: selection) {
+            if selection == .home, let loadNotifications {
+                await notifications.load(using: loadNotifications)
+            }
+        }
+    }
+
+    private var home: some View {
+        NavigationStack {
+            ContentUnavailableView("Dashboard Coming Soon", systemImage: "house")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.themeCanvas.ignoresSafeArea())
+                .navigationTitle("Home")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    if loadNotifications != nil, markNotificationRead != nil {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            Button {
+                                isNotificationsPresented = true
+                            } label: {
+                                Label("Notifications", systemImage: "bell")
+                                    .labelStyle(.iconOnly)
+                                    .overlay(alignment: .topTrailing) {
+                                        if notifications.hasUnread {
+                                            Circle()
+                                                .fill(Color.themePrimary)
+                                                .frame(width: 7, height: 7)
+                                        }
+                                    }
+                            }
+                        }
+                    }
+                }
+        }
+        .sheet(isPresented: $isNotificationsPresented) {
+            if let loadNotifications, let markNotificationRead {
+                NavigationStack {
+                    NotificationsView(
+                        viewModel: notifications, loadNotifications: loadNotifications,
+                        markNotificationRead: markNotificationRead
+                    )
+                }
+                .tint(Color.themePrimary)
+            }
+        }
     }
 
     private func placeholder(_ tab: MainTab, message: LocalizedStringKey) -> some View {
@@ -94,6 +143,8 @@ struct MainTabView: View {
         ),
         onSignOut: {},
         loadDoctors: { Doctor.samples },
-        appointmentManagement: .preview
+        appointmentManagement: .preview,
+        loadNotifications: { [.sample] },
+        markNotificationRead: { _ in }
     )
 }

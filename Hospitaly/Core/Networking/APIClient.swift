@@ -59,6 +59,10 @@ struct APIClient: Sendable {
         return try decode(data)
     }
 
+    func put(_ path: String, token: String) async throws {
+        _ = try await send(path, method: "PUT", token: token)
+    }
+
     private func send(
         _ path: String, method: String, token: String? = nil, body: Data? = nil,
         query: [URLQueryItem] = [], idempotencyKey: UUID? = nil
@@ -107,7 +111,9 @@ struct APIClient: Sendable {
 
     private func decode<Response: Decodable>(_ data: Data) throws -> Response {
         do {
-            return try JSONDecoder().decode(Response.self, from: data)
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            return try decoder.decode(Response.self, from: data)
         } catch {
             throw APIError.invalidPayload
         }

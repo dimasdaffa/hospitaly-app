@@ -12,6 +12,7 @@ struct RootView: View {
     let session: SessionStore
     let doctorService: DoctorService
     let appointmentService: AppointmentService
+    let notificationService: NotificationService
 
     var body: some View {
         Group {
@@ -32,7 +33,8 @@ struct RootView: View {
                     loadAppointments: loadAppointments, bookAppointment: bookAppointment,
                     appointmentManagement: AppointmentManagement(
                         loadSlots: loadReplacementSlots, reschedule: rescheduleAppointment, cancel: cancelAppointment
-                    )
+                    ),
+                    loadNotifications: loadNotifications, markNotificationRead: markNotificationRead
                 )
             }
         }
@@ -88,6 +90,18 @@ struct RootView: View {
         }
     }
 
+    private func loadNotifications() async throws -> [PatientNotification] {
+        try await session.withPatientToken { token in
+            try await notificationService.list(token: token)
+        }
+    }
+
+    private func markNotificationRead(_ id: UUID) async throws {
+        try await session.withPatientToken { token in
+            try await notificationService.markRead(id: id, token: token)
+        }
+    }
+
     private func restoreError(_ message: String) -> some View {
         ContentUnavailableView {
             Label("Couldn’t Restore Session", systemImage: "person.crop.circle.badge.exclamationmark")
@@ -111,7 +125,8 @@ struct RootView: View {
         profileService: ProfileService(client: client),
         tokenStore: TokenStore(account: "preview"),
         phase: .signedOut
-    ), doctorService: DoctorService(client: client), appointmentService: AppointmentService(client: client))
+    ), doctorService: DoctorService(client: client),
+       appointmentService: AppointmentService(client: client), notificationService: NotificationService(client: client))
 }
 
 #Preview("Restore Failed") {
@@ -121,5 +136,6 @@ struct RootView: View {
         profileService: ProfileService(client: client),
         tokenStore: TokenStore(account: "preview"),
         phase: .restoreFailed("Could not reach the server. Check your connection and try again.")
-    ), doctorService: DoctorService(client: client), appointmentService: AppointmentService(client: client))
+    ), doctorService: DoctorService(client: client),
+       appointmentService: AppointmentService(client: client), notificationService: NotificationService(client: client))
 }

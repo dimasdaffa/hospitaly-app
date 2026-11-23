@@ -11,7 +11,10 @@ import SwiftUI
 @main
 struct HospitalyApp: App {
     @State private var launch: Result<
-        (session: SessionStore, doctorService: DoctorService, appointmentService: AppointmentService),
+        (
+            session: SessionStore, doctorService: DoctorService,
+            appointmentService: AppointmentService, notificationService: NotificationService
+        ),
         Error
     > = Result {
         let baseURL = try AppConfig.apiBaseURL()
@@ -21,7 +24,10 @@ struct HospitalyApp: App {
             profileService: ProfileService(client: client),
             tokenStore: TokenStore(account: baseURL.absoluteString)
         )
-        return (session, DoctorService(client: client), AppointmentService(client: client))
+        return (
+            session, DoctorService(client: client), AppointmentService(client: client),
+            NotificationService(client: client)
+        )
     }
 
     var body: some Scene {
@@ -31,7 +37,8 @@ struct HospitalyApp: App {
                 RootView(
                     session: dependencies.session,
                     doctorService: dependencies.doctorService,
-                    appointmentService: dependencies.appointmentService
+                    appointmentService: dependencies.appointmentService,
+                    notificationService: dependencies.notificationService
                 )
             case .failure(let error):
                 ContentUnavailableView(
