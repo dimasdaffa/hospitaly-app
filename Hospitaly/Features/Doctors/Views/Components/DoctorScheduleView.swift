@@ -55,14 +55,25 @@ struct DoctorScheduleView: View {
 
             let slots = viewModel.slots
 
-            if !slots.contains(where: \.isAvailable) {
-                Text("No available times for this date.")
+            if slots.isEmpty {
+                ContentUnavailableView(
+                    "No Slots on This Date", systemImage: "calendar",
+                    description: Text("Choose another date to check available times.")
+                )
+            } else if !slots.contains(where: \.isAvailable) {
+                Text("All times for this date are unavailable. Choose another date.")
                     .font(.subheadline)
                     .foregroundStyle(Color.themeSecondaryText)
             }
 
-            slotSection("Morning", slots: slots.filter(\.isMorning))
-            slotSection("Afternoon", slots: slots.filter { !$0.isMorning })
+            let morning = slots.filter(\.isMorning)
+            let afternoon = slots.filter { !$0.isMorning }
+            if !morning.isEmpty {
+                slotSection("Morning", slots: morning)
+            }
+            if !afternoon.isEmpty {
+                slotSection("Afternoon", slots: afternoon)
+            }
         }
         .sheet(isPresented: $showsCalendar) {
             NavigationStack {

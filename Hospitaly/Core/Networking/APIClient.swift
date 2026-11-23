@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct APIClient {
+struct APIClient: Sendable {
     private let baseURL: URL
     private let session: URLSession
 
@@ -36,8 +36,10 @@ struct APIClient {
         return isLocalAPI ? url : nil
     }
 
-    func get<Response: Decodable>(_ path: String, token: String) async throws -> Response {
-        let data = try await send(path, method: "GET", token: token)
+    func get<Response: Decodable>(
+        _ path: String, token: String, query: [URLQueryItem] = []
+    ) async throws -> Response {
+        let data = try await send(path, method: "GET", token: token, query: query)
         return try decode(data)
     }
 
@@ -47,9 +49,11 @@ struct APIClient {
     }
 
     private func send(
-        _ path: String, method: String, token: String? = nil, body: Data? = nil
+        _ path: String, method: String, token: String? = nil, body: Data? = nil,
+        query: [URLQueryItem] = []
     ) async throws -> Data {
-        var request = URLRequest(url: baseURL.appending(path: path))
+        let url = baseURL.appending(path: path)
+        var request = URLRequest(url: query.isEmpty ? url : url.appending(queryItems: query))
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
 

@@ -10,8 +10,9 @@ import SwiftUI
 
 struct DoctorBookingBar: View {
     let slot: AppointmentSlot?
-    let fee: Int
-    let onContinue: (AppointmentSlot) -> Void
+    let fee: Int?
+    var currency: String? = "IDR"
+    let onContinue: ((AppointmentSlot) -> Void)?
 
     var body: some View {
         VStack(spacing: 12) {
@@ -39,16 +40,29 @@ struct DoctorBookingBar: View {
                         .font(.caption2.weight(.semibold))
                         .foregroundStyle(Color.themeMutedText)
 
-                    Text(fee, format: .currency(code: "IDR").precision(.fractionLength(0)).locale(Locale(identifier: "id_ID")))
-                        .font(.headline.bold())
-                        .foregroundStyle(Color.themeText)
+                    if let fee, let currency {
+                        Text(fee, format: .currency(code: currency).precision(.fractionLength(0)).locale(Locale(identifier: "id_ID")))
+                            .font(.headline.bold())
+                            .foregroundStyle(Color.themeText)
+                    } else {
+                        Text("Not listed")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.themeSecondaryText)
+                    }
                 }
             }
 
-            PrimaryActionButton(title: "Continue to Reason", icon: "arrow.right") {
-                if let slot { onContinue(slot) }
+            if let onContinue {
+                PrimaryActionButton(title: "Continue to Reason", icon: "arrow.right") {
+                    if let slot { onContinue(slot) }
+                }
+                .disabled(slot == nil)
+            } else {
+                Text("Online booking is coming soon.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.themeSecondaryText)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .disabled(slot == nil)
         }
         .frame(maxWidth: 508)
         .padding(.horizontal, 20)
@@ -66,8 +80,13 @@ struct DoctorBookingBar: View {
 
 #Preview {
     VStack(spacing: 12) {
-        DoctorBookingBar(slot: .sample(), fee: 150_000) { _ in }
-        DoctorBookingBar(slot: nil, fee: 150_000) { _ in }
+        DoctorBookingBar(slot: .sample(), fee: 150_000, onContinue: { _ in })
+        DoctorBookingBar(slot: nil, fee: 150_000, onContinue: { _ in })
     }
     .background(Color.themeDetailCanvas)
+}
+
+#Preview("Fee Unavailable") {
+    DoctorBookingBar(slot: .sample(), fee: nil, onContinue: nil)
+        .background(Color.themeDetailCanvas)
 }

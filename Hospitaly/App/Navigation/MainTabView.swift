@@ -16,6 +16,7 @@ struct MainTabView: View {
     let profile: UserProfile
     let onSignOut: @MainActor () throws -> Void
     let loadDoctors: @MainActor () async throws -> [Doctor]
+    var loadDoctorDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)? = nil
 
     var body: some View {
         TabView(selection: $selection) {
@@ -25,7 +26,7 @@ struct MainTabView: View {
             }
 
             Tab(MainTab.doctors.title, systemImage: MainTab.doctors.symbol, value: MainTab.doctors) {
-                DoctorListView(path: $doctorPath, loadDoctors: loadDoctors)
+                DoctorListView(path: $doctorPath, loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails)
                     .toolbarVisibility(.hidden, for: .tabBar)
             }
 

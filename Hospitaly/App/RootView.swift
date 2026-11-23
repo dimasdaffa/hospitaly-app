@@ -25,7 +25,10 @@ struct RootView: View {
                     onCheckConnection: session.checkConnection
                 )
             case .signedIn(let profile):
-                MainTabView(profile: profile, onSignOut: session.signOut, loadDoctors: loadDoctors)
+                MainTabView(
+                    profile: profile, onSignOut: session.signOut,
+                    loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails
+                )
             }
         }
         .tint(.themePrimary)
@@ -39,6 +42,12 @@ struct RootView: View {
     private func loadDoctors() async throws -> [Doctor] {
         try await session.withPatientToken { token in
             try await doctorService.list(token: token)
+        }
+    }
+
+    private func loadDoctorDetails(id: String, range: ClosedRange<Date>) async throws -> DoctorDetailData {
+        try await session.withPatientToken { token in
+            try await doctorService.details(id: id, range: range, token: token)
         }
     }
 

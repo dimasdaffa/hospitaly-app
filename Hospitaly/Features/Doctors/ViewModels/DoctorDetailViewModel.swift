@@ -10,10 +10,20 @@ import Observation
 
 @Observable
 final class DoctorDetailViewModel {
-    let doctor: Doctor
+    enum Phase: Equatable {
+        case loading
+        case loaded
+        case failed(String)
+    }
+
+    private(set) var doctor: Doctor
     let days: [Date]
     private let firstBookableDate: Date
     private let appointments: [Appointment]
+    private var serverSlots: [AppointmentSlot] = []
+    private(set) var weeklyHours: [DoctorDetailData.WeeklyHours] = []
+    private(set) var phase: Phase = .loading
+    private(set) var loadAttempt = 0
 
     var selectedDate: Date {
         didSet {
@@ -36,7 +46,9 @@ final class DoctorDetailViewModel {
         days = (0..<14).compactMap { calendar.date(byAdding: .day, value: $0, to: today) }
         firstBookableDate = firstDate
         let lastSlotToday = calendar.date(bySettingHour: 15, minute: 0, second: 0, of: today) ?? today
-        if firstDate == today && now >= lastSlotToday {
+        if !doctor.usesDemoSchedule {
+            selectedDate = today
+        } else if firstDate == today && now >= lastSlotToday {
             selectedDate = calendar.date(byAdding: .day, value: 1, to: today) ?? firstDate
         } else {
             selectedDate = firstDate
@@ -47,9 +59,44 @@ final class DoctorDetailViewModel {
         (days.first ?? selectedDate)...(days.last ?? selectedDate)
     }
 
+    var hasScheduledSlots: Bool { !serverSlots.isEmpty }
+
+    var hasBookableSlots: Bool { serverSlots.contains(where: \.isAvailable) }
+
+    func load(using request: @MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData) async {
+        guard !doctor.usesDemoSchedule, phase == .loading, !Task.isCancelled else { return }
+
+        do {
+            let details = try await request(doctor.id, dateRange)
+            try Task.checkCancellation()
+            doctor = details.doctor
+            serverSlots = details.slots
+            weeklyHours = details.weeklyHours
+            if let first = details.slots.first(where: \.isAvailable) ?? details.slots.first {
+                selectedDate = ClinicDate.calendar.startOfDay(for: first.start)
+            }
+            phase = .loaded
+        } catch is CancellationError {
+            return
+        } catch {
+            guard !Task.isCancelled else { return }
+            phase = .failed(error.localizedDescription)
+        }
+    }
+
+    func retry() {
+        guard case .failed = phase else { return }
+        phase = .loading
+        loadAttempt += 1
+    }
+
     var slots: [AppointmentSlot] {
         let calendar = ClinicDate.calendar
         let day = calendar.startOfDay(for: selectedDate)
+        if !doctor.usesDemoSchedule {
+            return serverSlots.filter { calendar.isDate($0.start, inSameDayAs: day) }
+        }
+
         let firstDay = calendar.isDate(day, inSameDayAs: firstBookableDate)
         let now = Date.now
         let starts = [540, 570, 600, 630, 660, 690, 780, 810, 840, 870, 900]
@@ -77,7 +124,7 @@ final class DoctorDetailViewModel {
     }
 
     func selectSlot(_ slot: AppointmentSlot) {
-        guard slot.isAvailable else { return }
+        guard slot.isAvailable, slot.start > .now, slots.contains(slot) else { return }
         selectedSlot = slot
     }
 }

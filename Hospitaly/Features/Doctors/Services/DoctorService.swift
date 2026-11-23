@@ -15,35 +15,76 @@ struct DoctorService {
         let now = Date.now
 
         return response.map { doctor in
-            Doctor(
-                id: doctor.id.uuidString,
-                name: doctor.name,
-                specialty: doctor.specialty,
-                hospital: nonBlank(doctor.practice?.name) ?? "Practice location unavailable",
-                portraitName: nil,
-                rating: doctor.rating,
-                reviewCount: doctor.reviewCount,
-                experienceYears: doctor.experience,
-                nextAvailable: slotLabel(doctor.nextAvailable, relativeTo: now),
-                license: nonBlank(doctor.license),
-                patientCount: doctor.totalPatients,
-                bio: nonBlank(doctor.bio),
-                practiceLocation: [doctor.practice?.address, doctor.practice?.room]
-                    .compactMap { nonBlank($0) }
-                    .joined(separator: ", "),
-                consultationFee: doctor.practice?.fee,
-                avatarURL: nonBlank(doctor.avatarURL).flatMap { client.publicImageURL($0) },
-                isFavorite: doctor.isFavorite ?? false,
-                usesDemoSchedule: false
-            )
+            let next = doctor.nextAvailable.flatMap { slot -> String? in
+                guard slot.available, let start = ClinicDate.date(day: slot.date, time: slot.time),
+                      start > now else { return nil }
+                return slotLabel(start, relativeTo: now)
+            }
+            return displayDoctor(doctor, nextAvailable: next)
         }
     }
 
-    private func slotLabel(_ slot: DoctorResponse.Slot?, relativeTo now: Date) -> String? {
-        guard let slot, slot.available,
-              let start = ClinicDate.date(day: slot.date, time: slot.time),
-              start > now else { return nil }
+    func details(id: String, range: ClosedRange<Date>, token: String) async throws -> DoctorDetailData {
+        guard let doctorID = UUID(uuidString: id) else { throw APIError.invalidPayload }
+        let path = "api/doctors/\(doctorID.uuidString)"
+        let rangeQuery = [
+            URLQueryItem(name: "from", value: ClinicDate.dayString(range.lowerBound)),
+            URLQueryItem(name: "to", value: ClinicDate.dayString(range.upperBound))
+        ]
 
+        async let profileRequest: DoctorResponse = client.get(path, token: token)
+        async let slotsRequest: [DoctorResponse.Slot] = client.get(
+            "\(path)/availability", token: token, query: rangeQuery
+        )
+        async let hoursRequest: [DoctorDetailData.WeeklyHours] = client.get(
+            "api/schedules", token: token, query: [URLQueryItem(name: "doctorId", value: doctorID.uuidString)]
+        )
+
+        let (profile, slotRows, hours) = try await (profileRequest, slotsRequest, hoursRequest)
+        let now = Date.now
+        let slots = try slotRows.map { row in
+            guard let start = ClinicDate.date(day: row.date, time: row.time),
+                  let end = ClinicDate.date(day: row.date, time: row.endTime),
+                  end > start else { throw APIError.invalidPayload }
+            return AppointmentSlot(start: start, end: end, isAvailable: row.available && start > now)
+        }.sorted { $0.start < $1.start }
+
+        let next = slots.first(where: \.isAvailable).map { slotLabel($0.start, relativeTo: now) }
+        return DoctorDetailData(
+            doctor: displayDoctor(profile, nextAvailable: next),
+            slots: slots,
+            weeklyHours: hours.sorted {
+                ($0.dayOrder, $0.startTime) < ($1.dayOrder, $1.startTime)
+            }
+        )
+    }
+
+    private func displayDoctor(_ doctor: DoctorResponse, nextAvailable: String?) -> Doctor {
+        Doctor(
+            id: doctor.id.uuidString,
+            name: doctor.name,
+            specialty: doctor.specialty,
+            hospital: nonBlank(doctor.practice?.name) ?? "Practice location unavailable",
+            portraitName: nil,
+            rating: doctor.rating,
+            reviewCount: doctor.reviewCount,
+            experienceYears: doctor.experience,
+            nextAvailable: nextAvailable,
+            license: nonBlank(doctor.license),
+            patientCount: doctor.totalPatients,
+            bio: nonBlank(doctor.bio),
+            practiceLocation: [doctor.practice?.address, doctor.practice?.room]
+                .compactMap { nonBlank($0) }
+                .joined(separator: ", "),
+            consultationFee: doctor.practice?.fee,
+            avatarURL: nonBlank(doctor.avatarURL).flatMap { client.publicImageURL($0) },
+            isFavorite: doctor.isFavorite ?? false,
+            usesDemoSchedule: false,
+            consultationCurrency: nonBlank(doctor.practice?.currency)?.uppercased()
+        )
+    }
+
+    private func slotLabel(_ start: Date, relativeTo now: Date) -> String {
         let calendar = ClinicDate.calendar
         let day: String
         if calendar.isDate(start, inSameDayAs: now) {

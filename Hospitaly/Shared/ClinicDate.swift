@@ -23,6 +23,19 @@ enum ClinicDate {
         return formatter
     }()
 
+    private static let dayFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
+    static func dayString(_ date: Date) -> String {
+        dayFormatter.string(from: date)
+    }
+
     static func date(day: String, time: String) -> Date? {
         slotFormatter.date(from: "\(day) \(time)")
     }

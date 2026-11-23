@@ -5,6 +5,7 @@
 //  Created by DIMAS DAFFA ERNANDA on 23/11/26.
 //
 
+import Foundation
 import SwiftUI
 
 struct DoctorListView: View {
@@ -13,6 +14,7 @@ struct DoctorListView: View {
 
     @Binding var path: [DoctorRoute]
     let loadDoctors: @MainActor () async throws -> [Doctor]
+    var loadDoctorDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)? = nil
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -67,8 +69,10 @@ struct DoctorListView: View {
             .navigationDestination(for: DoctorRoute.self) { route in
                 switch route {
                 case .detail(let doctor):
-                    DoctorDetailView(doctor: doctor, appointments: appointments) { slot in
-                        path.append(.booking(doctor, slot))
+                    DoctorDetailView(doctor: doctor, appointments: appointments, loadDetails: loadDoctorDetails) { slot in
+                        if doctor.usesDemoSchedule {
+                            path.append(.booking(doctor, slot))
+                        }
                     }
                 case .booking(let doctor, let slot):
                     BookingFormView(doctor: doctor, slot: slot) { reason, complaints in

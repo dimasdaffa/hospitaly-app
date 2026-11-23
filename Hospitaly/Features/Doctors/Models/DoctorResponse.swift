@@ -7,17 +7,19 @@
 
 import Foundation
 
-struct DoctorResponse: Decodable {
-    struct Practice: Decodable {
+struct DoctorResponse: Decodable, Sendable {
+    struct Practice: Decodable, Sendable {
         let name: String
         let address: String?
         let room: String?
         let fee: Int?
+        let currency: String?
     }
 
-    struct Slot: Decodable {
+    struct Slot: Decodable, Sendable {
         let date: String
         let time: String
+        let endTime: String
         let available: Bool
     }
 
