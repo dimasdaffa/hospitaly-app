@@ -12,6 +12,7 @@ struct PrimaryActionButton: View {
 
     let title: LocalizedStringKey
     var icon: String?
+    var cornerRadius: CGFloat = 16
     let action: () -> Void
 
     var body: some View {
@@ -29,7 +30,7 @@ struct PrimaryActionButton: View {
             .foregroundStyle(isEnabled ? Color.themeSurface : Color.themeMutedText)
             .background {
                 if isEnabled {
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: cornerRadius)
                         .fill(
                             LinearGradient(
                                 colors: [.themePrimary, .themePrimaryHighlight],
@@ -38,7 +39,7 @@ struct PrimaryActionButton: View {
                         )
                         .shadow(color: Color.themePrimary.opacity(0.22), radius: 6, y: 4)
                 } else {
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: cornerRadius)
                         .fill(Color.themeSubtleSurface)
                 }
             }

@@ -132,6 +132,24 @@ Hospitaly/                                  # iOS repository root
 │   │   │       ├── HomeView.swift                    # Greeting, notifications, booking, and next visit
 │   │   │       ├── CarePlanView.swift                # Scheduled doses and Mark as Taken
 │   │   │       └── Components/HomeAppointmentCardView.swift # Next visit date, status, and actions
+│   │   ├── HealthTracker/
+│   │   │   ├── Models/
+│   │   │   │   ├── HealthMetric.swift                  # Metric filters, units, and display formatting
+│   │   │   │   ├── HealthReading.swift                 # Decode a reading and resolve its timestamp
+│   │   │   │   ├── HealthReadingRequest.swift          # Create one vital measurement
+│   │   │   │   └── HealthTrackerActions.swift           # Authenticated load and save callbacks
+│   │   │   ├── Services/HealthService.swift             # Fetch and log health updates
+│   │   │   ├── ViewModels/
+│   │   │   │   ├── HealthTrackerViewModel.swift          # Date filters and reading state
+│   │   │   │   └── LogVitalViewModel.swift               # Wheel values, previous readings, and save state
+│   │   │   └── Views/
+│   │   │       ├── HealthTrackerView.swift               # Metric tabs, date ranges, and history
+│   │   │       ├── LogVitalView.swift                    # Bottom sheet for entering one measurement
+│   │   │       └── Components/
+│   │   │           ├── VitalChartView.swift              # Selectable trend chart and summary tiles
+│   │   │           ├── VitalLogRow.swift                 # Value, unit, and date of a reading
+│   │   │           ├── VitalMetricTabs.swift             # Metric switcher for the tracker and entry sheet
+│   │   │           └── VitalNumberWheel.swift            # Scrollable numeric input with centered selection
 │   │   └── Notifications/
 │   │       ├── Models/PatientNotification.swift       # Notification identity, event, and read state
 │   │       ├── Services/NotificationService.swift     # List and mark as read
@@ -160,6 +178,7 @@ Hospitaly/                                  # iOS repository root
 | Read appointment updates | Bell on Home in [MainTabView.swift](../Hospitaly/App/Navigation/MainTabView.swift) | [NotificationsViewModel.swift](../Hospitaly/Features/Notifications/ViewModels/NotificationsViewModel.swift) shares unread and loading state between the bell and [NotificationsView.swift](../Hospitaly/Features/Notifications/Views/NotificationsView.swift). |
 | Open the dashboard and next visit | [HomeView.swift](../Hospitaly/Features/Home/Views/HomeView.swift) | [HomeViewModel.swift](../Hospitaly/Features/Home/ViewModels/HomeViewModel.swift) selects the earliest upcoming start from patient appointments. The card opens existing appointment details or reschedule. See All opens My Appointments. |
 | View today's care plan and record a dose | [CarePlanView.swift](../Hospitaly/Features/Home/Views/CarePlanView.swift) on Home | [CarePlanViewModel.swift](../Hospitaly/Features/Home/ViewModels/CarePlanViewModel.swift) loads the clinic's current day and applies the response for the same scheduled dose. [CarePlanService.swift](../Hospitaly/Features/Home/Services/CarePlanService.swift) calls Vapor. |
+| Review and log vitals | Health Tracker in [QuickAccessSheet.swift](../Hospitaly/App/Navigation/QuickAccessSheet.swift) | [HealthTrackerViewModel.swift](../Hospitaly/Features/HealthTracker/ViewModels/HealthTrackerViewModel.swift) filters and loads readings. [LogVitalViewModel.swift](../Hospitaly/Features/HealthTracker/ViewModels/LogVitalViewModel.swift) validates input and submits the selected metric through [HealthService.swift](../Hospitaly/Features/HealthTracker/Services/HealthService.swift). |
 
 ## 4. Planned source additions
 
@@ -173,13 +192,6 @@ Hospitaly/
 │   │   │   ├── Views/PersonalInfoView.swift    # Edit personal information
 │   │   │   ├── Views/SecuritySettingsView.swift # Change password form
 │   │   │   └── ViewModels/ProfileViewModel.swift # Personal information edits
-│   │   ├── HealthTracker/
-│   │   │   ├── Views/HealthTrackerView.swift            # Blood pressure, weight, and heart rate tabs
-│   │   │   ├── Views/LogVitalView.swift                 # Enter one vital measurement
-│   │   │   ├── Views/Components/VitalChartView.swift    # Chart shared by the tracker tabs
-│   │   │   ├── ViewModels/HealthTrackerViewModel.swift   # Date filters and chart summaries
-│   │   │   ├── Models/HealthReading.swift               # Measurement and timestamp
-│   │   │   └── Services/HealthService.swift             # Read and write health updates
 │   │   ├── MedicalRecords/
 │   │   │   ├── Views/MedicalRecordsView.swift           # Combined history
 │   │   │   ├── Views/DiagnosisDetailView.swift          # Diagnosis and attachments
@@ -224,10 +236,10 @@ Hospitaly/
 | Reschedule and cancellation | [Dashboard action](<../../RS Permata Sehat/Patient Dashboard.png>) · [Cancellation form](<../../RS Permata Sehat/Cancel Appointment.png>) · [Cancellation alert](<../../RS Permata Sehat/Cancellation Alert.png>) | Upcoming Pending and Approved cards offer both actions, and Home can open reschedule for the next eligible visit. The replacement picker handles empty schedules and conflicts. Cancellation shows the requested state until hospital review. |
 | Appointment notifications | Bell in [Patient Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) | The Home bell shows an unread dot. The inbox supports refresh, retry, empty state, and marking an item as read. |
 | Dashboard and care plan | [Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) | Home shows the signed-in patient, notification bell, Book Now, the next appointment, and the daily care plan. Both data sections support pull to refresh, empty states, and Retry. A dose shows Taken after Vapor confirms the update. |
-| Tab bar and shortcuts | [Quick Access](<../../RS Permata Sehat/Quick Access.png>) | Custom bar and bottom sheet are implemented. Appointments opens the existing appointment list. Find Doctors and Quick Book open the directory. Profile opens the account tab. Messages opens the Chat placeholder. Health Tracker and Records are disabled until their screens exist. |
+| Tab bar and shortcuts | [Quick Access](<../../RS Permata Sehat/Quick Access.png>) | Custom bar and bottom sheet are implemented. Appointments opens the existing appointment list. Find Doctors and Quick Book open the directory. Health Tracker opens vital logs. Profile opens the account tab. Messages opens the Chat placeholder. Records is planned. |
 | Medical records and lab | [Records](<../../RS Permata Sehat/Medical Record List.png>) · [Diagnosis](<../../RS Permata Sehat/Diagnosis Details.png>) · [Lab](<../../RS Permata Sehat/Lab Result.png>) | Design references and backend available. The lab PDF comes from a staff-published attachment. |
 | Patient documents and BPJS | [Documents](<../../RS Permata Sehat/Document Screen.png>) · [Upload](<../../RS Permata Sehat/Upload Docs.png>) | Design references and backend available for document CRUD, history, multipart upload, and private downloads. |
-| Health tracker and vital entry | [Blood pressure](<../../RS Permata Sehat/My Health.png>) · [Weight](<../../RS Permata Sehat/My Health-1.png>) · [Heart rate](<../../RS Permata Sehat/My Health-2.png>) · [BP entry](<../../RS Permata Sehat/Entry BP.png>) · [Weight entry](<../../RS Permata Sehat/Entry Weight.png>) · [Heart rate entry](<../../RS Permata Sehat/Entry Heart Rate.png>) | Design references and backend available. The client will build chart summaries from readings. |
+| Health tracker and vital entry | [Blood pressure](<../../RS Permata Sehat/My Health.png>) · [Weight](<../../RS Permata Sehat/My Health-1.png>) · [Heart rate](<../../RS Permata Sehat/My Health-2.png>) · [BP entry](<../../RS Permata Sehat/Entry BP.png>) · [Weight entry](<../../RS Permata Sehat/Entry Weight.png>) · [Heart rate entry](<../../RS Permata Sehat/Entry Heart Rate.png>) | Quick Access opens the tracker. Metric tabs show a selectable trend, summary tiles, and logs for the selected 7, 30, or 90 clinic days. The blood pressure curve follows systolic readings and the selected point shows the full pair. The entry sheet uses scroll wheels with an optional keyboard and saves one metric at a time. Empty lists and fetch errors have dedicated states. |
 | Messages | [Messages](<../../RS Permata Sehat/Message Doctor.png>) | Chat shows a placeholder. The inbox and conversation screens are planned. |
 | Profile | [Profile Settings](<../../RS Permata Sehat/Profile Screen.png>) | Basic patient identity and logout are integrated in source. Personal information edits, security, and notification preferences are planned. |
 | Authentication | Sign-in uses the app theme. | Patient login, session restoration, and Debug reachability are integrated in source. Registration UI is planned. |
@@ -246,6 +258,7 @@ Use the [patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-apl
 | Status handling | Recognize `pending`, `approved`, `rejected`, `completed`, `cancellation_requested`, and `cancelled`. Render a neutral fallback for an unfamiliar status. Appointment updates are available through the in-app notification feed. |
 | Notifications | Fetch `GET /api/notifications` when selecting Home and opening the inbox, or use Refresh. Derive the unread dot from `readAt`. Mark an item as read using `PUT /api/notifications/:id/read` and update the unread state after the server acknowledges the request. Vapor emits `approved`, `rejected`, `cancelled`, and `cancellation_declined` events. |
 | Daily care plan | Fetch `GET /api/care-plan?date=…` using today's date in `Asia/Jakarta`. Track each dose by `recordId`, medication ID, date, and scheduled time. `PUT /api/care-plan/:recordId/:medicationId/taken` sends that entry's `date` and `time` and returns the saved `takenAt` in ISO 8601. Repeating the same request preserves the original intake timestamp. |
+| Vitals | Fetch `GET /api/health-updates` with `metric`, `from`, and `to`. The selected range covers 7, 30, or 90 days ending today in `Asia/Jakarta`. Log one selected measurement using `POST /api/health-updates` with `date`, ISO 8601 `measuredAt`, and `bloodPressure` as `systolic/diastolic`, `weight` as a positive decimal, or `heartRate` as a positive integer. Old records fall back to `createdAt`. Charts and summaries display the recorded values. An unconfirmed save sends the patient back to refresh Recent Logs before another submission. |
 | Private documents and lab | Upload patient documents as multipart PDF, JPEG, or PNG with a maximum file size of 5 MiB. Use authorized download endpoints for private files. Show the lab PDF action when the published result includes its download path. |
 | Presentation states | API-backed lists need loading, data, empty, and recoverable error states. Use API dates, availability, currency, statuses, and identifiers when the feature is integrated. Carry the server-created appointment from confirmation into refreshed history. |
 
@@ -254,7 +267,7 @@ Use the [patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-apl
 1. **Establish an authenticated connection.** API configuration, the shared client, sign-in, Keychain persistence, and a basic patient profile are integrated in source. iOS runtime verification is pending.
 2. **Integrate Doctors and booking.** Directory, details, slot lookup, booking, and appointment history are wired in source. Verify on device that the server-created appointment appears in My Appointments with the same doctor, time, status, and reference shown in confirmation.
 3. **Complete appointment management.** Rescheduling, cancellation requests, and the in-app notification inbox are wired in source. Device verification is pending.
-4. **Expand patient features.** The dashboard and daily care plan are wired in source. Continue with Health Tracker, records and lab, documents, chat, and profile settings according to user priority.
+4. **Expand patient features.** The dashboard, daily care plan, and Health Tracker are wired in source. Continue with records and lab, documents, chat, and profile settings according to user priority.
 
 When verification is requested, cover both doctor states, date changes, disabled slots, a blank visit reason, and a new appointment appearing in Upcoming. During API integration, also cover expired sessions, a conflicting slot, and document access boundaries. The Hurl suite verifies backend behavior. Record iOS build, Simulator, Preview, or device evidence separately with the revision and environment.
 

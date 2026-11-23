@@ -12,6 +12,7 @@ struct QuickAccessSheet: View {
 
     let onOpenTab: @MainActor (MainTab) -> Void
     let onOpenAppointments: @MainActor () -> Void
+    var onOpenHealthTracker: (@MainActor () -> Void)? = nil
 
     var body: some View {
         ScrollView {
@@ -31,8 +32,9 @@ struct QuickAccessSheet: View {
                     ) { onOpenTab(.doctors) }
 
                     shortcut(
-                        "Health Tracker", subtitle: "Coming soon", icon: "waveform.path.ecg",
-                        accent: .themeAvailableText, background: .themeAvailableBackground
+                        "Health Tracker", subtitle: "Vitals & stats", icon: "waveform.path.ecg",
+                        accent: .themeAvailableText, background: .themeAvailableBackground,
+                        action: onOpenHealthTracker
                     )
 
                     shortcut(
@@ -158,7 +160,8 @@ struct QuickAccessSheet: View {
         .sheet(isPresented: $isPresented) {
             QuickAccessSheet(
                 onOpenTab: { _ in isPresented = false },
-                onOpenAppointments: { isPresented = false }
+                onOpenAppointments: { isPresented = false },
+                onOpenHealthTracker: { isPresented = false }
             )
         }
 }

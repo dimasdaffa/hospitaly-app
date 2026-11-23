@@ -9,9 +9,14 @@ import Foundation
 import SwiftUI
 
 struct MainTabView: View {
+    private enum ShortcutSheet: String, Identifiable {
+        case menu, healthTracker
+        var id: Self { self }
+    }
+
     @State private var selection: MainTab = .home
     @State private var doctorPath: [DoctorRoute] = []
-    @State private var isQuickAccessPresented = false
+    @State private var shortcutSheet: ShortcutSheet?
     @State private var isNotificationsPresented = false
     @State private var notifications = NotificationsViewModel()
 
@@ -25,8 +30,26 @@ struct MainTabView: View {
     var loadNotifications: (@MainActor () async throws -> [PatientNotification])? = nil
     var markNotificationRead: (@MainActor (UUID) async throws -> Void)? = nil
     var carePlanActions: CarePlanActions? = nil
+    var healthTrackerActions: HealthTrackerActions? = nil
 
     var body: some View {
+        tabs
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if selection != .doctors || doctorPath.isEmpty {
+                    MainTabBar(selection: $selection) {
+                        shortcutSheet = .menu
+                    }
+                }
+            }
+            .sheet(item: $shortcutSheet, content: shortcutContent)
+            .task(id: selection) {
+                if selection == .home, let loadNotifications {
+                    await notifications.load(using: loadNotifications)
+                }
+            }
+    }
+
+    private var tabs: some View {
         TabView(selection: $selection) {
             Tab(MainTab.home.title, systemImage: MainTab.home.symbol, value: MainTab.home) {
                 home
@@ -39,7 +62,7 @@ struct MainTabView: View {
                     loadAppointments: loadAppointments, bookAppointment: bookAppointment,
                     appointmentManagement: appointmentManagement
                 )
-                    .toolbarVisibility(.hidden, for: .tabBar)
+                .toolbarVisibility(.hidden, for: .tabBar)
             }
 
             Tab(MainTab.chat.title, systemImage: MainTab.chat.symbol, value: MainTab.chat) {
@@ -54,24 +77,30 @@ struct MainTabView: View {
                 .toolbarVisibility(.hidden, for: .tabBar)
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if selection != .doctors || doctorPath.isEmpty {
-                MainTabBar(selection: $selection) {
-                    isQuickAccessPresented = true
-                }
-            }
-        }
-        .sheet(isPresented: $isQuickAccessPresented) {
+    }
+
+    @ViewBuilder
+    private func shortcutContent(_ sheet: ShortcutSheet) -> some View {
+        switch sheet {
+        case .menu:
             QuickAccessSheet(
                 onOpenTab: openTab,
-                onOpenAppointments: openAppointmentsFromMenu
+                onOpenAppointments: openAppointmentsFromMenu,
+                onOpenHealthTracker: openHealthTrackerAction
             )
-        }
-        .task(id: selection) {
-            if selection == .home, let loadNotifications {
-                await notifications.load(using: loadNotifications)
+        case .healthTracker:
+            if let healthTrackerActions {
+                NavigationStack {
+                    HealthTrackerView(actions: healthTrackerActions)
+                }
+                .tint(Color.themePrimary)
             }
         }
+    }
+
+    private var openHealthTrackerAction: (@MainActor () -> Void)? {
+        guard healthTrackerActions != nil else { return nil }
+        return { shortcutSheet = .healthTracker }
     }
 
     private var home: some View {
@@ -113,11 +142,11 @@ struct MainTabView: View {
         }
 
         selection = tab
-        isQuickAccessPresented = false
+        shortcutSheet = nil
     }
 
     private func openAppointmentsFromMenu() {
-        isQuickAccessPresented = false
+        shortcutSheet = nil
         openAppointments()
     }
 
@@ -138,6 +167,7 @@ struct MainTabView: View {
         appointmentManagement: .preview,
         loadNotifications: { [.sample] },
         markNotificationRead: { _ in },
-        carePlanActions: .preview
+        carePlanActions: .preview,
+        healthTrackerActions: .preview
     )
 }
