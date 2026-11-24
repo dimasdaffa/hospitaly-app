@@ -28,6 +28,7 @@ struct Doctor: Identifiable, Hashable, Sendable {
     var isFavorite = false
     var usesDemoSchedule = true
     var consultationCurrency: String? = "IDR"
+    var userId: UUID? = nil
 
     var isAvailable: Bool {
         nextAvailable != nil

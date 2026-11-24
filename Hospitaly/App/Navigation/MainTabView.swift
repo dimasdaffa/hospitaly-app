@@ -10,15 +10,17 @@ import SwiftUI
 
 struct MainTabView: View {
     private enum ShortcutSheet: String, Identifiable {
-        case menu, healthTracker
+        case menu, healthTracker, records
         var id: Self { self }
     }
 
     @State private var selection: MainTab = .home
     @State private var doctorPath: [DoctorRoute] = []
+    @State private var chatPath: [MessagePeer] = []
     @State private var shortcutSheet: ShortcutSheet?
     @State private var isNotificationsPresented = false
     @State private var notifications = NotificationsViewModel()
+    @State private var inbox = InboxViewModel()
 
     let profile: UserProfile
     let onSignOut: @MainActor () throws -> Void
@@ -31,22 +33,33 @@ struct MainTabView: View {
     var markNotificationRead: (@MainActor (UUID) async throws -> Void)? = nil
     var carePlanActions: CarePlanActions? = nil
     var healthTrackerActions: HealthTrackerActions? = nil
+    var medicalRecordsActions: MedicalRecordsActions? = nil
+    var messageActions: MessageActions? = nil
 
     var body: some View {
         tabs
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if selection != .doctors || doctorPath.isEmpty {
-                    MainTabBar(selection: $selection) {
+                if showsTabBar {
+                    MainTabBar(selection: $selection, hasUnreadMessages: inbox.hasUnread) {
                         shortcutSheet = .menu
                     }
                 }
             }
             .sheet(item: $shortcutSheet, content: shortcutContent)
+            .task(id: profile.id) { await refreshInbox() }
             .task(id: selection) {
                 if selection == .home, let loadNotifications {
                     await notifications.load(using: loadNotifications)
                 }
             }
+    }
+
+    private var showsTabBar: Bool {
+        switch selection {
+        case .doctors: doctorPath.isEmpty
+        case .chat: chatPath.isEmpty
+        default: true
+        }
     }
 
     private var tabs: some View {
@@ -66,7 +79,7 @@ struct MainTabView: View {
             }
 
             Tab(MainTab.chat.title, systemImage: MainTab.chat.symbol, value: MainTab.chat) {
-                placeholder(.chat, message: "Patient messages are coming soon.")
+                chat
                     .toolbarVisibility(.hidden, for: .tabBar)
             }
 
@@ -79,6 +92,27 @@ struct MainTabView: View {
         }
     }
 
+    @ContentBuilder
+    private var chat: some View {
+        if let messageActions {
+            NavigationStack(path: $chatPath) {
+                InboxView(
+                    model: inbox, patientID: profile.id, isActive: selection == .chat && chatPath.isEmpty,
+                    actions: messageActions, loadDoctors: loadDoctors, onOpenPeer: openThread
+                )
+                .navigationDestination(for: MessagePeer.self) { peer in
+                    ConversationView(
+                        peer: peer, patientID: profile.id, actions: messageActions, onInboxChanged: refreshInbox
+                    )
+                }
+            }
+        } else {
+            ContentUnavailableView("Messages Unavailable", systemImage: MainTab.chat.symbol)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.themeCanvas.ignoresSafeArea())
+        }
+    }
+
     @ViewBuilder
     private func shortcutContent(_ sheet: ShortcutSheet) -> some View {
         switch sheet {
@@ -86,12 +120,21 @@ struct MainTabView: View {
             QuickAccessSheet(
                 onOpenTab: openTab,
                 onOpenAppointments: openAppointmentsFromMenu,
-                onOpenHealthTracker: openHealthTrackerAction
+                onOpenHealthTracker: openHealthTrackerAction,
+                onOpenRecords: openRecordsAction,
+                hasUnreadMessages: inbox.hasUnread
             )
         case .healthTracker:
             if let healthTrackerActions {
                 NavigationStack {
                     HealthTrackerView(actions: healthTrackerActions)
+                }
+                .tint(Color.themePrimary)
+            }
+        case .records:
+            if let medicalRecordsActions {
+                NavigationStack {
+                    MedicalRecordsView(actions: medicalRecordsActions, onFollowUp: openFollowUp, onChat: openChatAction)
                 }
                 .tint(Color.themePrimary)
             }
@@ -101,6 +144,11 @@ struct MainTabView: View {
     private var openHealthTrackerAction: (@MainActor () -> Void)? {
         guard healthTrackerActions != nil else { return nil }
         return { shortcutSheet = .healthTracker }
+    }
+
+    private var openRecordsAction: (@MainActor () -> Void)? {
+        guard medicalRecordsActions != nil else { return nil }
+        return { shortcutSheet = .records }
     }
 
     private var home: some View {
@@ -130,15 +178,13 @@ struct MainTabView: View {
         }
     }
 
-    private func placeholder(_ tab: MainTab, message: LocalizedStringKey) -> some View {
-        ContentUnavailableView(tab.title, systemImage: tab.symbol, description: Text(message))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color.themeCanvas.ignoresSafeArea())
-    }
-
     private func openTab(_ tab: MainTab) {
         if tab == .doctors {
             doctorPath.removeAll()
+        }
+        if tab == .chat {
+            inbox.query = ""
+            chatPath.removeAll()
         }
 
         selection = tab
@@ -154,20 +200,49 @@ struct MainTabView: View {
         doctorPath = [.appointments(seed: presentation?.appointment, presenting: presentation)]
         selection = .doctors
     }
+
+    private func openFollowUp(_ doctor: Doctor) {
+        doctorPath = [.detail(doctor)]
+        selection = .doctors
+        shortcutSheet = nil
+    }
+
+    private var openChatAction: ((Doctor) -> Void)? {
+        guard messageActions != nil else { return nil }
+        return { doctor in
+            if let peer = MessagePeer(doctor: doctor) { openThread(peer) }
+        }
+    }
+
+    private func openThread(_ peer: MessagePeer) {
+        guard peer.id != profile.id else { return }
+        inbox.query = ""
+        chatPath = [peer]
+        selection = .chat
+        shortcutSheet = nil
+    }
+
+    private func refreshInbox() async {
+        if let messageActions {
+            await inbox.load(using: messageActions.loadInbox)
+        }
+    }
 }
 
 #Preview {
     MainTabView(
         profile: UserProfile(
-            id: UUID(), name: "Demo Patient", email: "patient@example.test",
+            id: MessagePeer.samplePatientID, name: "Demo Patient", email: "patient@example.test",
             role: "patient", patientNumber: "PS-DEMO"
         ),
         onSignOut: {},
-        loadDoctors: { Doctor.samples },
+        loadDoctors: { [.messageSample] + Doctor.samples.dropFirst() },
         appointmentManagement: .preview,
         loadNotifications: { [.sample] },
         markNotificationRead: { _ in },
         carePlanActions: .preview,
-        healthTrackerActions: .preview
+        healthTrackerActions: .preview,
+        medicalRecordsActions: .preview,
+        messageActions: .preview
     )
 }

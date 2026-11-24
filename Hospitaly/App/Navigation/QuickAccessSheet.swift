@@ -13,6 +13,8 @@ struct QuickAccessSheet: View {
     let onOpenTab: @MainActor (MainTab) -> Void
     let onOpenAppointments: @MainActor () -> Void
     var onOpenHealthTracker: (@MainActor () -> Void)? = nil
+    var onOpenRecords: (@MainActor () -> Void)? = nil
+    var hasUnreadMessages = false
 
     var body: some View {
         ScrollView {
@@ -38,13 +40,14 @@ struct QuickAccessSheet: View {
                     )
 
                     shortcut(
-                        "Messages", subtitle: "Coming soon", icon: "text.bubble",
+                        "Messages", subtitle: hasUnreadMessages ? "Unread messages" : "Inbox & conversations", icon: "text.bubble",
                         accent: .themePurpleAccent, background: .themePurpleBackground
                     ) { onOpenTab(.chat) }
 
                     shortcut(
-                        "Records", subtitle: "Coming soon", icon: "folder",
-                        accent: .themeRecordsAccent, background: .themeRecordsBackground
+                        "Records", subtitle: "History & labs", icon: "folder",
+                        accent: .themeRecordsAccent, background: .themeRecordsBackground,
+                        action: onOpenRecords
                     )
 
                     shortcut(
@@ -161,7 +164,8 @@ struct QuickAccessSheet: View {
             QuickAccessSheet(
                 onOpenTab: { _ in isPresented = false },
                 onOpenAppointments: { isPresented = false },
-                onOpenHealthTracker: { isPresented = false }
+                onOpenHealthTracker: { isPresented = false },
+                onOpenRecords: { isPresented = false }
             )
         }
 }

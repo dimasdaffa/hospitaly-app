@@ -43,6 +43,10 @@ struct APIClient: Sendable {
         return try decode(data)
     }
 
+    func getFile(_ path: String, token: String, mediaType: String) async throws -> Data {
+        try await send(path, method: "GET", token: token, mediaType: mediaType)
+    }
+
     func post<Body: Encodable, Response: Decodable>(
         _ path: String, body: Body, token: String? = nil, idempotencyKey: UUID? = nil
     ) async throws -> Response {
@@ -72,12 +76,12 @@ struct APIClient: Sendable {
 
     private func send(
         _ path: String, method: String, token: String? = nil, body: Data? = nil,
-        query: [URLQueryItem] = [], idempotencyKey: UUID? = nil
+        query: [URLQueryItem] = [], idempotencyKey: UUID? = nil, mediaType: String? = nil
     ) async throws -> Data {
         let url = baseURL.appending(path: path)
         var request = URLRequest(url: query.isEmpty ? url : url.appending(queryItems: query))
         request.httpMethod = method
-        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        request.setValue(mediaType ?? "application/json", forHTTPHeaderField: "Accept")
 
         if let token {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -111,6 +115,11 @@ struct APIClient: Sendable {
 
         guard (200..<300).contains(httpResponse.statusCode) else {
             throw APIError.httpStatus(httpResponse.statusCode)
+        }
+
+        if let mediaType {
+            guard httpResponse.mimeType?.caseInsensitiveCompare(mediaType) == .orderedSame,
+                  !data.isEmpty else { throw APIError.invalidPayload }
         }
 
         return data

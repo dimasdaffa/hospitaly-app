@@ -15,6 +15,8 @@ struct RootView: View {
     let notificationService: NotificationService
     let carePlanService: CarePlanService
     let healthService: HealthService
+    let medicalRecordsService: MedicalRecordsService
+    let messageService: MessageService
 
     var body: some View {
         Group {
@@ -38,7 +40,9 @@ struct RootView: View {
                     ),
                     loadNotifications: loadNotifications, markNotificationRead: markNotificationRead,
                     carePlanActions: CarePlanActions(load: loadCarePlan, markTaken: markDoseTaken),
-                    healthTrackerActions: HealthTrackerActions(load: loadHealthReadings, save: saveHealthReading)
+                    healthTrackerActions: HealthTrackerActions(load: loadHealthReadings, save: saveHealthReading),
+                    medicalRecordsActions: medicalRecordsActions,
+                    messageActions: messageActions
                 )
             }
         }
@@ -130,6 +134,48 @@ struct RootView: View {
         }
     }
 
+    private var medicalRecordsActions: MedicalRecordsActions {
+        MedicalRecordsActions(
+            loadHistory: {
+                try await session.withPatientToken { try await medicalRecordsService.history(token: $0) }
+            },
+            loadRecord: { id in
+                try await session.withPatientToken { try await medicalRecordsService.record(id, token: $0) }
+            },
+            loadAttachments: { id in
+                try await session.withPatientToken { try await medicalRecordsService.attachments(id, token: $0) }
+            },
+            loadLab: { id in
+                try await session.withPatientToken { try await medicalRecordsService.lab(id, token: $0) }
+            },
+            download: { file in
+                try await session.withPatientToken { try await medicalRecordsService.download(file, token: $0) }
+            },
+            displayDoctor: { doctorService.displayDoctor($0) }
+        )
+    }
+
+    private var messageActions: MessageActions {
+        MessageActions(
+            loadInbox: { query in
+                try await session.withPatientToken { try await messageService.inbox(query: query, token: $0) }
+            },
+            loadMessages: { peerID, page in
+                try await session.withPatientToken {
+                    try await messageService.thread(peerID: peerID, page: page, token: $0)
+                }
+            },
+            send: { receiverID, content in
+                try await session.withPatientToken {
+                    try await messageService.send(receiverID: receiverID, content: content, token: $0)
+                }
+            },
+            markRead: { id in
+                try await session.withPatientToken { try await messageService.markRead(id, token: $0) }
+            }
+        )
+    }
+
     private func restoreError(_ message: String) -> some View {
         ContentUnavailableView {
             Label("Couldn’t Restore Session", systemImage: "person.crop.circle.badge.exclamationmark")
@@ -155,7 +201,8 @@ struct RootView: View {
         phase: .signedOut
     ), doctorService: DoctorService(client: client),
        appointmentService: AppointmentService(client: client), notificationService: NotificationService(client: client),
-       carePlanService: CarePlanService(client: client), healthService: HealthService(client: client))
+       carePlanService: CarePlanService(client: client), healthService: HealthService(client: client),
+       medicalRecordsService: MedicalRecordsService(client: client), messageService: MessageService(client: client))
 }
 
 #Preview("Restore Failed") {
@@ -167,5 +214,6 @@ struct RootView: View {
         phase: .restoreFailed("Could not reach the server. Check your connection and try again.")
     ), doctorService: DoctorService(client: client),
        appointmentService: AppointmentService(client: client), notificationService: NotificationService(client: client),
-       carePlanService: CarePlanService(client: client), healthService: HealthService(client: client))
+       carePlanService: CarePlanService(client: client), healthService: HealthService(client: client),
+       medicalRecordsService: MedicalRecordsService(client: client), messageService: MessageService(client: client))
 }

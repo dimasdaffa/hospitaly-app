@@ -9,6 +9,7 @@ import SwiftUI
 
 struct MainTabBar: View {
     @Binding var selection: MainTab
+    var hasUnreadMessages = false
     let onQuickAccess: @MainActor () -> Void
 
     var body: some View {
@@ -54,6 +55,14 @@ struct MainTabBar: View {
             VStack(spacing: 5) {
                 Image(systemName: tab.symbol)
                     .font(.system(size: 21, weight: .semibold))
+                    .overlay(alignment: .topTrailing) {
+                        if tab == .chat && hasUnreadMessages {
+                            Circle()
+                                .fill(Color.themePrimaryHighlight)
+                                .frame(width: 7, height: 7)
+                                .offset(x: 5, y: -1)
+                        }
+                    }
 
                 Text(tab.title)
                     .font(.caption2.weight(selection == tab ? .semibold : .medium))

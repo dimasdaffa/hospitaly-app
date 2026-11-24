@@ -14,7 +14,8 @@ struct HospitalyApp: App {
         (
             session: SessionStore, doctorService: DoctorService,
             appointmentService: AppointmentService, notificationService: NotificationService,
-            carePlanService: CarePlanService, healthService: HealthService
+            carePlanService: CarePlanService, healthService: HealthService,
+            medicalRecordsService: MedicalRecordsService, messageService: MessageService
         ),
         Error
     > = Result {
@@ -27,7 +28,8 @@ struct HospitalyApp: App {
         )
         return (
             session, DoctorService(client: client), AppointmentService(client: client),
-            NotificationService(client: client), CarePlanService(client: client), HealthService(client: client)
+            NotificationService(client: client), CarePlanService(client: client), HealthService(client: client),
+            MedicalRecordsService(client: client), MessageService(client: client)
         )
     }
 
@@ -41,7 +43,9 @@ struct HospitalyApp: App {
                     appointmentService: dependencies.appointmentService,
                     notificationService: dependencies.notificationService,
                     carePlanService: dependencies.carePlanService,
-                    healthService: dependencies.healthService
+                    healthService: dependencies.healthService,
+                    medicalRecordsService: dependencies.medicalRecordsService,
+                    messageService: dependencies.messageService
                 )
             case .failure(let error):
                 ContentUnavailableView(

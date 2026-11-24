@@ -85,7 +85,8 @@ struct DoctorService {
             avatarURL: nonBlank(doctor.avatarURL).flatMap { client.publicImageURL($0) },
             isFavorite: doctor.isFavorite ?? false,
             usesDemoSchedule: false,
-            consultationCurrency: nonBlank(doctor.practice?.currency)?.uppercased()
+            consultationCurrency: nonBlank(doctor.practice?.currency)?.uppercased(),
+            userId: doctor.messagingUserId
         )
     }
 

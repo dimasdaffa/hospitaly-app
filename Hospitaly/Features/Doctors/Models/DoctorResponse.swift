@@ -8,6 +8,10 @@
 import Foundation
 
 struct DoctorResponse: Decodable, Sendable {
+    struct Account: Decodable, Sendable {
+        let id: UUID
+    }
+
     struct Practice: Decodable, Sendable {
         let name: String
         let address: String?
@@ -36,4 +40,8 @@ struct DoctorResponse: Decodable, Sendable {
     let practice: Practice?
     let isFavorite: Bool?
     let nextAvailable: Slot?
+    let userId: UUID?
+    let user: Account?
+
+    var messagingUserId: UUID? { userId ?? user?.id }
 }
