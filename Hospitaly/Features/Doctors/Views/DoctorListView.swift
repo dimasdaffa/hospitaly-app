@@ -16,6 +16,7 @@ struct DoctorListView: View {
     @Binding var path: [DoctorRoute]
     let loadDoctors: @MainActor () async throws -> [Doctor]
     var loadDoctorDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)? = nil
+    var setFavorite: (@MainActor (String, Bool) async throws -> Void)? = nil
     var loadAppointments: (@MainActor () async throws -> [Appointment])? = nil
     var bookAppointment: (@MainActor (BookingRequest, Doctor) async throws -> Appointment)? = nil
     var appointmentManagement: AppointmentManagement? = nil
@@ -97,6 +98,11 @@ struct DoctorListView: View {
         }
         .tint(Color.themePrimary)
         .task(id: viewModel.loadAttempt) { await viewModel.load(using: loadDoctors) }
+        .alert("Couldn’t Update Favorite", item: $viewModel.favoriteError) { _ in
+            Button("OK", role: .cancel) {}
+        } message: { message in
+            Text(message)
+        }
     }
 
     @ViewBuilder
@@ -141,7 +147,10 @@ struct DoctorListView: View {
                         DoctorCardView(
                             doctor: doctor,
                             isFavorite: viewModel.favoriteDoctorIDs.contains(doctor.id),
-                            onFavorite: { viewModel.toggleFavorite(doctor.id) },
+                            isSavingFavorite: viewModel.savingFavoriteIDs.contains(doctor.id),
+                            onFavorite: {
+                                Task { await viewModel.toggleFavorite(doctor.id, using: setFavorite) }
+                            },
                             onOpenDoctor: { path.append(.detail(doctor)) }
                         )
                     }

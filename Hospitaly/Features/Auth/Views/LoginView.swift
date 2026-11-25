@@ -9,9 +9,12 @@ import SwiftUI
 
 struct LoginView: View {
     @State private var viewModel = LoginViewModel()
+    @State private var showsRegistration = false
+    @State private var didRegister = false
 
     let onSignIn: @MainActor (LoginRequest) async throws -> Void
     let onCheckConnection: @MainActor () async throws -> Void
+    var onRegister: (@MainActor (RegisterRequest) async throws -> String)?
 
     var body: some View {
         @Bindable var model = viewModel
@@ -39,6 +42,10 @@ struct LoginView: View {
                     Text(message)
                         .font(.footnote)
                         .foregroundStyle(Color.themePrimary)
+                } else if didRegister {
+                    Text("Account created. Sign in with your new password.")
+                        .font(.footnote)
+                        .foregroundStyle(Color.themeAvailableText)
                 }
 
                 PrimaryActionButton(
@@ -47,6 +54,12 @@ struct LoginView: View {
                     action: signIn
                 )
                 .disabled(!viewModel.canSignIn)
+
+                if onRegister != nil {
+                    Button("Create Patient Account") { showsRegistration = true }
+                        .font(.subheadline.weight(.semibold))
+                        .disabled(viewModel.isSigningIn)
+                }
 
                 #if DEBUG
                 connectionCheck
@@ -59,6 +72,17 @@ struct LoginView: View {
         .scrollBounceBehavior(.basedOnSize)
         .foregroundStyle(Color.themeText)
         .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .sheet(isPresented: $showsRegistration) {
+            if let onRegister {
+                NavigationStack {
+                    RegisterView(onRegister: onRegister) { email in
+                        viewModel.useRegisteredEmail(email)
+                        didRegister = true
+                    }
+                }
+                .tint(Color.themePrimary)
+            }
+        }
     }
 
     private var header: some View {
@@ -96,10 +120,11 @@ struct LoginView: View {
     #endif
 
     private func signIn() {
+        if viewModel.canSignIn { didRegister = false }
         Task { await viewModel.signIn(using: onSignIn) }
     }
 }
 
 #Preview {
-    LoginView(onSignIn: { _ in }, onCheckConnection: {})
+    LoginView(onSignIn: { _ in }, onCheckConnection: {}, onRegister: { $0.email })
 }

@@ -27,6 +27,7 @@ struct MainTabView: View {
     let onSignOut: @MainActor () throws -> Void
     let loadDoctors: @MainActor () async throws -> [Doctor]
     var loadDoctorDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)? = nil
+    var setFavorite: (@MainActor (String, Bool) async throws -> Void)? = nil
     var loadAppointments: (@MainActor () async throws -> [Appointment])? = nil
     var bookAppointment: (@MainActor (BookingRequest, Doctor) async throws -> Appointment)? = nil
     var appointmentManagement: AppointmentManagement? = nil
@@ -37,6 +38,8 @@ struct MainTabView: View {
     var medicalRecordsActions: MedicalRecordsActions? = nil
     var messageActions: MessageActions? = nil
     var documentsActions: DocumentsActions? = nil
+    var profileSettings: ProfileSettingsActions? = nil
+    var profileAvatarURL: URL? = nil
 
     var body: some View {
         tabs
@@ -75,6 +78,7 @@ struct MainTabView: View {
             Tab(MainTab.doctors.title, systemImage: MainTab.doctors.symbol, value: MainTab.doctors) {
                 DoctorListView(
                     path: $doctorPath, loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails,
+                    setFavorite: setFavorite,
                     loadAppointments: loadAppointments, bookAppointment: bookAppointment,
                     appointmentManagement: appointmentManagement
                 )
@@ -95,13 +99,10 @@ struct MainTabView: View {
 
     private var profileTab: some View {
         NavigationStack(path: $profilePath) {
-            ProfileView(profile: profile, onSignOut: onSignOut, showsDocuments: documentsActions != nil)
-                .navigationDestination(for: ProfileView.Route.self) { route in
-                    switch route {
-                    case .documents:
-                        if let documentsActions { DocumentsView(actions: documentsActions) }
-                    }
-                }
+            ProfileView(
+                profile: profile, onSignOut: onSignOut, avatarURL: profileAvatarURL,
+                settings: profileSettings, documents: documentsActions
+            )
         }
     }
 
@@ -258,6 +259,7 @@ struct MainTabView: View {
         healthTrackerActions: .preview,
         medicalRecordsActions: .preview,
         messageActions: .preview,
-        documentsActions: .preview
+        documentsActions: .preview,
+        profileSettings: .preview
     )
 }

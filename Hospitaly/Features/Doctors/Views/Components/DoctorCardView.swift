@@ -10,6 +10,7 @@ import SwiftUI
 struct DoctorCardView: View {
     let doctor: Doctor
     let isFavorite: Bool
+    var isSavingFavorite = false
     let onFavorite: () -> Void
     let onOpenDoctor: () -> Void
 
@@ -42,13 +43,21 @@ struct DoctorCardView: View {
             .frame(minHeight: 104, alignment: .topLeading)
             .overlay(alignment: .topTrailing) {
                 Button(action: onFavorite) {
-                    Image(systemName: isFavorite ? "heart.fill" : "heart")
-                        .font(.system(size: 17, weight: .medium))
-                        .foregroundStyle(isFavorite ? Color.themePrimary : Color.themeMutedText)
-                        .frame(width: 40, height: 42)
-                        .background(Color.themeSubtleSurface, in: Circle())
+                    Group {
+                        if isSavingFavorite {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Image(systemName: isFavorite ? "heart.fill" : "heart")
+                                .font(.system(size: 17, weight: .medium))
+                                .foregroundStyle(isFavorite ? Color.themePrimary : Color.themeMutedText)
+                        }
+                    }
+                    .frame(width: 40, height: 42)
+                    .background(Color.themeSubtleSurface, in: Circle())
                 }
                 .buttonStyle(.plain)
+                .disabled(isSavingFavorite)
                 .padding(.top, 4)
             }
 

@@ -11,6 +11,7 @@ enum SessionError: LocalizedError {
     case invalidCredentials
     case patientAccountRequired
     case signInUnavailable
+    case incorrectCurrentPassword
 
     var errorDescription: String? {
         switch self {
@@ -20,6 +21,8 @@ enum SessionError: LocalizedError {
             "Sign in with a patient account to use Hospitaly."
         case .signInUnavailable:
             "A session is already active or signing in."
+        case .incorrectCurrentPassword:
+            "Your current password is incorrect."
         }
     }
 }

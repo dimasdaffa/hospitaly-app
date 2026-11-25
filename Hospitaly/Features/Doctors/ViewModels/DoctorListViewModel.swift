@@ -25,6 +25,8 @@ final class DoctorListViewModel {
     private(set) var phase: Phase = .loading
     private(set) var loadAttempt = 0
     private(set) var favoriteDoctorIDs: Set<Doctor.ID> = []
+    private(set) var savingFavoriteIDs: Set<Doctor.ID> = []
+    var favoriteError: String?
 
     init(doctors: [Doctor]? = nil) {
         if let doctors {
@@ -83,10 +85,24 @@ final class DoctorListViewModel {
         }
     }
 
-    func toggleFavorite(_ doctorID: Doctor.ID) {
-        // shortcut: Keep changes in memory until favorite write endpoints are connected.
-        if favoriteDoctorIDs.remove(doctorID) == nil {
-            favoriteDoctorIDs.insert(doctorID)
+    func toggleFavorite(
+        _ doctorID: Doctor.ID, using request: (@MainActor (String, Bool) async throws -> Void)?
+    ) async {
+        guard !Task.isCancelled, savingFavoriteIDs.insert(doctorID).inserted else { return }
+        let shouldFavorite = !favoriteDoctorIDs.contains(doctorID)
+        defer { savingFavoriteIDs.remove(doctorID) }
+
+        do {
+            if let request { try await request(doctorID, shouldFavorite) }
+            if shouldFavorite {
+                favoriteDoctorIDs.insert(doctorID)
+            } else {
+                favoriteDoctorIDs.remove(doctorID)
+            }
+        } catch where !Task.isCancelled && !(error is CancellationError) {
+            favoriteError = error.localizedDescription
+        } catch {
+            return
         }
     }
 }

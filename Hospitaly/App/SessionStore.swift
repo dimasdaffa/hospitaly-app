@@ -20,6 +20,7 @@ final class SessionStore {
     private(set) var phase: Phase
     @ObservationIgnored private var isRestoring = false
     @ObservationIgnored private var isSigningIn = false
+    @ObservationIgnored private var isRegistering = false
 
     private let authService: AuthService
     private let profileService: ProfileService
@@ -73,7 +74,7 @@ final class SessionStore {
     }
 
     func signIn(_ request: LoginRequest) async throws {
-        guard phase == .signedOut, !isSigningIn else { throw SessionError.signInUnavailable }
+        guard phase == .signedOut, !isSigningIn, !isRegistering else { throw SessionError.signInUnavailable }
         isSigningIn = true
         defer { isSigningIn = false }
 
@@ -105,6 +106,49 @@ final class SessionStore {
 
     func checkConnection() async throws {
         try await authService.checkConnection()
+    }
+
+    func register(_ request: RegisterRequest) async throws -> String {
+        guard phase == .signedOut, !isSigningIn, !isRegistering else { throw SessionError.signInUnavailable }
+        isRegistering = true
+        defer { isRegistering = false }
+        return try await authService.register(request)
+    }
+
+    func updateProfile(_ request: ProfileUpdateRequest) async throws {
+        guard case .signedIn(let current) = phase else { throw APIError.httpStatus(401) }
+        try await withPatientToken { token in
+            let updated = try await profileService.update(request, token: token)
+            guard updated.id == current.id, updated.role == "patient" else { throw APIError.invalidPayload }
+            try Task.checkCancellation()
+            guard case .signedIn(let active) = phase, active.id == current.id,
+                  try tokenStore.read() == token else { throw CancellationError() }
+            phase = .signedIn(updated)
+        }
+    }
+
+    func uploadProfilePhoto(_ jpeg: Data) async throws -> String {
+        try await withPatientToken { try await profileService.uploadPhoto(jpeg, token: $0) }
+    }
+
+    func profileAvatarURL(_ profile: UserProfile) -> URL? {
+        profileService.avatarURL(profile)
+    }
+
+    func helpTopics() async throws -> [HelpTopic] {
+        try await withPatientToken { try await profileService.helpTopics(token: $0) }
+    }
+
+    func changePassword(_ request: ChangePasswordRequest) async throws {
+        try await withPatientToken { token in
+            do {
+                try await authService.changePassword(request, token: token)
+            } catch APIError.httpStatus(401) {
+                // Vapor also returns 401 when the current password is wrong.
+                _ = try await patientProfile(token: token)
+                throw SessionError.incorrectCurrentPassword
+            }
+        }
     }
 
     func withPatientToken<Response>(_ request: @MainActor (String) async throws -> Response) async throws -> Response {

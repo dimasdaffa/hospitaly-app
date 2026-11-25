@@ -64,6 +64,16 @@ struct DoctorService {
         }.sorted { $0.start < $1.start }
     }
 
+    func setFavorite(id: String, isFavorite: Bool, token: String) async throws {
+        guard let doctorID = UUID(uuidString: id) else { throw APIError.invalidPayload }
+        let path = "api/doctors/\(doctorID.uuidString)/favorite"
+        if isFavorite {
+            try await client.put(path, token: token)
+        } else {
+            try await client.delete(path, token: token)
+        }
+    }
+
     func displayDoctor(_ doctor: DoctorResponse, nextAvailable: String? = nil) -> Doctor {
         Doctor(
             id: doctor.id.uuidString,

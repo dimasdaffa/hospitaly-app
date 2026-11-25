@@ -23,6 +23,12 @@ final class LoginViewModel {
             && !password.isEmpty && !isSigningIn
     }
 
+    func useRegisteredEmail(_ email: String) {
+        self.email = email
+        password = ""
+        errorMessage = nil
+    }
+
     func signIn(using action: @MainActor (LoginRequest) async throws -> Void) async {
         guard canSignIn else { return }
         isSigningIn = true

@@ -29,12 +29,14 @@ struct RootView: View {
             case .signedOut:
                 LoginView(
                     onSignIn: session.signIn,
-                    onCheckConnection: session.checkConnection
+                    onCheckConnection: session.checkConnection,
+                    onRegister: session.register
                 )
             case .signedIn(let profile):
                 MainTabView(
                     profile: profile, onSignOut: session.signOut,
                     loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails,
+                    setFavorite: setFavorite,
                     loadAppointments: loadAppointments, bookAppointment: bookAppointment,
                     appointmentManagement: AppointmentManagement(
                         loadSlots: loadReplacementSlots, reschedule: rescheduleAppointment, cancel: cancelAppointment
@@ -44,7 +46,9 @@ struct RootView: View {
                     healthTrackerActions: HealthTrackerActions(load: loadHealthReadings, save: saveHealthReading),
                     medicalRecordsActions: medicalRecordsActions,
                     messageActions: messageActions,
-                    documentsActions: documentsActions
+                    documentsActions: documentsActions,
+                    profileSettings: profileSettings,
+                    profileAvatarURL: session.profileAvatarURL(profile)
                 )
             }
         }
@@ -71,6 +75,12 @@ struct RootView: View {
     private func loadAppointments() async throws -> [Appointment] {
         try await session.withPatientToken { token in
             try await appointmentService.list(token: token)
+        }
+    }
+
+    private func setFavorite(id: String, isFavorite: Bool) async throws {
+        try await session.withPatientToken {
+            try await doctorService.setFavorite(id: id, isFavorite: isFavorite, token: $0)
         }
     }
 
@@ -198,6 +208,21 @@ struct RootView: View {
             download: { file in
                 try await session.withPatientToken { try await documentService.download(file, token: $0) }
             }
+        )
+    }
+
+    private var profileSettings: ProfileSettingsActions {
+        ProfileSettingsActions(
+            updateProfile: session.updateProfile,
+            uploadPhoto: session.uploadProfilePhoto,
+            changePassword: session.changePassword,
+            loadNotificationSettings: {
+                try await session.withPatientToken { try await notificationService.settings(token: $0) }
+            },
+            saveNotificationSettings: { settings in
+                try await session.withPatientToken { try await notificationService.updateSettings(settings, token: $0) }
+            },
+            loadHelp: session.helpTopics
         )
     }
 
