@@ -43,8 +43,18 @@ struct APIClient: Sendable {
         return try decode(data)
     }
 
-    func getFile(_ path: String, token: String, mediaType: String) async throws -> Data {
-        try await send(path, method: "GET", token: token, mediaType: mediaType)
+    func getFile(_ file: PrivateDocumentDownload, token: String) async throws -> Data {
+        try await send(file.source.path, method: "GET", token: token, mediaType: file.mediaType)
+    }
+
+    func postMultipart<Response: Decodable>(
+        _ path: String, body: Data, boundary: String, token: String
+    ) async throws -> Response {
+        let data = try await send(
+            path, method: "POST", token: token, body: body,
+            contentType: "multipart/form-data; boundary=\(boundary)"
+        )
+        return try decode(data)
     }
 
     func post<Body: Encodable, Response: Decodable>(
@@ -76,7 +86,8 @@ struct APIClient: Sendable {
 
     private func send(
         _ path: String, method: String, token: String? = nil, body: Data? = nil,
-        query: [URLQueryItem] = [], idempotencyKey: UUID? = nil, mediaType: String? = nil
+        query: [URLQueryItem] = [], idempotencyKey: UUID? = nil,
+        mediaType: String? = nil, contentType: String = "application/json"
     ) async throws -> Data {
         let url = baseURL.appending(path: path)
         var request = URLRequest(url: query.isEmpty ? url : url.appending(queryItems: query))
@@ -92,7 +103,7 @@ struct APIClient: Sendable {
         }
 
         if let body {
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.setValue(contentType, forHTTPHeaderField: "Content-Type")
             request.httpBody = body
         }
 

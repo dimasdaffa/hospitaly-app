@@ -14,7 +14,7 @@ struct DiagnosisDetailView: View {
     @State private var attachments: [RecordAttachment] = []
     @State private var attachmentPhase = MedicalRecordsViewModel.Phase.loading
     @State private var attachmentAttempt = 0
-    @State private var download: RecordFile?
+    @State private var download: PrivateDocumentDownload?
 
     let recordID: UUID
     let actions: MedicalRecordsActions
@@ -53,7 +53,7 @@ struct DiagnosisDetailView: View {
                 actionBar(actions.displayDoctor(clinician))
             }
         }
-        .modifier(RecordFileExportModifier(file: $download, download: actions.download))
+        .modifier(PrivateFileExportModifier(file: $download, download: actions.download))
         .task(id: loadAttempt) { await loadRecord() }
         .task(id: attachmentAttempt) { await loadAttachments() }
     }
@@ -297,7 +297,7 @@ struct DiagnosisDetailView: View {
 
                 Spacer()
 
-                if download?.source == .attachment(attachment.id) {
+                if download?.source == .document(attachment.id) {
                     ProgressView()
                 } else if attachment.file != nil {
                     Image(systemName: "arrow.down.to.line")

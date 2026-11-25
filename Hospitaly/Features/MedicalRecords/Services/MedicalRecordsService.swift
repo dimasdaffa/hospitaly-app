@@ -29,13 +29,8 @@ struct MedicalRecordsService {
         try await client.get("api/lab-results/\(id)", token: token)
     }
 
-    func download(_ file: RecordFile, token: String) async throws -> Data {
-        let path: String
-        switch file.source {
-        case .lab(let id): path = "api/lab-results/\(id)/pdf"
-        case .attachment(let id): path = "api/documents/\(id)/download"
-        }
-        return try await client.getFile(path, token: token, mediaType: file.mediaType)
+    func download(_ file: PrivateDocumentDownload, token: String) async throws -> Data {
+        try await client.getFile(file, token: token)
     }
 
     private func records(token: String) async throws -> [MedicalRecord] {

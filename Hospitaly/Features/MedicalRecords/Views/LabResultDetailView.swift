@@ -11,7 +11,7 @@ struct LabResultDetailView: View {
     @State private var result: LabResult?
     @State private var error: String?
     @State private var loadAttempt = 0
-    @State private var download: RecordFile?
+    @State private var download: PrivateDocumentDownload?
 
     let resultID: UUID
     let actions: MedicalRecordsActions
@@ -56,7 +56,7 @@ struct LabResultDetailView: View {
                 .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
             }
         }
-        .modifier(RecordFileExportModifier(file: $download, download: actions.download))
+        .modifier(PrivateFileExportModifier(file: $download, download: actions.download))
         .task(id: loadAttempt) { await load() }
     }
 

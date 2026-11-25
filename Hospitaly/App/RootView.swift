@@ -17,6 +17,7 @@ struct RootView: View {
     let healthService: HealthService
     let medicalRecordsService: MedicalRecordsService
     let messageService: MessageService
+    let documentService: DocumentService
 
     var body: some View {
         Group {
@@ -42,7 +43,8 @@ struct RootView: View {
                     carePlanActions: CarePlanActions(load: loadCarePlan, markTaken: markDoseTaken),
                     healthTrackerActions: HealthTrackerActions(load: loadHealthReadings, save: saveHealthReading),
                     medicalRecordsActions: medicalRecordsActions,
-                    messageActions: messageActions
+                    messageActions: messageActions,
+                    documentsActions: documentsActions
                 )
             }
         }
@@ -176,6 +178,20 @@ struct RootView: View {
         )
     }
 
+    private var documentsActions: DocumentsActions {
+        DocumentsActions(
+            load: {
+                try await session.withPatientToken { try await documentService.list(token: $0) }
+            },
+            upload: { draft in
+                try await session.withPatientToken { try await documentService.upload(draft, token: $0) }
+            },
+            download: { file in
+                try await session.withPatientToken { try await documentService.download(file, token: $0) }
+            }
+        )
+    }
+
     private func restoreError(_ message: String) -> some View {
         ContentUnavailableView {
             Label("Couldn’t Restore Session", systemImage: "person.crop.circle.badge.exclamationmark")
@@ -202,7 +218,8 @@ struct RootView: View {
     ), doctorService: DoctorService(client: client),
        appointmentService: AppointmentService(client: client), notificationService: NotificationService(client: client),
        carePlanService: CarePlanService(client: client), healthService: HealthService(client: client),
-       medicalRecordsService: MedicalRecordsService(client: client), messageService: MessageService(client: client))
+       medicalRecordsService: MedicalRecordsService(client: client), messageService: MessageService(client: client),
+       documentService: DocumentService(client: client))
 }
 
 #Preview("Restore Failed") {
@@ -215,5 +232,6 @@ struct RootView: View {
     ), doctorService: DoctorService(client: client),
        appointmentService: AppointmentService(client: client), notificationService: NotificationService(client: client),
        carePlanService: CarePlanService(client: client), healthService: HealthService(client: client),
-       medicalRecordsService: MedicalRecordsService(client: client), messageService: MessageService(client: client))
+       medicalRecordsService: MedicalRecordsService(client: client), messageService: MessageService(client: client),
+       documentService: DocumentService(client: client))
 }

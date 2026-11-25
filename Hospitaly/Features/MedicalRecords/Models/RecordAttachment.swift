@@ -15,8 +15,8 @@ struct RecordAttachment: Decodable, Identifiable, Sendable {
     let createdAt: Date?
     let downloadPath: String?
 
-    var file: RecordFile? {
+    var file: PrivateDocumentDownload? {
         guard downloadPath != nil else { return nil }
-        return RecordFile(source: .attachment(id), name: name, mediaType: mediaType)
+        return PrivateDocumentDownload(source: .document(id), name: name, mediaType: mediaType)
     }
 }

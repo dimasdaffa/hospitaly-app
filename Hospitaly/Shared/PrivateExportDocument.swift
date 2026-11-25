@@ -1,5 +1,5 @@
 //
-//  RecordExportDocument.swift
+//  PrivateExportDocument.swift
 //  Hospitaly
 //
 //  Created by DIMAS DAFFA ERNANDA on 24/11/26.
@@ -8,7 +8,7 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-nonisolated final class RecordExportDocument: WritableDocument {
+nonisolated final class PrivateExportDocument: WritableDocument {
     static var writableContentTypes: [UTType] {
         [.pdf, .jpeg, .png] + [UTType(filenameExtension: "docx")].compactMap { $0 }
     }

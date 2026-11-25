@@ -9,15 +9,25 @@ import Foundation
 import SwiftUI
 
 struct ProfileView: View {
+    enum Route: Hashable {
+        case documents
+    }
+
     @State private var signOutError: String?
 
     let profile: UserProfile
     let onSignOut: @MainActor () throws -> Void
+    var showsDocuments = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
                 identityCard
+
+                if showsDocuments {
+                    NavigationLink(value: Route.documents) { documentsRow }
+                        .buttonStyle(.plain)
+                }
 
                 if let signOutError {
                     Text(signOutError)
@@ -38,6 +48,32 @@ struct ProfileView: View {
         .background(Color.themeDetailCanvas.ignoresSafeArea())
         .navigationTitle("Profile")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var documentsRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "doc.text.fill")
+                .foregroundStyle(Color.themePrimary)
+                .frame(width: 40, height: 40)
+                .background(Color.themePrimary.opacity(0.08), in: .rect(cornerRadius: 11))
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Documents & BPJS")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.themeText)
+                Text("Insurance and patient documents")
+                    .font(.caption)
+                    .foregroundStyle(Color.themeSecondaryText)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(Color.themeMutedText)
+        }
+        .padding(14)
+        .background(Color.themeSurface, in: .rect(cornerRadius: 17))
+        .contentShape(.rect)
     }
 
     private var identityCard: some View {
@@ -84,7 +120,11 @@ struct ProfileView: View {
                 role: "patient",
                 patientNumber: "PS-DEMO"
             ),
-            onSignOut: {}
+            onSignOut: {},
+            showsDocuments: true
         )
+        .navigationDestination(for: ProfileView.Route.self) { _ in
+            DocumentsView(actions: .preview)
+        }
     }
 }

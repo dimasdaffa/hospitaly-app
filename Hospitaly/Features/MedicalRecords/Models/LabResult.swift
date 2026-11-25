@@ -34,8 +34,8 @@ struct LabResult: Decodable, Identifiable, Sendable {
     let authorSpecialty: String?
     let pdfPath: String?
 
-    var pdf: RecordFile? {
+    var pdf: PrivateDocumentDownload? {
         guard pdfPath != nil else { return nil }
-        return RecordFile(source: .lab(id), name: title, mediaType: "application/pdf")
+        return PrivateDocumentDownload(source: .lab(id), name: title, mediaType: "application/pdf")
     }
 }

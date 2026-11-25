@@ -17,6 +17,7 @@ struct MainTabView: View {
     @State private var selection: MainTab = .home
     @State private var doctorPath: [DoctorRoute] = []
     @State private var chatPath: [MessagePeer] = []
+    @State private var profilePath: [ProfileView.Route] = []
     @State private var shortcutSheet: ShortcutSheet?
     @State private var isNotificationsPresented = false
     @State private var notifications = NotificationsViewModel()
@@ -35,6 +36,7 @@ struct MainTabView: View {
     var healthTrackerActions: HealthTrackerActions? = nil
     var medicalRecordsActions: MedicalRecordsActions? = nil
     var messageActions: MessageActions? = nil
+    var documentsActions: DocumentsActions? = nil
 
     var body: some View {
         tabs
@@ -58,6 +60,7 @@ struct MainTabView: View {
         switch selection {
         case .doctors: doctorPath.isEmpty
         case .chat: chatPath.isEmpty
+        case .profile: profilePath.isEmpty
         default: true
         }
     }
@@ -84,11 +87,21 @@ struct MainTabView: View {
             }
 
             Tab(MainTab.profile.title, systemImage: MainTab.profile.symbol, value: MainTab.profile) {
-                NavigationStack {
-                    ProfileView(profile: profile, onSignOut: onSignOut)
-                }
-                .toolbarVisibility(.hidden, for: .tabBar)
+                profileTab
+                    .toolbarVisibility(.hidden, for: .tabBar)
             }
+        }
+    }
+
+    private var profileTab: some View {
+        NavigationStack(path: $profilePath) {
+            ProfileView(profile: profile, onSignOut: onSignOut, showsDocuments: documentsActions != nil)
+                .navigationDestination(for: ProfileView.Route.self) { route in
+                    switch route {
+                    case .documents:
+                        if let documentsActions { DocumentsView(actions: documentsActions) }
+                    }
+                }
         }
     }
 
@@ -186,6 +199,7 @@ struct MainTabView: View {
             inbox.query = ""
             chatPath.removeAll()
         }
+        if tab == .profile { profilePath.removeAll() }
 
         selection = tab
         shortcutSheet = nil
@@ -243,6 +257,7 @@ struct MainTabView: View {
         carePlanActions: .preview,
         healthTrackerActions: .preview,
         medicalRecordsActions: .preview,
-        messageActions: .preview
+        messageActions: .preview,
+        documentsActions: .preview
     )
 }

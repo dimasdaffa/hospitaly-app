@@ -1,5 +1,5 @@
 //
-//  RecordFileExportModifier.swift
+//  PrivateFileExportModifier.swift
 //  Hospitaly
 //
 //  Created by DIMAS DAFFA ERNANDA on 24/11/26.
@@ -8,12 +8,12 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-struct RecordFileExportModifier: ViewModifier {
-    @Binding var file: RecordFile?
-    let download: @MainActor (RecordFile) async throws -> Data
+struct PrivateFileExportModifier: ViewModifier {
+    @Binding var file: PrivateDocumentDownload?
+    let download: @MainActor (PrivateDocumentDownload) async throws -> Data
 
     @State private var isExporting = false
-    @State private var document: RecordExportDocument?
+    @State private var document: PrivateExportDocument?
     @State private var exportName: String?
     @State private var exportType: UTType?
     @State private var errorMessage = ""
@@ -40,7 +40,7 @@ struct RecordFileExportModifier: ViewModifier {
 
     private func prepareExport() async {
         guard let file else { return }
-        guard let type = RecordExportDocument.writableContentTypes.first(where: { $0.preferredMIMEType == file.mediaType }) else {
+        guard let type = PrivateExportDocument.writableContentTypes.first(where: { $0.preferredMIMEType == file.mediaType }) else {
             self.file = nil
             showError("This file format is unavailable.")
             return
@@ -49,7 +49,7 @@ struct RecordFileExportModifier: ViewModifier {
         do {
             let data = try await download(file)
             try Task.checkCancellation()
-            document = RecordExportDocument(bytes: data)
+            document = PrivateExportDocument(bytes: data)
 
             let filename = file.exportName
             let suffix = type.preferredFilenameExtension
@@ -73,10 +73,10 @@ struct RecordFileExportModifier: ViewModifier {
 }
 
 #Preview("File Download Error") {
-    @Previewable @State var file: RecordFile?
+    @Previewable @State var file: PrivateDocumentDownload?
 
     Button("Download PDF") {
-        file = RecordFile(source: .lab(UUID()), name: "Demo Lab Report", mediaType: "application/pdf")
+        file = PrivateDocumentDownload(source: .lab(UUID()), name: "Demo Lab Report", mediaType: "application/pdf")
     }
-    .modifier(RecordFileExportModifier(file: $file, download: { _ in throw APIError.connectionFailed }))
+    .modifier(PrivateFileExportModifier(file: $file, download: { _ in throw APIError.connectionFailed }))
 }
