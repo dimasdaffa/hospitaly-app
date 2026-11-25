@@ -47,11 +47,11 @@ struct APIClient: Sendable {
         try await send(file.source.path, method: "GET", token: token, mediaType: file.mediaType)
     }
 
-    func postMultipart<Response: Decodable>(
-        _ path: String, body: Data, boundary: String, token: String
+    func sendMultipart<Response: Decodable>(
+        _ path: String, method: String, body: Data, boundary: String, token: String
     ) async throws -> Response {
         let data = try await send(
-            path, method: "POST", token: token, body: body,
+            path, method: method, token: token, body: body,
             contentType: "multipart/form-data; boundary=\(boundary)"
         )
         return try decode(data)
@@ -75,6 +75,10 @@ struct APIClient: Sendable {
 
     func put(_ path: String, token: String) async throws {
         _ = try await send(path, method: "PUT", token: token)
+    }
+
+    func delete(_ path: String, token: String) async throws {
+        _ = try await send(path, method: "DELETE", token: token)
     }
 
     func put<Body: Encodable, Response: Decodable>(

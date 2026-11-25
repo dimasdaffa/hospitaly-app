@@ -15,10 +15,14 @@ struct PatientDocument: Decodable, Identifiable, Sendable {
     let mediaType: String
     let size: Int
     let createdAt: Date?
+    let updatedAt: Date?
+    let deletedAt: Date?
     let downloadPath: String?
 
+    var canManage: Bool { deletedAt == nil && category != .clinicalAttachment }
+
     var download: PrivateDocumentDownload? {
-        guard downloadPath != nil else { return nil }
+        guard deletedAt == nil, downloadPath != nil else { return nil }
         return PrivateDocumentDownload(source: .document(id), name: name, mediaType: mediaType)
     }
 }

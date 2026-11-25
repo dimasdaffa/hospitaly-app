@@ -10,26 +10,35 @@ import Observation
 
 @Observable
 final class UploadDocumentViewModel {
-    private struct PendingUpload {
-        let upload: DocumentUpload
+    private struct PendingSave {
+        let draft: DocumentDraft
         let knownIDs: Set<UUID>
     }
 
-    var name = ""
-    var cardNumber = ""
-    var category: DocumentCategory = .bpjs
+    let original: PatientDocument?
+    var name: String
+    var cardNumber: String
+    var category: DocumentCategory
 
     private(set) var file: UploadDocumentFile?
     private(set) var fileError: String?
     private(set) var submissionError: String?
     private(set) var isPicking = false
     private(set) var isSubmitting = false
-    private var pending: PendingUpload?
+    private var pending: PendingSave?
+    private var originalIsUnavailable = false
+
+    init(original: PatientDocument? = nil) {
+        self.original = original
+        name = original?.name ?? ""
+        cardNumber = original?.cardNumber ?? ""
+        category = original?.category ?? .bpjs
+    }
 
     var needsCheck: Bool { pending != nil }
     var isBusy: Bool { isPicking || isSubmitting }
-    var inputDisabled: Bool { isBusy || needsCheck }
-    var canSubmit: Bool { !inputDisabled && validatedUpload != nil }
+    var inputDisabled: Bool { isBusy || needsCheck || originalIsUnavailable }
+    var canSubmit: Bool { !inputDisabled && fileError == nil && validatedDraft != nil }
 
     var metadataError: String? {
         if name.trimmingCharacters(in: .whitespacesAndNewlines).utf8.count > 255 {
@@ -65,28 +74,45 @@ final class UploadDocumentViewModel {
         }
     }
 
+    func keepCurrentFile() {
+        guard original != nil, !inputDisabled else { return }
+        file = nil
+        fileError = nil
+    }
+
     func submit(
-        knownIDs: Set<UUID>, using request: @MainActor (DocumentUpload) async throws -> PatientDocument
+        knownIDs: Set<UUID>, using actions: DocumentsActions
     ) async -> PatientDocument? {
-        guard canSubmit, let upload = validatedUpload, !Task.isCancelled else { return nil }
+        guard canSubmit, let draft = validatedDraft, !Task.isCancelled else { return nil }
         isSubmitting = true
         submissionError = nil
         defer { isSubmitting = false }
 
         do {
-            let saved = try await request(upload)
-            guard upload.matches(saved), saved.download != nil else { throw APIError.invalidPayload }
+            let saved: PatientDocument
+            if let original {
+                saved = try await actions.update(original.id, draft)
+                guard saved.id == original.id else { throw APIError.invalidPayload }
+            } else {
+                saved = try await actions.upload(draft)
+            }
+            guard draft.matches(saved), saved.download != nil else { throw APIError.invalidPayload }
             return saved
         } catch APIError.httpStatus(413) {
             submissionError = "The server rejected the file size. Choose a smaller file."
         } catch APIError.httpStatus(415) {
             submissionError = "The server could not accept this file format."
+        } catch APIError.httpStatus(409) {
+            submissionError = "This file is linked to a published lab result."
+        } catch APIError.httpStatus(404) where original != nil {
+            pending = PendingSave(draft: draft, knownIDs: knownIDs)
+            submissionError = "This document may have been removed. Check Documents to refresh it."
         } catch APIError.httpStatus(let status) where [400, 401, 403, 404].contains(status) {
             submissionError = APIError.httpStatus(status).localizedDescription
         } catch {
-            // shortcut: Document creation has no replay key. Check the saved bytes before offering a retry.
-            pending = PendingUpload(upload: upload, knownIDs: knownIDs)
-            submissionError = "The upload could not be confirmed. Check Documents before uploading again."
+            // shortcut: There is no replay key. Confirm the saved fields and any replacement bytes before retrying.
+            pending = PendingSave(draft: draft, knownIDs: knownIDs)
+            submissionError = "The save could not be confirmed. Check Documents before trying again."
         }
         return nil
     }
@@ -98,37 +124,55 @@ final class UploadDocumentViewModel {
 
         do {
             let rows = try await actions.load()
-            let candidates = rows.filter {
-                !pending.knownIDs.contains($0.id) && pending.upload.matches($0)
+            try Task.checkCancellation()
+            let candidates: [PatientDocument]
+            if let original {
+                candidates = rows.filter { $0.id == original.id && $0.canManage }
+                if candidates.isEmpty {
+                    originalIsUnavailable = true
+                    self.pending = nil
+                    submissionError = "This document is no longer available for editing."
+                    return (rows, nil)
+                }
+            } else {
+                candidates = rows.filter { !pending.knownIDs.contains($0.id) }
             }
 
-            for candidate in candidates {
-                guard let file = candidate.download else { continue }
-                let bytes = try await actions.download(file)
-                try Task.checkCancellation()
-                if bytes == pending.upload.file.data {
-                    self.pending = nil
-                    submissionError = nil
-                    return (rows, candidate)
+            for candidate in candidates where pending.draft.matches(candidate) {
+                guard let download = candidate.download else { continue }
+                if let file = pending.draft.file {
+                    let bytes = try await actions.download(download)
+                    try Task.checkCancellation()
+                    guard bytes == file.data else { continue }
                 }
+                self.pending = nil
+                submissionError = nil
+                return (rows, candidate)
             }
 
             try Task.checkCancellation()
             self.pending = nil
-            submissionError = "A matching upload could not be found. You can submit it again."
+            submissionError = "The saved document does not match your changes. You can try again."
             return (rows, nil)
         } catch where !Task.isCancelled && !(error is CancellationError) {
-            submissionError = "Couldn’t check the upload. Try checking Documents again."
+            submissionError = "Couldn’t verify the save. Try checking Documents again."
         } catch {
             return nil
         }
         return nil
     }
 
-    private var validatedUpload: DocumentUpload? {
+    private var validatedDraft: DocumentDraft? {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let number = cardNumber.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard let file, !name.isEmpty, metadataError == nil, category != .clinicalAttachment else { return nil }
-        return DocumentUpload(name: name, cardNumber: number.isEmpty ? nil : number, category: category, file: file)
+        guard !name.isEmpty, metadataError == nil, category != .clinicalAttachment else { return nil }
+        let preservedNumber = cardNumber == original?.cardNumber ? original?.cardNumber : (number.isEmpty ? nil : number)
+        let draft = DocumentDraft(name: name, cardNumber: preservedNumber, category: category, file: file)
+        if let original {
+            guard original.canManage, file != nil || !draft.matches(original) else { return nil }
+        } else {
+            guard file != nil else { return nil }
+        }
+        return draft
     }
 }

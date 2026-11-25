@@ -8,8 +8,26 @@
 import SwiftUI
 
 struct DocumentsView: View {
+    private enum Route: Hashable {
+        case history
+    }
+
+    private enum Form: Identifiable {
+        case upload
+        case edit(PatientDocument)
+
+        var id: String { document?.id.uuidString ?? "new" }
+
+        var document: PatientDocument? {
+            if case .edit(let document) = self { return document }
+            return nil
+        }
+    }
+
     @State private var model = DocumentsViewModel()
-    @State private var showsUpload = false
+    @State private var form: Form?
+    @State private var deleteCandidate: PatientDocument?
+    @State private var deleteError: String?
     @State private var loadAttempt = 0
     @State private var download: PrivateDocumentDownload?
 
@@ -27,19 +45,45 @@ struct DocumentsView: View {
         .background(Color.themeDetailCanvas.ignoresSafeArea())
         .navigationTitle("Documents & BPJS")
         .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showsUpload) {
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink("History", value: Route.history)
+                    .disabled(isBusy)
+            }
+        }
+        .navigationDestination(for: Route.self) { route in
+            switch route {
+            case .history: DocumentHistoryView(actions: actions)
+            }
+        }
+        .sheet(item: $form) { form in
             NavigationStack {
                 UploadDocumentView(
                     actions: actions, knownIDs: Set(model.documents.map(\.id)),
-                    onRefresh: model.replace(with:), onSaved: model.add(_:)
+                    original: form.document, onRefresh: model.replace(with:), onSaved: model.upsert(_:)
                 )
             }
             .tint(Color.themePrimary)
+        }
+        .alert("Delete Document?", item: $deleteCandidate) { document in
+            Button("Delete", role: .destructive) {
+                Task { deleteError = await model.delete(document, using: actions) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: { document in
+            Text("The file for “\(document.name)” will be deleted. Its details will stay in History.")
+        }
+        .alert("Couldn’t Delete Document", item: $deleteError) { _ in
+            Button("OK", role: .cancel) {}
+        } message: { message in
+            Text(message)
         }
         .modifier(PrivateFileExportModifier(file: $download, download: actions.download))
         .task(id: loadAttempt) { await model.load(using: actions.load) }
         .refreshable { await model.load(using: actions.load) }
     }
+
+    private var isBusy: Bool { download != nil || model.deletingID != nil }
 
     @ContentBuilder
     private var content: some View {
@@ -106,7 +150,7 @@ struct DocumentsView: View {
 
     private var uploadButton: some View {
         Button {
-            showsUpload = true
+            form = .upload
         } label: {
             VStack(spacing: 8) {
                 Image(systemName: "plus")
@@ -133,32 +177,37 @@ struct DocumentsView: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .disabled(isBusy)
     }
 
     private func insuranceRow(_ document: PatientDocument) -> some View {
-        Button {
-            download = document.download
-        } label: {
-            HStack(spacing: 12) {
-                DocumentCategoryIcon(category: document.category)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(document.name)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.themeText)
-                    Text(document.cardNumber ?? document.category.title)
-                        .font(.caption)
-                        .foregroundStyle(Color.themeSecondaryText)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+        HStack(spacing: 12) {
+            Button {
+                download = document.download
+            } label: {
+                HStack(spacing: 12) {
+                    DocumentCategoryIcon(category: document.category)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(document.name)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.themeText)
+                        Text(document.cardNumber ?? document.category.title)
+                            .font(.caption)
+                            .foregroundStyle(Color.themeSecondaryText)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                downloadIcon(document)
+                    downloadIcon(document)
+                }
+                .contentShape(.rect)
             }
-            .padding(14)
-            .background(Color.themeSurface, in: .rect(cornerRadius: 17))
-            .contentShape(.rect)
+            .buttonStyle(.plain)
+            .disabled(isBusy || document.download == nil)
+
+            managementMenu(document)
         }
-        .buttonStyle(.plain)
-        .disabled(download != nil || document.download == nil)
+        .padding(14)
+        .background(Color.themeSurface, in: .rect(cornerRadius: 17))
     }
 
     private func fileCard(_ document: PatientDocument) -> some View {
@@ -171,6 +220,7 @@ struct DocumentsView: View {
                     Spacer()
                     downloadIcon(document)
                 }
+                .padding(.trailing, document.canManage ? 32 : 0)
 
                 Text(document.name)
                     .font(.subheadline.weight(.semibold))
@@ -194,7 +244,32 @@ struct DocumentsView: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-        .disabled(download != nil || document.download == nil)
+        .disabled(isBusy || document.download == nil)
+        .overlay(alignment: .topTrailing) {
+            managementMenu(document)
+                .padding(9)
+        }
+    }
+
+    @ContentBuilder
+    private func managementMenu(_ document: PatientDocument) -> some View {
+        if model.deletingID == document.id {
+            ProgressView()
+                .frame(width: 30, height: 32)
+        } else if document.canManage {
+            Menu {
+                Button("Edit", systemImage: "pencil") { form = .edit(document) }
+                Button("Delete", systemImage: "trash", role: .destructive) { deleteCandidate = document }
+            } label: {
+                Label("Document Actions", systemImage: "ellipsis")
+                    .labelStyle(.iconOnly)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.themeSecondaryText)
+                    .frame(width: 30, height: 32)
+                    .contentShape(.rect)
+            }
+            .disabled(isBusy)
+        }
     }
 
     @ContentBuilder

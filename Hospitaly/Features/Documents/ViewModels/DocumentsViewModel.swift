@@ -16,6 +16,7 @@ final class DocumentsViewModel {
 
     private(set) var documents: [PatientDocument] = []
     private(set) var phase = Phase.loading
+    private(set) var deletingID: UUID?
     @ObservationIgnored private var requestID: UUID?
 
     var insurance: [PatientDocument] { documents.filter { $0.category.isInsurance } }
@@ -46,7 +47,31 @@ final class DocumentsViewModel {
         phase = .loaded
     }
 
-    func add(_ document: PatientDocument) {
+    func upsert(_ document: PatientDocument) {
         replace(with: [document] + documents.filter { $0.id != document.id })
+    }
+
+    func delete(_ document: PatientDocument, using actions: DocumentsActions) async -> String? {
+        guard deletingID == nil, document.canManage, !Task.isCancelled else { return nil }
+        deletingID = document.id
+        defer { deletingID = nil }
+
+        do {
+            try await actions.delete(document.id)
+            replace(with: documents.filter { $0.id != document.id })
+        } catch APIError.httpStatus(401) {
+            return nil
+        } catch APIError.httpStatus(409) {
+            return "This file is linked to a published lab result."
+        } catch where !Task.isCancelled && !(error is CancellationError) {
+            if let rows = try? await actions.load(), !Task.isCancelled {
+                replace(with: rows)
+                if !rows.contains(where: { $0.id == document.id }) { return nil }
+            }
+            return error.localizedDescription
+        } catch {
+            return nil
+        }
+        return nil
     }
 }

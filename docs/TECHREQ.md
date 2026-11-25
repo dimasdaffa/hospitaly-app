@@ -171,16 +171,17 @@ Hospitaly/                                  # iOS repository root
 │   │   │   │   ├── DocumentCategory.swift              # Insurance, identity, and supporting file categories
 │   │   │   │   ├── PatientDocument.swift               # Listed metadata and private download reference
 │   │   │   │   ├── UploadDocumentFile.swift            # Coordinated file read, byte limit, and type check
-│   │   │   │   ├── DocumentUpload.swift                # Validated upload metadata and bytes
-│   │   │   │   ├── DocumentsActions.swift              # Authenticated list, upload, and download callbacks
-│   │   │   │   └── DocumentsPreviewData.swift          # Synthetic files and in-memory upload fixture
-│   │   │   ├── Services/DocumentService.swift           # List, multipart creation, and private download
+│   │   │   │   ├── DocumentDraft.swift                  # Validated metadata and optional file bytes
+│   │   │   │   ├── DocumentsActions.swift              # Authenticated file operations
+│   │   │   │   └── DocumentsPreviewData.swift          # Synthetic files and in-memory mutation fixture
+│   │   │   ├── Services/DocumentService.swift           # List, history, uploads, updates, and downloads
 │   │   │   ├── ViewModels/
-│   │   │   │   ├── DocumentsViewModel.swift             # List loading and newly uploaded documents
-│   │   │   │   └── UploadDocumentViewModel.swift        # File selection, draft, and upload confirmation
+│   │   │   │   ├── DocumentsViewModel.swift             # List loading and confirmed mutations
+│   │   │   │   └── UploadDocumentViewModel.swift        # Create and edit drafts, file selection, and confirmation
 │   │   │   └── Views/
-│   │   │       ├── DocumentsView.swift                # Insurance and recent files
-│   │   │       ├── UploadDocumentView.swift           # File picker and document metadata form
+│   │   │       ├── DocumentsView.swift                # Insurance, recent files, and management actions
+│   │   │       ├── UploadDocumentView.swift           # Shared create and edit form
+│   │   │       ├── DocumentHistoryView.swift          # Active and deleted document history
 │   │   │       └── Components/DocumentCategoryIcon.swift # Category icon and color
 │   │   ├── Messages/
 │   │   │   ├── Models/
@@ -234,7 +235,7 @@ Hospitaly/                                  # iOS repository root
 | Review and log vitals | Health Tracker in [QuickAccessSheet.swift](../Hospitaly/App/Navigation/QuickAccessSheet.swift) | [HealthTrackerViewModel.swift](../Hospitaly/Features/HealthTracker/ViewModels/HealthTrackerViewModel.swift) filters and loads readings. [LogVitalViewModel.swift](../Hospitaly/Features/HealthTracker/ViewModels/LogVitalViewModel.swift) validates input and submits the selected metric through [HealthService.swift](../Hospitaly/Features/HealthTracker/Services/HealthService.swift). |
 | Review medical records and lab reports | Records in [QuickAccessSheet.swift](../Hospitaly/App/Navigation/QuickAccessSheet.swift) | [MedicalRecordsViewModel.swift](../Hospitaly/Features/MedicalRecords/ViewModels/MedicalRecordsViewModel.swift) searches and groups the timeline. [MedicalRecordsService.swift](../Hospitaly/Features/MedicalRecords/Services/MedicalRecordsService.swift) fetches the patient’s records and handles authenticated clinical downloads. |
 | Message a doctor | Chat tab, Quick Access, or Chat Doctor in [DiagnosisDetailView.swift](../Hospitaly/Features/MedicalRecords/Views/DiagnosisDetailView.swift) | [InboxViewModel.swift](../Hospitaly/Features/Messages/ViewModels/InboxViewModel.swift) owns the inbox and unread badge. [ConversationViewModel.swift](../Hospitaly/Features/Messages/ViewModels/ConversationViewModel.swift) loads pages, sends a draft, and marks received messages as read through [MessageService.swift](../Hospitaly/Features/Messages/Services/MessageService.swift). |
-| Manage uploaded patient files | Documents & BPJS in [ProfileView.swift](../Hospitaly/Features/Profile/Views/ProfileView.swift) | [DocumentsViewModel.swift](../Hospitaly/Features/Documents/ViewModels/DocumentsViewModel.swift) lists current documents and inserts successful uploads. [UploadDocumentViewModel.swift](../Hospitaly/Features/Documents/ViewModels/UploadDocumentViewModel.swift) verifies the file, submits the draft, and checks unconfirmed uploads. |
+| Manage uploaded patient files | Documents & BPJS in [ProfileView.swift](../Hospitaly/Features/Profile/Views/ProfileView.swift) | [DocumentsViewModel.swift](../Hospitaly/Features/Documents/ViewModels/DocumentsViewModel.swift) loads current documents or history and applies confirmed mutations. [UploadDocumentViewModel.swift](../Hospitaly/Features/Documents/ViewModels/UploadDocumentViewModel.swift) validates drafts and checks unconfirmed saves. |
 
 ## 4. Planned source additions
 
@@ -248,8 +249,6 @@ Hospitaly/
 │   │   │   ├── Views/PersonalInfoView.swift    # Edit personal information
 │   │   │   ├── Views/SecuritySettingsView.swift # Change password form
 │   │   │   └── ViewModels/ProfileViewModel.swift # Personal information edits
-│   │   ├── Documents/
-│   │   │   └── Views/DocumentHistoryView.swift          # Document history
 │   │   └── Notifications/
 │   │       └── Views/NotificationSettingsView.swift     # Appointment notification preferences
 │   └── Shared/LoadErrorView.swift                        # Reusable retry state when screens need it
@@ -272,7 +271,7 @@ Hospitaly/
 | Dashboard and care plan | [Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) | Home shows the signed-in patient, notification bell, Book Now, the next appointment, and the daily care plan. Both data sections support pull to refresh, empty states, and Retry. A dose shows Taken after Vapor confirms the update. |
 | Tab bar and shortcuts | [Quick Access](<../../RS Permata Sehat/Quick Access.png>) | Custom bar and bottom sheet are implemented. Appointments opens the existing appointment list. Find Doctors and Quick Book open the directory. Health Tracker opens vital logs. Records opens the combined medical history. Profile opens the account tab. Messages opens the inbox. |
 | Medical records and lab | [Records](<../../RS Permata Sehat/Medical Record List.png>) · [Diagnosis](<../../RS Permata Sehat/Diagnosis Details.png>) · [Lab](<../../RS Permata Sehat/Lab Result.png>) | Integrated in source with search, filters, monthly groups, detail screens, and retry states. Diagnosis can open follow-up booking or a conversation with the visit’s doctor. Private attachments and published lab PDFs can be saved through the system exporter. |
-| Patient documents and BPJS | [Documents](<../../RS Permata Sehat/Document Screen.png>) · [Upload](<../../RS Permata Sehat/Upload Docs.png>) | Profile opens the insurance and recent files list. File selection, multipart upload, and private download through the system exporter are integrated in source. The list includes empty, loading, and retry states. Document edits, replacement, deletion, and history are planned. |
+| Patient documents and BPJS | [Documents](<../../RS Permata Sehat/Document Screen.png>) · [Upload](<../../RS Permata Sehat/Upload Docs.png>) | Profile opens the insurance and recent files list. Users can upload and download files, edit their own document metadata, replace attachments, and confirm deletion. History shows active and deleted records. Clinical attachments are available for download. |
 | Health tracker and vital entry | [Blood pressure](<../../RS Permata Sehat/My Health.png>) · [Weight](<../../RS Permata Sehat/My Health-1.png>) · [Heart rate](<../../RS Permata Sehat/My Health-2.png>) · [BP entry](<../../RS Permata Sehat/Entry BP.png>) · [Weight entry](<../../RS Permata Sehat/Entry Weight.png>) · [Heart rate entry](<../../RS Permata Sehat/Entry Heart Rate.png>) | Quick Access opens the tracker. Metric tabs show a selectable trend, summary tiles, and logs for the selected 7, 30, or 90 clinic days. The blood pressure curve follows systolic readings and the selected point shows the full pair. The entry sheet uses scroll wheels with an optional keyboard and saves one metric at a time. Empty lists and fetch errors have dedicated states. |
 | Messages | [Messages](<../../RS Permata Sehat/Message Doctor.png>) | The inbox, unread badges, server search, doctor picker, paged conversations, send, and mark-as-read are integrated in source. Incoming messages appear when the conversation opens or refreshes. |
 | Profile | [Profile Settings](<../../RS Permata Sehat/Profile Screen.png>) | Basic patient identity and logout are integrated in source. Personal information edits, security, and notification preferences are planned. |
@@ -295,7 +294,7 @@ Use the [patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-apl
 | Vitals | Fetch `GET /api/health-updates` with `metric`, `from`, and `to`. The selected range covers 7, 30, or 90 days ending today in `Asia/Jakarta`. Log one selected measurement using `POST /api/health-updates` with `date`, ISO 8601 `measuredAt`, and `bloodPressure` as `systolic/diastolic`, `weight` as a positive decimal, or `heartRate` as a positive integer. Old records fall back to `createdAt`. Charts and summaries display the recorded values. An unconfirmed save sends the patient back to refresh Recent Logs before another submission. |
 | Clinical history and files | Combine `GET /api/medical-records` and `GET /api/lab-results` for the timeline. Details use `GET /api/medical-records/:id`, `GET /api/medical-records/:id/documents`, and `GET /api/lab-results/:id`. Offer an authenticated export at `GET /api/documents/:id/download` or `GET /api/lab-results/:id/pdf` when the report includes the corresponding download path. |
 | Messages | Load the inbox with `GET /api/messages/conversations` and search with `q`. Load a peer’s history with `GET /api/messages?peerId=…&limit=50&page=…`. For new messages, use the doctor’s account UUID from `userId` or the clinical record’s nested `user.id` and send `{receiverId,content}` with `POST /api/messages`. Limit trimmed content to 255 characters. Use `PUT /api/messages/:id/read` only for incoming unread messages. An unconfirmed send keeps the draft and refreshes the thread before allowing a retry. |
-| Patient documents | List current files using `GET /api/documents`. Create a document with `POST /api/documents` and multipart `name`, `category`, `file`, and optional `cardNumber`. The form accepts PDF, JPEG, or PNG up to 5 MiB. The list uses the server-created document and offers `GET /api/documents/:id/download` when available. For an unconfirmed upload, compare newly listed matching files with the draft bytes before allowing another submission. |
+| Patient documents | List current files using `GET /api/documents` and historical records using `GET /api/documents/history`. Create a document with `POST /api/documents` and multipart `name`, `category`, `file`, and optional `cardNumber`. Update with `PUT /api/documents/:id`. Send JSON to keep the current file or multipart to replace it. Create and replacement accept PDF, JPEG, or PNG up to 5 MiB. `DELETE /api/documents/:id` returns 204 and retains history metadata. The list applies confirmed server changes and offers `GET /api/documents/:id/download` when available. For an unconfirmed save, compare server metadata and any selected file bytes before offering a retry. |
 | Presentation states | API-backed lists need loading, data, empty, and recoverable error states. Use API dates, availability, currency, statuses, and identifiers when the feature is integrated. Carry the server-created appointment from confirmation into refreshed history. |
 
 ## 7. Delivery sequence and verification
@@ -303,7 +302,7 @@ Use the [patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-apl
 1. **Establish an authenticated connection.** API configuration, the shared client, sign-in, Keychain persistence, and a basic patient profile are integrated in source. iOS runtime verification is pending.
 2. **Integrate Doctors and booking.** Directory, details, slot lookup, booking, and appointment history are wired in source. Verify on device that the server-created appointment appears in My Appointments with the same doctor, time, status, and reference shown in confirmation.
 3. **Complete appointment management.** Rescheduling, cancellation requests, and the in-app notification inbox are wired in source. Device verification is pending.
-4. **Expand patient features.** The dashboard, daily care plan, Health Tracker, medical records, lab results, Messages, and patient document upload and download are wired in source. Continue with document management and profile settings according to user priority.
+4. **Expand patient features.** The dashboard, daily care plan, Health Tracker, medical records, lab results, Messages, and patient document management are wired in source. Continue with profile settings according to user priority.
 
 When verification is requested, cover both doctor states, date changes, disabled slots, a blank visit reason, and a new appointment appearing in Upcoming. During API integration, also cover expired sessions, a conflicting slot, and document access boundaries. The Hurl suite verifies backend behavior. Record iOS build, Simulator, Preview, or device evidence separately with the revision and environment.
 

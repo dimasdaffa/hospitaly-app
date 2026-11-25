@@ -183,8 +183,17 @@ struct RootView: View {
             load: {
                 try await session.withPatientToken { try await documentService.list(token: $0) }
             },
+            loadHistory: {
+                try await session.withPatientToken { try await documentService.history(token: $0) }
+            },
             upload: { draft in
                 try await session.withPatientToken { try await documentService.upload(draft, token: $0) }
+            },
+            update: { id, draft in
+                try await session.withPatientToken { try await documentService.update(id, draft: draft, token: $0) }
+            },
+            delete: { id in
+                try await session.withPatientToken { try await documentService.delete(id, token: $0) }
             },
             download: { file in
                 try await session.withPatientToken { try await documentService.download(file, token: $0) }

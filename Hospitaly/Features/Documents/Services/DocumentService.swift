@@ -8,20 +8,53 @@
 import Foundation
 
 struct DocumentService {
+    private struct Metadata: Encodable {
+        let name: String
+        let category: String
+        let cardNumber: String?
+    }
+
     let client: APIClient
 
     func list(token: String) async throws -> [PatientDocument] {
         try await client.get("api/documents", token: token)
     }
 
-    func upload(_ upload: DocumentUpload, token: String) async throws -> PatientDocument {
+    func history(token: String) async throws -> [PatientDocument] {
+        try await client.get("api/documents/history", token: token)
+    }
+
+    func upload(_ draft: DocumentDraft, token: String) async throws -> PatientDocument {
+        guard let file = draft.file else { throw APIError.invalidPayload }
+        return try await sendFile(draft, file: file, path: "api/documents", method: "POST", token: token)
+    }
+
+    func update(_ id: UUID, draft: DocumentDraft, token: String) async throws -> PatientDocument {
+        let path = "api/documents/\(id)"
+        if let file = draft.file {
+            return try await sendFile(draft, file: file, path: path, method: "PUT", token: token)
+        }
+        let body = Metadata(name: draft.name, category: draft.category.rawValue, cardNumber: draft.cardNumber)
+        return try await client.put(path, body: body, token: token)
+    }
+
+    func delete(_ id: UUID, token: String) async throws {
+        try await client.delete("api/documents/\(id)", token: token)
+    }
+
+    func download(_ file: PrivateDocumentDownload, token: String) async throws -> Data {
+        try await client.getFile(file, token: token)
+    }
+
+    private func sendFile(
+        _ draft: DocumentDraft, file: UploadDocumentFile, path: String, method: String, token: String
+    ) async throws -> PatientDocument {
         let boundary = "Hospitaly-\(UUID().uuidString)"
-        let file = upload.file
         var body = Data()
         body.reserveCapacity(file.data.count + 2_048)
-        appendField("name", upload.name, boundary: boundary, to: &body)
-        appendField("category", upload.category.rawValue, boundary: boundary, to: &body)
-        if let cardNumber = upload.cardNumber {
+        appendField("name", draft.name, boundary: boundary, to: &body)
+        appendField("category", draft.category.rawValue, boundary: boundary, to: &body)
+        if let cardNumber = draft.cardNumber {
             appendField("cardNumber", cardNumber, boundary: boundary, to: &body)
         }
 
@@ -31,11 +64,7 @@ struct DocumentService {
         body.append(file.data)
         body.append(contentsOf: "\r\n--\(boundary)--\r\n".utf8)
 
-        return try await client.postMultipart("api/documents", body: body, boundary: boundary, token: token)
-    }
-
-    func download(_ file: PrivateDocumentDownload, token: String) async throws -> Data {
-        try await client.getFile(file, token: token)
+        return try await client.sendMultipart(path, method: method, body: body, boundary: boundary, token: token)
     }
 
     private func appendField(_ name: String, _ value: String, boundary: String, to data: inout Data) {

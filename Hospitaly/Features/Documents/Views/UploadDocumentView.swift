@@ -9,7 +9,7 @@ import SwiftUI
 
 struct UploadDocumentView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var model = UploadDocumentViewModel()
+    @State private var model: UploadDocumentViewModel
     @State private var showsFileImporter = false
     @State private var reconciledIDs: Set<UUID>?
 
@@ -17,6 +17,17 @@ struct UploadDocumentView: View {
     let knownIDs: Set<UUID>
     let onRefresh: ([PatientDocument]) -> Void
     let onSaved: (PatientDocument) -> Void
+
+    init(
+        actions: DocumentsActions, knownIDs: Set<UUID>, original: PatientDocument? = nil,
+        onRefresh: @escaping ([PatientDocument]) -> Void, onSaved: @escaping (PatientDocument) -> Void
+    ) {
+        _model = State(initialValue: UploadDocumentViewModel(original: original))
+        self.actions = actions
+        self.knownIDs = knownIDs
+        self.onRefresh = onRefresh
+        self.onSaved = onSaved
+    }
 
     var body: some View {
         ScrollView {
@@ -32,7 +43,7 @@ struct UploadDocumentView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Color.themeDetailCanvas.ignoresSafeArea())
-        .navigationTitle("Upload Document")
+        .navigationTitle(model.original == nil ? "Upload Document" : "Edit Document")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -57,7 +68,7 @@ struct UploadDocumentView: View {
                         ProgressView()
                             .frame(height: 44)
                     } else {
-                        Image(systemName: model.file == nil ? "icloud.and.arrow.up.fill" : "doc.badge.checkmark")
+                        Image(systemName: model.file == nil ? "icloud.and.arrow.up.fill" : "checkmark.circle.fill")
                             .font(.title2.weight(.semibold))
                             .foregroundStyle(Color.themePrimary)
                             .frame(width: 48, height: 48)
@@ -73,10 +84,10 @@ struct UploadDocumentView: View {
                             .font(.caption)
                             .foregroundStyle(Color.themeSecondaryText)
                     } else {
-                        Text(model.isPicking ? "Opening File…" : "Tap to Upload")
+                        Text(filePickerTitle)
                             .font(.headline)
                             .foregroundStyle(Color.themeText)
-                        Text("PDF, JPEG, or PNG · up to 5 MiB")
+                        Text(filePickerDetail)
                             .font(.caption)
                             .foregroundStyle(Color.themeSecondaryText)
                     }
@@ -98,7 +109,24 @@ struct UploadDocumentView: View {
                     .font(.footnote)
                     .foregroundStyle(Color.themePrimary)
             }
+
+            if model.original != nil, model.file != nil || model.fileError != nil {
+                Button("Keep Current File", action: model.keepCurrentFile)
+                    .font(.footnote.weight(.semibold))
+            }
         }
+    }
+
+    private var filePickerTitle: LocalizedStringKey {
+        if model.isPicking { return "Opening File…" }
+        return model.original == nil ? "Tap to Upload" : "Choose Replacement File"
+    }
+
+    private var filePickerDetail: String {
+        if let original = model.original {
+            return "Current file · \(original.size.formatted(.byteCount(style: .file)))\nPDF, JPEG, or PNG · up to 5 MiB"
+        }
+        return "PDF, JPEG, or PNG · up to 5 MiB"
     }
 
     private var metadataFields: some View {
@@ -193,7 +221,7 @@ struct UploadDocumentView: View {
                 }
                 .disabled(model.isBusy)
             } else {
-                PrimaryActionButton(title: model.isSubmitting ? "Uploading…" : "Submit Document") {
+                PrimaryActionButton(title: submitTitle) {
                     Task { await upload() }
                 }
                 .disabled(!model.canSubmit)
@@ -207,8 +235,15 @@ struct UploadDocumentView: View {
         .overlay(alignment: .top) { Divider() }
     }
 
+    private var submitTitle: LocalizedStringKey {
+        if model.original != nil {
+            return model.isSubmitting ? "Saving…" : "Save Changes"
+        }
+        return model.isSubmitting ? "Uploading…" : "Submit Document"
+    }
+
     private func upload() async {
-        guard let document = await model.submit(knownIDs: reconciledIDs ?? knownIDs, using: actions.upload) else {
+        guard let document = await model.submit(knownIDs: reconciledIDs ?? knownIDs, using: actions) else {
             return
         }
         onSaved(document)
@@ -226,5 +261,14 @@ struct UploadDocumentView: View {
 #Preview("Upload Document") {
     NavigationStack {
         UploadDocumentView(actions: .preview, knownIDs: [], onRefresh: { _ in }, onSaved: { _ in })
+    }
+}
+
+#Preview("Edit Document") {
+    NavigationStack {
+        UploadDocumentView(
+            actions: .preview, knownIDs: [PatientDocument.sampleCard.id], original: .sampleCard,
+            onRefresh: { _ in }, onSaved: { _ in }
+        )
     }
 }
