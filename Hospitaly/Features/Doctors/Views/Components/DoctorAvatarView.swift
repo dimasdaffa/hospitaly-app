@@ -10,12 +10,13 @@ import SwiftUI
 struct DoctorAvatarView: View {
     let doctor: Doctor
     var size: CGFloat = 80
+    var height: CGFloat? = nil
     var showsAvailability = true
 
     var body: some View {
         VStack(spacing: -14) {
             portrait
-                .frame(width: size, height: size)
+                .frame(width: size, height: height ?? size)
                 .grayscale(doctor.isAvailable ? 0 : 1)
                 .background(Color.themeSubtleSurface)
                 .clipShape(.rect(cornerRadius: 23))

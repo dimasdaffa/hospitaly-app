@@ -18,9 +18,9 @@ struct DoctorBookingBar: View {
         VStack(spacing: 12) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("SELECTED SLOT")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(Color.themeMutedText)
+                    Text("Selected time")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.themeCrimsonInk)
 
                     if let slot {
                         Text("\(slot.dateLabel) · \(slot.timeLabel)")
@@ -36,9 +36,9 @@ struct DoctorBookingBar: View {
                 Spacer(minLength: 12)
 
                 VStack(alignment: .trailing, spacing: 4) {
-                    Text("FEE")
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(Color.themeMutedText)
+                    Text("Fee")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.themeCrimsonInk)
 
                     if let fee, let currency {
                         Text(fee, format: .currency(code: currency).precision(.fractionLength(0)).locale(Locale(identifier: "id_ID")))
@@ -52,17 +52,22 @@ struct DoctorBookingBar: View {
                 }
             }
 
-            PrimaryActionButton(title: "Continue to Reason", icon: "arrow.right") {
+            PrimaryActionButton(title: "Continue to Reason", icon: "arrow.right", cornerRadius: 24) {
                 if let slot { onContinue(slot) }
             }
             .disabled(slot == nil)
         }
-        .frame(maxWidth: 508)
-        .padding(.horizontal, 20)
+        .padding(.horizontal, Theme.contentInset)
+        .frame(maxWidth: Theme.dashboardWidth)
         .padding(.top, 14)
         .padding(.bottom, 10)
         .frame(maxWidth: .infinity)
-        .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+        .background {
+            Rectangle()
+                .fill(.regularMaterial)
+                .environment(\.colorScheme, .light)
+                .ignoresSafeArea(.container, edges: .bottom)
+        }
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(Color.themeDivider)
@@ -76,10 +81,10 @@ struct DoctorBookingBar: View {
         DoctorBookingBar(slot: .sample(), fee: 150_000, onContinue: { _ in })
         DoctorBookingBar(slot: nil, fee: 150_000, onContinue: { _ in })
     }
-    .background(Color.themeDetailCanvas)
+    .background(Theme.dashboardCanvas)
 }
 
 #Preview("Fee Unavailable") {
     DoctorBookingBar(slot: .sample(), fee: nil, onContinue: { _ in })
-        .background(Color.themeDetailCanvas)
+        .background(Theme.dashboardCanvas)
 }

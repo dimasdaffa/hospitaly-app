@@ -15,6 +15,8 @@ struct AppointmentSlotPicker: View {
     let slots: [AppointmentSlot]
     let selectedSlot: AppointmentSlot?
     let onSelectSlot: (AppointmentSlot) -> Void
+    var isCompact = false
+
     @State private var showsCalendar = false
 
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
@@ -22,7 +24,7 @@ struct AppointmentSlotPicker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
-                Text("Schedules")
+                Text(isCompact ? "Available Date & Time" : "Schedules")
                     .font(.title3.bold())
                     .foregroundStyle(Color.themeText)
 
@@ -38,6 +40,8 @@ struct AppointmentSlotPicker: View {
                     }
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color.themePrimary)
+                    .frame(minHeight: isCompact ? 44 : nil)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
             }
@@ -99,11 +103,12 @@ struct AppointmentSlotPicker: View {
 
     private func dayButton(_ date: Date) -> some View {
         let selected = ClinicDate.calendar.isDate(date, inSameDayAs: selectedDate)
+        let shape = RoundedRectangle(cornerRadius: isCompact ? 16 : 24)
 
         return Button {
             selectedDate = date
         } label: {
-            VStack(spacing: 8) {
+            VStack(spacing: isCompact ? 4 : 8) {
                 Text(ClinicDate.label(date, as: .dateTime.weekday(.abbreviated)))
                     .font(.caption)
                     .foregroundStyle(selected ? Color.themeSurface : Color.themeMutedText)
@@ -112,12 +117,9 @@ struct AppointmentSlotPicker: View {
                     .font(.title2.bold())
                     .foregroundStyle(selected ? Color.themeSurface : Color.themeText)
             }
-            .frame(width: 65, height: 89)
-            .background(selected ? Color.themePrimary : Color.themeSurface, in: .rect(cornerRadius: 24))
-            .overlay {
-                RoundedRectangle(cornerRadius: 24)
-                    .strokeBorder(Color.themeCardBorder, lineWidth: selected ? 0 : 1)
-            }
+            .frame(width: isCompact ? 54 : 65, height: isCompact ? 66 : 89)
+            .background(selected ? Color.themePrimary : Color.themeSurface, in: shape)
+            .overlay { shape.strokeBorder(Color.themeCardBorder, lineWidth: selected ? 0 : 1) }
             .shadow(color: selected ? Color.themePrimary.opacity(0.22) : .clear, radius: 4, y: 3)
         }
         .buttonStyle(.plain)
@@ -132,26 +134,26 @@ struct AppointmentSlotPicker: View {
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(slots) { slot in
                     let selected = selectedSlot?.id == slot.id
+                    let filled = selected && isCompact
+                    let shape = RoundedRectangle(cornerRadius: isCompact ? 22 : 14)
+                    let selectedLabelColor = filled ? Color.themeSurface : Color.themePrimary
+                    let labelColor = slot.isAvailable ? Color.themeText : Color.themeMutedText.opacity(0.65)
 
                     Button {
                         onSelectSlot(slot)
                     } label: {
                         Text(slot.timeLabel)
                             .font(.subheadline.weight(selected ? .semibold : .medium))
-                            .foregroundStyle(
-                                selected ? Color.themePrimary
-                                    : slot.isAvailable ? Color.themeText : Color.themeMutedText.opacity(0.65)
-                            )
+                            .foregroundStyle(selected ? selectedLabelColor : labelColor)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                             .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(Color.themeSurface, in: .rect(cornerRadius: 14))
+                            .background(filled ? Color.themePrimary : Color.themeSurface, in: shape)
                             .overlay {
-                                RoundedRectangle(cornerRadius: 14)
-                                    .strokeBorder(
-                                        selected ? Color.themePrimary : Color.themeCardBorder,
-                                        lineWidth: selected ? 2 : 1
-                                    )
+                                shape.strokeBorder(
+                                    selected ? Color.themePrimary : Color.themeCardBorder,
+                                    lineWidth: selected ? 2 : 1
+                                )
                             }
                     }
                     .buttonStyle(.plain)

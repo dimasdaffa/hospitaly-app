@@ -9,8 +9,14 @@ import Foundation
 import SwiftUI
 
 struct DoctorDetailView: View {
+    private enum Section: String, CaseIterable {
+        case appointment = "Appointment"
+        case schedule = "Schedule"
+        case about = "About"
+    }
+
     @State private var viewModel: DoctorDetailViewModel
-    @State private var showsFullBio = false
+    @State private var section: Section = .appointment
 
     let loadDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)?
     let onContinue: (Doctor, AppointmentSlot) -> Void
@@ -27,85 +33,30 @@ struct DoctorDetailView: View {
     }
 
     var body: some View {
-        let doctor = viewModel.doctor
-
         ScrollView {
-            VStack(alignment: .leading, spacing: 28) {
-                DoctorProfileHeader(doctor: doctor)
+            VStack(spacing: 0) {
+                DoctorProfileHeader(doctor: viewModel.doctor)
+                    .padding(.horizontal, Theme.contentInset)
+                    .padding(.top, 12)
+                    .padding(.bottom, 22)
 
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("About Doctor")
-                        .font(.title3.bold())
-                        .foregroundStyle(Color.themeText)
-
-                    if let bio = doctor.bio {
-                        Text(bio)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.themeSecondaryText)
-                            .lineSpacing(4)
-                            .lineLimit(showsFullBio ? nil : 3)
-
-                        Button(showsFullBio ? "Read less" : "Read more") {
-                            showsFullBio.toggle()
-                        }
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.themePrimary)
-                        .buttonStyle(.plain)
-                    } else {
-                        Text("No biography has been added yet.")
-                            .font(.subheadline)
-                            .foregroundStyle(Color.themeSecondaryText)
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Practice Location")
-                        .font(.title3.bold())
-                        .foregroundStyle(Color.themeText)
-
-                    HStack(spacing: 14) {
-                        Image(systemName: "cross.case.fill")
-                            .font(.title3)
-                            .foregroundStyle(Color.themePrimary)
-                            .frame(width: 48, height: 48)
-                            .background(Color.themePrimary.opacity(0.08), in: .rect(cornerRadius: 14))
-
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(doctor.hospital)
-                                .font(.headline)
-                                .foregroundStyle(Color.themeText)
-
-                            if !doctor.practiceLocation.isEmpty {
-                                Text(doctor.practiceLocation)
-                                    .font(.footnote)
-                                    .foregroundStyle(Color.themeSecondaryText)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
-                    .background(Color.themeSurface, in: .rect(cornerRadius: 16))
-                }
-
-                scheduleContent
+                detailPanel
             }
-            .frame(maxWidth: 508)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 24)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if doctor.canBookDemoSlot || viewModel.hasBookableSlots {
+            if section == .appointment && canBook {
                 DoctorBookingBar(
                     slot: viewModel.selectedSlot,
-                    fee: doctor.consultationFee,
-                    currency: doctor.consultationCurrency,
-                    onContinue: { slot in onContinue(doctor, slot) }
+                    fee: viewModel.doctor.consultationFee,
+                    currency: viewModel.doctor.consultationCurrency,
+                    onContinue: { slot in onContinue(viewModel.doctor, slot) }
                 )
             }
         }
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.dashboardCanvas.ignoresSafeArea() }
         .navigationTitle("Doctor Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarVisibility(.visible, for: .navigationBar)
@@ -116,12 +67,110 @@ struct DoctorDetailView: View {
         }
     }
 
+    private var canBook: Bool {
+        viewModel.doctor.canBookDemoSlot || viewModel.hasBookableSlots
+    }
+
+    private var detailPanel: some View {
+        VStack(spacing: 0) {
+            sectionTabs
+
+            VStack(alignment: .leading, spacing: 20) {
+                switch section {
+                case .appointment, .schedule:
+                    schedulingContent
+                case .about:
+                    aboutContent
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(Theme.contentInset)
+        }
+        .background(
+            Color.themeSurface.opacity(0.86),
+            in: UnevenRoundedRectangle(topLeadingRadius: Theme.cardRadius, topTrailingRadius: Theme.cardRadius)
+        )
+    }
+
+    private var sectionTabs: some View {
+        HStack(spacing: 0) {
+            ForEach(Section.allCases, id: \.self) { tab in
+                let selected = section == tab
+                Button {
+                    section = tab
+                } label: {
+                    Text(tab.rawValue)
+                        .font(.subheadline.weight(selected ? .semibold : .medium))
+                        .foregroundStyle(selected ? Color.themeCrimsonInk : Color.themeSecondaryText)
+                        .frame(maxWidth: .infinity, minHeight: 48)
+                        .contentShape(Rectangle())
+                        .overlay(alignment: .bottom) {
+                            if selected {
+                                Capsule()
+                                    .fill(Color.themePrimary)
+                                    .frame(height: 2)
+                                    .padding(.horizontal, 8)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .padding(.horizontal, 12)
+        .background(alignment: .bottom) { Divider() }
+    }
+
+    private var aboutContent: some View {
+        let doctor = viewModel.doctor
+
+        return VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("About Doctor")
+                    .font(.title3.bold())
+                    .foregroundStyle(Color.themeText)
+
+                Text(doctor.bio ?? "No biography has been added yet.")
+                    .font(.subheadline)
+                    .foregroundStyle(Color.themeSecondaryText)
+                    .lineSpacing(4)
+            }
+
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Practice Location")
+                    .font(.title3.bold())
+                    .foregroundStyle(Color.themeText)
+
+                HStack(spacing: 14) {
+                    Image(systemName: "cross.case.fill")
+                        .font(.title3)
+                        .foregroundStyle(Color.themeCrimsonInk)
+                        .frame(width: 44, height: 44)
+                        .background(Color.themeGlassRose, in: .rect(cornerRadius: 14))
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(doctor.hospital)
+                            .font(.headline)
+                            .foregroundStyle(Color.themeText)
+
+                        if !doctor.practiceLocation.isEmpty {
+                            Text(doctor.practiceLocation)
+                                .font(.footnote)
+                                .foregroundStyle(Color.themeSecondaryText)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(14)
+                .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: 18))
+            }
+        }
+    }
+
     @ViewBuilder
-    private var scheduleContent: some View {
-        if viewModel.doctor.canBookDemoSlot {
-            slotPicker
-        } else if viewModel.doctor.usesDemoSchedule {
-            DoctorWeeklyScheduleView()
+    private var schedulingContent: some View {
+        if viewModel.doctor.usesDemoSchedule {
+            schedules(weeklyHours: nil)
         } else {
             switch viewModel.phase {
             case .loading:
@@ -138,13 +187,18 @@ struct DoctorDetailView: View {
                         .buttonStyle(.borderedProminent)
                 }
             case .loaded:
-                if viewModel.hasScheduledSlots {
-                    slotPicker
-                }
-                if !viewModel.hasBookableSlots {
-                    DoctorWeeklyScheduleView(weeklyHours: viewModel.weeklyHours)
-                }
+                schedules(weeklyHours: viewModel.weeklyHours)
             }
+        }
+    }
+
+    @ViewBuilder
+    private func schedules(weeklyHours: [DoctorDetailData.WeeklyHours]?) -> some View {
+        if section == .appointment && (viewModel.doctor.canBookDemoSlot || viewModel.hasScheduledSlots) {
+            slotPicker
+        }
+        if section == .schedule || !canBook {
+            DoctorWeeklyScheduleView(weeklyHours: weeklyHours, hasBookableSlots: canBook)
         }
     }
 
@@ -152,7 +206,8 @@ struct DoctorDetailView: View {
         @Bindable var model = viewModel
         return AppointmentSlotPicker(
             days: model.days, dateRange: model.dateRange, selectedDate: $model.selectedDate,
-            slots: model.slots, selectedSlot: model.selectedSlot, onSelectSlot: model.selectSlot
+            slots: model.slots, selectedSlot: model.selectedSlot, onSelectSlot: model.selectSlot,
+            isCompact: true
         )
     }
 }
@@ -169,10 +224,11 @@ struct DoctorDetailView: View {
     }
 }
 
-#Preview("No Practice Schedule") {
+#Preview("No Practice Schedule or Portrait") {
     let doctor = {
         var doctor = Doctor.samples[1]
         doctor.usesDemoSchedule = false
+        doctor.portraitName = nil
         return doctor
     }()
 

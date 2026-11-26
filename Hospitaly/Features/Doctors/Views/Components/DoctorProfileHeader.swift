@@ -8,75 +8,81 @@
 import SwiftUI
 
 struct DoctorProfileHeader: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     let doctor: Doctor
 
     var body: some View {
-        VStack(spacing: 20) {
-            DoctorAvatarView(doctor: doctor, size: 120)
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 16))
+            : AnyLayout(HStackLayout(alignment: .center, spacing: 14))
 
-            VStack(spacing: 6) {
-                Text(doctor.name)
-                    .font(.title2.bold())
-                    .foregroundStyle(Color.themeText)
+        VStack(alignment: .leading, spacing: 18) {
+            layout {
+                identity
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
-                if let license = doctor.license {
-                    Text("STR/SIP: \(license)")
-                        .font(.caption)
-                        .foregroundStyle(Color.themeSecondaryText)
-                }
-
-                Text("\(doctor.specialty) Specialist")
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.themePrimary)
+                DoctorAvatarView(doctor: doctor, size: 136, height: 166)
+                    .padding(5)
+                    .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: 28))
             }
-            .multilineTextAlignment(.center)
 
-            HStack(spacing: 12) {
+            HStack(spacing: 0) {
                 statistic(
-                    "Rating", value: doctor.rating.formatted(.number.precision(.fractionLength(1))),
-                    icon: "star", color: .themePrimary, background: Color.themePrimary.opacity(0.07)
+                    "Experience", value: "\(doctor.experienceYears) yrs"
                 )
+                Divider().frame(height: 24)
                 statistic(
-                    "Patients", value: doctor.patientCount.formatted(.number.notation(.compactName)),
-                    icon: "person.2", color: .themeExperienceAccent, background: .themeExperienceBackground
+                    "Patients", value: doctor.patientCount.formatted(.number.notation(.compactName))
                 )
+                Divider().frame(height: 24)
                 statistic(
-                    "Experience", value: "\(doctor.experienceYears) yrs",
-                    icon: "briefcase", color: .themePurpleAccent, background: .themePurpleBackground
+                    "Rating", value: doctor.rating.formatted(.number.precision(.fractionLength(1)))
                 )
             }
+            .padding(.vertical, 10)
+            .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: 18))
         }
-        .frame(maxWidth: .infinity)
     }
 
-    private func statistic(
-        _ title: LocalizedStringKey, value: String, icon: String, color: Color, background: Color
-    ) -> some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(color)
-                .frame(width: 40, height: 40)
-                .background(background, in: Circle())
+    private var identity: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(doctor.specialty)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(Color.themeCrimsonInk)
 
+            Text(doctor.name)
+                .font(.largeTitle.bold())
+                .tracking(-0.8)
+                .foregroundStyle(Color.themeText)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if let license = doctor.license {
+                Text("STR/SIP: \(license)")
+                    .font(.caption)
+                    .foregroundStyle(Color.themeSecondaryText)
+            }
+        }
+    }
+
+    private func statistic(_ title: LocalizedStringKey, value: String) -> some View {
+        VStack(spacing: 3) {
             Text(value)
                 .font(.headline.bold())
                 .foregroundStyle(Color.themeText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
 
             Text(title)
-                .font(.caption2.weight(.semibold))
-                .textCase(.uppercase)
-                .foregroundStyle(Color.themeMutedText)
+                .font(.caption)
+                .foregroundStyle(Color.themeSecondaryText)
         }
-        .frame(maxWidth: .infinity, minHeight: 116)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 20))
+        .multilineTextAlignment(.center)
+        .padding(.horizontal, 4)
+        .frame(maxWidth: .infinity)
     }
 }
 
 #Preview {
     DoctorProfileHeader(doctor: Doctor.samples[0])
         .padding()
-        .background(Color.themeDetailCanvas)
+        .background(Theme.dashboardCanvas)
 }

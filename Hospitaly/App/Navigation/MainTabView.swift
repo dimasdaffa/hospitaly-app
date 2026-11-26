@@ -180,7 +180,6 @@ struct MainTabView: View {
             onSeeAll: { openAppointments() },
             onOpenAppointment: { openAppointments(presenting: $0) },
             onOpenNotifications: canOpenNotifications ? { isNotificationsPresented = true } : nil,
-            onOpenHelp: profileSettings == nil ? nil : { openProfile(.help) },
             shortcuts: homeShortcuts,
             carePlanActions: carePlanActions
         )

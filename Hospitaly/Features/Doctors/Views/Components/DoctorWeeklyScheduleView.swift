@@ -10,6 +10,7 @@ import SwiftUI
 
 struct DoctorWeeklyScheduleView: View {
     var weeklyHours: [DoctorDetailData.WeeklyHours]? = nil
+    var hasBookableSlots = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -43,20 +44,23 @@ struct DoctorWeeklyScheduleView: View {
                         row("Sunday", hours: "Closed", isClosed: true)
                     }
                 }
-                .background(Color.themeSurface, in: .rect(cornerRadius: 16))
-
-                Label {
-                    Text("Weekly hours are for reference. No bookable slots are available in the next 14 days.")
-                        .font(.footnote)
-                } icon: {
-                    Image(systemName: "info.circle.fill")
-                        .foregroundStyle(Color.themeMutedText)
-                }
-                .foregroundStyle(Color.themeSecondaryText)
-                .padding(14)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.themeExperienceBackground, in: .rect(cornerRadius: 14))
+                .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: 18))
             }
+
+            Label {
+                if hasBookableSlots {
+                    Text("Weekly hours are for reference. Open Appointment to select an available time.")
+                } else {
+                    Text("No bookable slots are available in the next 14 days.")
+                }
+            } icon: {
+                Image(systemName: "info.circle")
+            }
+            .font(.footnote)
+            .foregroundStyle(Color.themeCrimsonInk)
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.themeGlassRose, in: .rect(cornerRadius: 14))
         }
     }
 
@@ -80,11 +84,11 @@ struct DoctorWeeklyScheduleView: View {
 #Preview {
     DoctorWeeklyScheduleView()
         .padding()
-        .background(Color.themeDetailCanvas)
+        .background(Theme.dashboardCanvas)
 }
 
 #Preview("No Practice Schedule") {
     DoctorWeeklyScheduleView(weeklyHours: [])
         .padding()
-        .background(Color.themeDetailCanvas)
+        .background(Theme.dashboardCanvas)
 }

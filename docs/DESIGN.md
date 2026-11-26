@@ -1,6 +1,6 @@
 # Hospitaly design direction
 
-**Phase 1 — Theme and Home dashboard · 27 November 2026**
+**Theme, Home dashboard, and doctor details · 27 November 2026**
 
 The visual reference brings the next step into focus with a colored header, a prominent care card, a search field across the transition to the page, and compact service shortcuts. Hospitaly uses that hierarchy with its crimson brand, glass surfaces, and the patient flows already connected to Vapor.
 
@@ -26,6 +26,13 @@ Use system typography and sentence-case labels. Keep appointment facts on a ligh
 5. Today’s Care Plan keeps the actual doses from Vapor, including the existing Mark as Taken action and confirmation.
 
 The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and events describe separate features. Those sections require their own product decisions and backend contracts before they can represent live patient data.
+
+## Doctor detail layout and behavior
+
+- The rose background extends behind the system navigation bar. The doctor’s name and specialty sit to the left of the portrait, with a glass surface underneath for experience, patient count, and rating. Unavailable portraits remain grayscale, and missing photos use the shared placeholder.
+- The Appointment tab opens first. Its compact date cards and time pills use crimson for the active choice. The bottom bar shows the selected time and consultation fee, and Continue to Reason opens the existing booking form after an available time is selected.
+- Schedule displays the doctor’s weekly practice hours. Appointment also shows those hours when there are no bookable slots in the next 14 clinic days.
+- About holds the biography and practice address. Profile details, practice hours, and availability continue to use the existing Vapor endpoints.
 
 ## Rollout
 

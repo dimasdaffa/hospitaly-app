@@ -32,7 +32,6 @@ struct HomeView: View {
     let onSeeAll: () -> Void
     let onOpenAppointment: (AppointmentPresentation) -> Void
     let onOpenNotifications: (() -> Void)?
-    var onOpenHelp: (() -> Void)? = nil
     var shortcuts: [Shortcut] = []
     var carePlanActions: CarePlanActions? = nil
 
@@ -94,9 +93,6 @@ struct HomeView: View {
                             "Notifications", symbol: "bell", hasIndicator: hasUnreadNotifications,
                             action: onOpenNotifications
                         )
-                    }
-                    if let onOpenHelp {
-                        headerButton("Help Center", symbol: "questionmark", action: onOpenHelp)
                     }
                 }
             }
@@ -326,7 +322,7 @@ struct HomeView: View {
         patientName: "Demo Patient", isActive: true, hasUnreadNotifications: true,
         loadAppointments: { Appointment.samples },
         onBook: {}, onSearchDoctors: { _ in }, onSeeAll: {}, onOpenAppointment: { _ in },
-        onOpenNotifications: {}, onOpenHelp: {},
+        onOpenNotifications: {},
         shortcuts: [
             .init(title: "Appointments", symbol: "calendar.badge.clock", action: {}),
             .init(title: "Health Tracker", symbol: "waveform.path.ecg", action: {}),
