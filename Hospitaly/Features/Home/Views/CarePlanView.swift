@@ -15,8 +15,9 @@ struct CarePlanView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Today’s Care Plan")
-                .font(.headline)
+                .font(.title3.bold())
                 .foregroundStyle(Color.themeText)
+                .accessibilityAddTraits(.isHeader)
 
             switch viewModel.phase {
             case .loading:
@@ -32,14 +33,14 @@ struct CarePlanView: View {
                     Button("Retry", action: onRetry)
                         .buttonStyle(.borderedProminent)
                 }
-                .background(Color.themeSurface, in: .rect(cornerRadius: 20))
+                .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
             case .loaded(let entries):
                 if entries.isEmpty {
                     ContentUnavailableView(
                         "No Doses Scheduled Today", systemImage: "pills",
                         description: Text("Medication scheduled for today will appear here.")
                     )
-                    .background(Color.themeSurface, in: .rect(cornerRadius: 20))
+                    .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
                 } else {
                     if let error = viewModel.saveError {
                         Text(error)
@@ -53,7 +54,7 @@ struct CarePlanView: View {
                                 doseCard(entry)
                             }
                         }
-                        .padding(.vertical, 3)
+                        .padding(.vertical, 7)
                     }
                     .scrollIndicators(.hidden)
                 }
@@ -65,9 +66,9 @@ struct CarePlanView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "pills.fill")
-                    .foregroundStyle(Color.themeRecordsAccent)
+                    .foregroundStyle(Color.themeCrimsonInk)
                     .frame(width: 42, height: 42)
-                    .background(Color.themeRecordsBackground, in: .rect(cornerRadius: 13))
+                    .background(Color.themeGlassRose, in: .rect(cornerRadius: 13))
 
                 Spacer()
 
@@ -105,10 +106,9 @@ struct CarePlanView: View {
                 } label: {
                     Text(viewModel.savingID == entry.id ? "Saving…" : "Mark as Taken")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.themeSecondaryText)
-                        .frame(maxWidth: .infinity, minHeight: 42)
-                        .background(Color.themeSurface, in: .rect(cornerRadius: 12))
-                        .overlay { RoundedRectangle(cornerRadius: 12).strokeBorder(Color.themeOutline, lineWidth: 1) }
+                        .foregroundStyle(Color.themeCrimsonInk)
+                        .frame(maxWidth: .infinity, minHeight: 44)
+                        .background(Color.themeGlassRose, in: .capsule)
                 }
                 .buttonStyle(.plain)
                 .disabled(viewModel.savingID != nil)
@@ -116,8 +116,7 @@ struct CarePlanView: View {
         }
         .padding(16)
         .frame(width: 244, alignment: .leading)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 20))
-        .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(Color.themeCardBorder, lineWidth: 1) }
+        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
     }
 }
 
@@ -128,13 +127,13 @@ struct CarePlanView: View {
         onMarkTaken: { _ in }
     )
     .padding()
-    .background(Color.themeCanvas)
+    .background(Theme.dashboardCanvas)
 }
 
 #Preview("Empty Care Plan") {
     CarePlanView(viewModel: CarePlanViewModel(phase: .loaded([])), onRetry: {}, onMarkTaken: { _ in })
         .padding()
-        .background(Color.themeCanvas)
+        .background(Theme.dashboardCanvas)
 }
 
 #Preview("Care Plan Failed") {
@@ -144,5 +143,5 @@ struct CarePlanView: View {
         onMarkTaken: { _ in }
     )
     .padding()
-    .background(Color.themeCanvas)
+    .background(Theme.dashboardCanvas)
 }

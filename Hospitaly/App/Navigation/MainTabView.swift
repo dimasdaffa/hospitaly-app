@@ -16,6 +16,7 @@ struct MainTabView: View {
 
     @State private var selection: MainTab = .home
     @State private var doctorPath: [DoctorRoute] = []
+    @State private var doctorSearchRequest: DoctorListView.SearchRequest?
     @State private var chatPath: [MessagePeer] = []
     @State private var profilePath: [ProfileView.Route] = []
     @State private var shortcutSheet: ShortcutSheet?
@@ -80,7 +81,8 @@ struct MainTabView: View {
                     path: $doctorPath, loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails,
                     setFavorite: setFavorite,
                     loadAppointments: loadAppointments, bookAppointment: bookAppointment,
-                    appointmentManagement: appointmentManagement
+                    appointmentManagement: appointmentManagement,
+                    searchRequest: doctorSearchRequest
                 )
                 .toolbarVisibility(.hidden, for: .tabBar)
             }
@@ -173,10 +175,13 @@ struct MainTabView: View {
             isActive: selection == .home,
             hasUnreadNotifications: notifications.hasUnread,
             loadAppointments: loadAppointments ?? { [] },
-            onBook: { openTab(.doctors) },
+            onBook: { openDoctorSearch("") },
+            onSearchDoctors: openDoctorSearch,
             onSeeAll: { openAppointments() },
             onOpenAppointment: { openAppointments(presenting: $0) },
             onOpenNotifications: canOpenNotifications ? { isNotificationsPresented = true } : nil,
+            onOpenHelp: profileSettings == nil ? nil : { openProfile(.help) },
+            shortcuts: homeShortcuts,
             carePlanActions: carePlanActions
         )
         .sheet(isPresented: $isNotificationsPresented) {
@@ -192,9 +197,37 @@ struct MainTabView: View {
         }
     }
 
+    private var homeShortcuts: [HomeView.Shortcut] {
+        var shortcuts = [
+            HomeView.Shortcut(title: "Appointments", symbol: "calendar.badge.clock", action: openAppointmentsFromMenu)
+        ]
+        if let openHealthTrackerAction {
+            shortcuts.append(.init(title: "Health Tracker", symbol: "waveform.path.ecg", action: openHealthTrackerAction))
+        }
+        if let openRecordsAction {
+            shortcuts.append(.init(title: "Records", symbol: "folder", action: openRecordsAction))
+        }
+        if documentsActions != nil {
+            shortcuts.append(.init(title: "Documents", symbol: "doc.text", action: { openProfile(.documents) }))
+        }
+        return shortcuts
+    }
+
+    private func openDoctorSearch(_ query: String) {
+        openTab(.doctors)
+        doctorSearchRequest = DoctorListView.SearchRequest(query: query)
+    }
+
+    private func openProfile(_ route: ProfileView.Route) {
+        profilePath = [route]
+        selection = .profile
+        shortcutSheet = nil
+    }
+
     private func openTab(_ tab: MainTab) {
         if tab == .doctors {
             doctorPath.removeAll()
+            doctorSearchRequest = nil
         }
         if tab == .chat {
             inbox.query = ""

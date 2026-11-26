@@ -9,6 +9,11 @@ import Foundation
 import SwiftUI
 
 struct DoctorListView: View {
+    struct SearchRequest: Equatable {
+        let id = UUID()
+        let query: String
+    }
+
     @State private var viewModel = DoctorListViewModel()
     @State private var demoAppointments = Appointment.samples
     @State private var availabilityRevision = 0
@@ -20,6 +25,7 @@ struct DoctorListView: View {
     var loadAppointments: (@MainActor () async throws -> [Appointment])? = nil
     var bookAppointment: (@MainActor (BookingRequest, Doctor) async throws -> Appointment)? = nil
     var appointmentManagement: AppointmentManagement? = nil
+    var searchRequest: SearchRequest? = nil
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -97,6 +103,11 @@ struct DoctorListView: View {
             }
         }
         .tint(Color.themePrimary)
+        .onChange(of: searchRequest, initial: true) { _, request in
+            guard let request else { return }
+            viewModel.resetFilters()
+            viewModel.searchText = request.query
+        }
         .task(id: viewModel.loadAttempt) { await viewModel.load(using: loadDoctors) }
         .alert("Couldn’t Update Favorite", item: $viewModel.favoriteError) { _ in
             Button("OK", role: .cancel) {}

@@ -7,9 +7,41 @@
 
 import SwiftUI
 
+enum Theme {
+    enum GlassTone: Equatable {
+        case light, crimson
+    }
+
+    static let contentInset: CGFloat = 20
+    static let dashboardWidth: CGFloat = 560
+    static let sectionSpacing: CGFloat = 28
+    static let cardRadius: CGFloat = 24
+    static let heroRadius: CGFloat = 34
+    static let searchOverlap: CGFloat = 27
+
+    static var crimsonGradient: LinearGradient {
+        LinearGradient(
+            colors: [.themeCrimsonDeep, .themeCrimsonShade],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+        )
+    }
+
+    static var dashboardCanvas: LinearGradient {
+        LinearGradient(
+            colors: [.themeGlassRose, .themeGlassCanvas, .themeGlassCanvas],
+            startPoint: .top, endPoint: .bottomTrailing
+        )
+    }
+}
+
 extension Color {
     static let themePrimary = Color(hex: 0xDB143C)
     static let themePrimaryHighlight = Color(hex: 0xF04143)
+    static let themeCrimsonDeep = Color(hex: 0x510D2A)
+    static let themeCrimsonShade = Color(hex: 0xB01B45)
+    static let themeCrimsonInk = Color(hex: 0xA31138)
+    static let themeGlassRose = Color(hex: 0xF6E2EB)
+    static let themeGlassCanvas = Color(hex: 0xFFF8FB)
     static let themeVitalAccent = Color(hex: 0xED172C)
     static let themeDashboardHeroEnd = Color(hex: 0xFF859A)
     static let themeDetailCanvas = Color(hex: 0xF5F7F9)
@@ -43,6 +75,33 @@ extension Color {
     static let themeRecordsAccent = Color(hex: 0xDA5210)
     static let themeRecordsBackground = Color(hex: 0xFFF3E6)
     static let themeQuickBook = Color(hex: 0xFFBD09)
+}
+
+extension View {
+    func hospitalyGlassSurface<S: InsettableShape>(
+        in shape: S, tone: Theme.GlassTone = .light
+    ) -> some View {
+        let onCrimson = tone == .crimson
+        let tint = onCrimson ? Color.themeSurface.opacity(0.09) : Color.themeSurface.opacity(0.68)
+
+        return background {
+            shape
+                .fill(.thinMaterial)
+                .environment(\.colorScheme, onCrimson ? .dark : .light)
+                .opacity(onCrimson ? 0.40 : 1)
+                .overlay { shape.fill(tint) }
+                .overlay {
+                    shape.strokeBorder(
+                        LinearGradient(
+                            colors: [.themeSurface.opacity(0.94), .themeSurface.opacity(onCrimson ? 0.18 : 0.55)],
+                            startPoint: .topLeading, endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1
+                    )
+                }
+                .shadow(color: Color.themeCrimsonDeep.opacity(onCrimson ? 0.22 : 0.13), radius: 12, y: 5)
+        }
+    }
 }
 
 // MARK: - Convenience Initializers

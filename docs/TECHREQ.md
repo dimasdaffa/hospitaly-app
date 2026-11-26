@@ -1,15 +1,16 @@
 # Hospitaly — Technical Requirements
 
-**RS Permata Sehat · 25 November 2026 · iOS working tree**
+**RS Permata Sehat · 27 November 2026 · iOS working tree**
 
 ## 1. Product scope and sources
 
-Hospitaly is a SwiftUI patient app for the RS Permata Sehat learning project. The signed-in shell opens on Home and has Doctors, Chat, and Profile tabs with a central Quick Access button. The app connects to Vapor for appointments, the care plan, vitals, clinical history, patient messages, and account settings. Home shows the patient greeting, Book Now, the next appointment, and today's scheduled doses.
+Hospitaly is a SwiftUI patient app for the RS Permata Sehat learning project. The signed-in shell opens on Home and has Doctors, Chat, and Profile tabs with a central Quick Access button. The app connects to Vapor for appointments, the care plan, vitals, clinical history, patient messages, and account settings. Home features the next appointment, doctor search, care shortcuts, and today's scheduled doses.
 
 | Question | Source of truth |
 | --- | --- |
 | What does the iOS project currently implement? | [Hospitaly source](../Hospitaly/) and the feature owners in [Architecture](#3-architecture-and-current-source-layout). |
 | What should the screens look like? | [RS Permata Sehat mockups](<../../RS Permata Sehat/>). Names, prices, dates, and results in the images are design examples. |
+| What guides the redesign? | [Hospitaly design direction](DESIGN.md) defines the crimson glass theme and dashboard rollout. |
 | What does the backend accept and return? | [Patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-aplikasi-pasien-ios), [Vapor routes](../../be-rumahsakit-swift/Sources/rumahsakit/routes.swift), and the relevant handlers and DTOs. |
 | How is HTTP behavior verified? | [Backend Hurl suite](../../be-rumahsakit-swift/Tests/hurl/README.md). |
 | What conventions apply to future work? | [Hospitaly agent guide](AGENTS.md). |
@@ -24,7 +25,7 @@ The mockup folder, iOS repo, and Vapor repo are siblings in the current workspac
 | Presentation | SwiftUI, Observation through `@Observable`, typed navigation, a custom tab bar, and local `#Preview` fixtures. |
 | Networking | [APIClient.swift](../Hospitaly/Core/Networking/APIClient.swift) sends HTTP requests using `URLSession`, adds Bearer authorization when requested, and decodes JSON responses. Session tokens are stored in Keychain per API base URL. |
 | Local backend | Vapor and MySQL behind Nginx. Docker Compose publishes the API at `http://localhost:8081`, the default for the Debug build in Simulator. [Compose configuration](../../be-rumahsakit-swift/docker-compose.yml) |
-| Local design system | `Theme.swift` holds semantic colors. `ClinicDate.swift` formats clinic dates and times in `Asia/Jakarta`. Bundled sample portraits live in the app asset catalog. |
+| Local design system | `Theme.swift` holds semantic colors, dashboard spacing, and shared glass surfaces. `ClinicDate.swift` formats clinic dates and times in `Asia/Jakarta`. Bundled sample portraits live in the app asset catalog. |
 
 Override the base URL with the `HOSPITALY_API_BASE_URL` environment variable in the Xcode scheme. For a physical iPhone on the same network as the Mac, use the Mac's reachable `.local` hostname and the Compose port. Local HTTP configuration lives in the [Debug Info.plist](../Config/Hospitaly-Debug-Info.plist). A Release build requires an explicit HTTPS base URL. A distributed build can get that value from the `HospitalyAPIBaseURL` key in its Info.plist. [Apple App Transport Security](https://developer.apple.com/documentation/bundleresources/information-property-list/nsapptransportsecurity/nsallowslocalnetworking)
 
@@ -149,9 +150,11 @@ Hospitaly/                                  # iOS repository root
 │   │   │   │   ├── HomeViewModel.swift                # Load and select the next appointment
 │   │   │   │   └── CarePlanViewModel.swift            # Daily loading, error, and saving state
 │   │   │   └── Views/
-│   │   │       ├── HomeView.swift                    # Greeting, notifications, booking, and next visit
+│   │   │       ├── HomeView.swift                    # Crimson dashboard, next visit, search, and shortcuts
 │   │   │       ├── CarePlanView.swift                # Scheduled doses and Mark as Taken
-│   │   │       └── Components/HomeAppointmentCardView.swift # Next visit date, status, and actions
+│   │   │       └── Components/
+│   │   │           ├── HomeAppointmentCardView.swift # Next visit date, status, and actions
+│   │   │           └── HomeHeaderBackdrop.swift      # Crimson gradient and curved highlights
 │   │   ├── HealthTracker/
 │   │   │   ├── Models/
 │   │   │   │   ├── HealthMetric.swift                  # Metric filters, units, and display formatting
@@ -230,7 +233,7 @@ Hospitaly/                                  # iOS repository root
 │   │       ├── Views/NotificationsView.swift          # Patient appointment notification inbox
 │   │       └── Views/NotificationSettingsView.swift   # Appointment notification preference
 │   └── Shared/
-│       ├── Theme.swift                     # Semantic color palette
+│       ├── Theme.swift                     # Color palette, layout tokens, and glass surfaces
 │       ├── ClinicDate.swift                # Clinic time zone and date formatting
 │       ├── PrimaryActionButton.swift       # Shared primary action button
 │       ├── PrivateDocumentDownload.swift  # Authenticated file route and default export name
@@ -238,6 +241,7 @@ Hospitaly/                                  # iOS repository root
 │       └── PrivateFileExportModifier.swift # Download status, Files exporter, and errors
 └── docs/
     ├── TECHREQ.md                          # Product and implementation reference
+    ├── DESIGN.md                           # Crimson glass redesign and rollout
     └── AGENTS.md                           # Working conventions
 ```
 
@@ -254,7 +258,7 @@ Hospitaly/                                  # iOS repository root
 | View appointments again | [MyAppointmentsView.swift](../Hospitaly/Features/Appointments/Views/MyAppointmentsView.swift) | [AppointmentsViewModel.swift](../Hospitaly/Features/Appointments/ViewModels/AppointmentsViewModel.swift) loads patient appointments. The view groups them by status and time. It opens from confirmation, the directory calendar, or Quick Access. |
 | Change an appointment | Actions on upcoming cards or in [Appointment Details](../Hospitaly/Features/Appointments/Views/AppointmentDetailView.swift) after tapping a card | [RescheduleView.swift](../Hospitaly/Features/Appointments/Views/RescheduleView.swift) loads replacement times. [CancelAppointmentView.swift](../Hospitaly/Features/Appointments/Views/CancelAppointmentView.swift) collects the reason and shows the submission result. [AppointmentsViewModel.swift](../Hospitaly/Features/Appointments/ViewModels/AppointmentsViewModel.swift) applies the returned appointment by ID. |
 | Read appointment updates | Bell on Home in [MainTabView.swift](../Hospitaly/App/Navigation/MainTabView.swift) | [NotificationsViewModel.swift](../Hospitaly/Features/Notifications/ViewModels/NotificationsViewModel.swift) shares unread and loading state between the bell and [NotificationsView.swift](../Hospitaly/Features/Notifications/Views/NotificationsView.swift). |
-| Open the dashboard and next visit | [HomeView.swift](../Hospitaly/Features/Home/Views/HomeView.swift) | [HomeViewModel.swift](../Hospitaly/Features/Home/ViewModels/HomeViewModel.swift) selects the earliest upcoming start from patient appointments. The card opens existing appointment details or reschedule. See All opens My Appointments. |
+| Open the dashboard and next visit | [HomeView.swift](../Hospitaly/Features/Home/Views/HomeView.swift) | [HomeViewModel.swift](../Hospitaly/Features/Home/ViewModels/HomeViewModel.swift) selects the earliest upcoming start from patient appointments. The card opens details or reschedule. [MainTabView.swift](../Hospitaly/App/Navigation/MainTabView.swift) forwards Home search to the doctor directory and opens existing patient features through care shortcuts. |
 | View today's care plan and record a dose | [CarePlanView.swift](../Hospitaly/Features/Home/Views/CarePlanView.swift) on Home | [CarePlanViewModel.swift](../Hospitaly/Features/Home/ViewModels/CarePlanViewModel.swift) loads the clinic's current day and applies the response for the same scheduled dose. [CarePlanService.swift](../Hospitaly/Features/Home/Services/CarePlanService.swift) calls Vapor. |
 | Review and log vitals | Health Tracker in [QuickAccessSheet.swift](../Hospitaly/App/Navigation/QuickAccessSheet.swift) | [HealthTrackerViewModel.swift](../Hospitaly/Features/HealthTracker/ViewModels/HealthTrackerViewModel.swift) filters and loads readings. [LogVitalViewModel.swift](../Hospitaly/Features/HealthTracker/ViewModels/LogVitalViewModel.swift) validates input and submits the selected metric through [HealthService.swift](../Hospitaly/Features/HealthTracker/Services/HealthService.swift). |
 | Review medical records and lab reports | Records in [QuickAccessSheet.swift](../Hospitaly/App/Navigation/QuickAccessSheet.swift) | [MedicalRecordsViewModel.swift](../Hospitaly/Features/MedicalRecords/ViewModels/MedicalRecordsViewModel.swift) searches and groups the timeline. [MedicalRecordsService.swift](../Hospitaly/Features/MedicalRecords/Services/MedicalRecordsService.swift) fetches the patient’s records and handles authenticated clinical downloads. |
@@ -287,7 +291,7 @@ Hospitaly/
 | Booking and history | [Visit form](<../../RS Permata Sehat/Appointment Details.png>) · [Confirmation](<../../RS Permata Sehat/Make Appointment.png>) · [My Appointments](<../../RS Permata Sehat/Manage Appointment.png>) | Booking and appointment history are wired to Vapor. Confirmation uses server identity, status, and reference. My Appointments groups server results into Upcoming and History, with empty and failed states. A slot conflict offers a return to refreshed availability. |
 | Reschedule and cancellation | [Dashboard action](<../../RS Permata Sehat/Patient Dashboard.png>) · [Cancellation form](<../../RS Permata Sehat/Cancel Appointment.png>) · [Cancellation alert](<../../RS Permata Sehat/Cancellation Alert.png>) | Upcoming Pending and Approved cards offer both actions, and Home can open reschedule for the next eligible visit. The replacement picker handles empty schedules and conflicts. Cancellation shows the requested state until hospital review. |
 | Appointment notifications | Bell in [Patient Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) | The Home bell shows an unread dot. The inbox supports refresh, retry, empty state, and marking an item as read. |
-| Dashboard and care plan | [Dashboard](<../../RS Permata Sehat/Patient Dashboard.png>) | Home shows the signed-in patient, notification bell, Book Now, the next appointment, and the daily care plan. Both data sections support pull to refresh, empty states, and Retry. A dose shows Taken after Vapor confirms the update. |
+| Dashboard and care plan | [Crimson glass dashboard](DESIGN.md#home-layout-and-behavior) | Home features the next appointment inside the crimson header, a search field linked to Doctors, care shortcuts, and the daily care plan. Both data sections support pull to refresh, empty states, and Retry. A dose shows Taken after Vapor confirms the update. |
 | Tab bar and shortcuts | [Quick Access](<../../RS Permata Sehat/Quick Access.png>) | Custom bar and bottom sheet are implemented. Appointments opens the existing appointment list. Find Doctors and Quick Book open the directory. Health Tracker opens vital logs. Records opens the combined medical history. Profile opens the account tab. Messages opens the inbox. |
 | Medical records and lab | [Records](<../../RS Permata Sehat/Medical Record List.png>) · [Diagnosis](<../../RS Permata Sehat/Diagnosis Details.png>) · [Lab](<../../RS Permata Sehat/Lab Result.png>) | Integrated in source with search, filters, monthly groups, detail screens, and retry states. Diagnosis can open follow-up booking or a conversation with the visit’s doctor. Private attachments and published lab PDFs can be saved through the system exporter. |
 | Patient documents and BPJS | [Documents](<../../RS Permata Sehat/Document Screen.png>) · [Upload](<../../RS Permata Sehat/Upload Docs.png>) | Profile opens the insurance and recent files list. Users can upload and download files, edit their own document metadata, replace attachments, and confirm deletion. History shows active and deleted records. Clinical attachments are available for download. |
