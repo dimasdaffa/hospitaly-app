@@ -25,7 +25,7 @@ struct CancelAppointmentView: View {
                 form
             }
         }
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Cancel Appointment")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -74,13 +74,13 @@ struct CancelAppointmentView: View {
                         }
                     }
                 }
-                .background(Color.themeSurface, in: .rect(cornerRadius: 16))
+                .hospitalyPanel(cornerRadius: 18)
                 .disabled(model.hasAttempt)
 
                 TextField("Please specify (optional)", text: $model.note, axis: .vertical)
                     .lineLimit(3...5)
                     .padding(16)
-                    .background(Color.themeSurface, in: .rect(cornerRadius: 16))
+                    .hospitalyPanel(cornerRadius: 18)
                     .disabled(model.hasAttempt)
 
                 Label(
@@ -115,7 +115,7 @@ struct CancelAppointmentView: View {
                     .frame(maxWidth: 508)
                     .padding(16)
                     .frame(maxWidth: .infinity)
-                    .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+                    .hospitalyActionBar()
             }
         }
     }

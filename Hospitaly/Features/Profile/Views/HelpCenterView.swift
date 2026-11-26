@@ -27,6 +27,8 @@ struct HelpCenterView: View {
                     }
                 }
                 .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .environment(\.colorScheme, .light)
             } else if let loadError {
                 ContentUnavailableView {
                     Label("Couldn’t Load Help Topics", systemImage: "exclamationmark.circle")
@@ -46,6 +48,7 @@ struct HelpCenterView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Help Center")
         .navigationBarTitleDisplayMode(.inline)
         .task(id: loadAttempt) { await load() }

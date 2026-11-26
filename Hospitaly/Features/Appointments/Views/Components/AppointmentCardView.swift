@@ -39,12 +39,7 @@ struct AppointmentCardView: View {
             }
         }
         .padding(16)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 22))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22)
-                .strokeBorder(Color.themeCardBorder, lineWidth: 1)
-        }
-        .shadow(color: Color.themeCardShadow.opacity(0.5), radius: 2, y: 1)
+        .hospitalyPanel()
     }
 
     private var detailsLabel: some View {
@@ -63,17 +58,28 @@ struct AppointmentCardView: View {
                             .textCase(.uppercase)
                             .foregroundStyle(Color.themePrimary)
                     }
-
-                    Label("\(appointment.slot.dateLabel) · \(appointment.slot.timeLabel)", systemImage: "calendar")
-                        .font(.footnote)
-                        .foregroundStyle(Color.themeSecondaryText)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 AppointmentStatusBadge(status: appointment.status)
             }
 
-            Divider()
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 16) {
+                    Label(appointment.slot.dateLabel, systemImage: "calendar")
+                    Label(appointment.slot.timeLabel, systemImage: "clock")
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Label(appointment.slot.dateLabel, systemImage: "calendar")
+                    Label(appointment.slot.timeLabel, systemImage: "clock")
+                }
+            }
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Color.themeCrimsonInk)
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.themeGlassRose.opacity(0.64), in: .rect(cornerRadius: 12))
 
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -98,5 +104,5 @@ struct AppointmentCardView: View {
 #Preview {
     AppointmentCardView(appointment: .sample, onOpen: {})
         .padding()
-        .background(Color.themeCanvas)
+        .background(Theme.roseCanvas)
 }

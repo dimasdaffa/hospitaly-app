@@ -84,11 +84,11 @@ struct DoctorWeeklyScheduleView: View {
 #Preview {
     DoctorWeeklyScheduleView()
         .padding()
-        .background(Theme.dashboardCanvas)
+        .background(Theme.roseCanvas)
 }
 
 #Preview("No Practice Schedule") {
     DoctorWeeklyScheduleView(weeklyHours: [])
         .padding()
-        .background(Theme.dashboardCanvas)
+        .background(Theme.roseCanvas)
 }

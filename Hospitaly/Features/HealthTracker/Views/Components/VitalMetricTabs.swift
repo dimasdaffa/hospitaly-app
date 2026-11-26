@@ -21,13 +21,12 @@ struct VitalMetricTabs: View {
                         .font(.caption.weight(.semibold))
                         .lineLimit(1)
                         .minimumScaleFactor(0.8)
-                        .foregroundStyle(selection == metric ? Color.themeVitalAccent : Color.themeSecondaryText)
+                        .foregroundStyle(selection == metric ? Color.themeSurface : Color.themeSecondaryText)
                         .frame(maxWidth: .infinity, minHeight: 39)
                         .background {
                             if selection == metric {
                                 RoundedRectangle(cornerRadius: 13)
-                                    .fill(Color.themeSurface)
-                                    .shadow(color: Color.themeCardShadow.opacity(0.45), radius: 2, y: 1)
+                                    .fill(Color.themeCrimsonInk)
                             }
                         }
                         .contentShape(.rect)
@@ -36,7 +35,7 @@ struct VitalMetricTabs: View {
             }
         }
         .padding(4)
-        .background(Color.themeSubtleSurface, in: .capsule)
+        .hospitalyGlassSurface(in: Capsule())
     }
 }
 

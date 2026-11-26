@@ -84,5 +84,5 @@ struct DoctorProfileHeader: View {
 #Preview {
     DoctorProfileHeader(doctor: Doctor.samples[0])
         .padding()
-        .background(Theme.dashboardCanvas)
+        .background(Theme.roseCanvas)
 }

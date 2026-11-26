@@ -30,42 +30,42 @@ struct DoctorListView: View {
     var body: some View {
         NavigationStack(path: $path) {
             VStack(spacing: 0) {
-                Text("Our Specialists")
-                    .font(.title3.bold())
-                    .foregroundStyle(Color.themeText)
-                    .frame(maxWidth: .infinity, minHeight: 60)
-                    .background(Color.themeSurface, ignoresSafeAreaEdges: .top)
-                    .overlay(alignment: .trailing) {
-                        Button {
-                            path.append(.appointments(seed: nil))
-                        } label: {
-                            Image(systemName: "calendar")
-                                .font(.system(size: 19, weight: .medium))
-                                .foregroundStyle(Color.themePrimary)
-                                .frame(width: 44, height: 44)
-                        }
-                        .buttonStyle(.plain)
-                        .padding(.trailing, 10)
+                HStack(spacing: 12) {
+                    Text("Our Specialists")
+                        .font(.largeTitle.bold())
+                        .tracking(-0.8)
+                        .foregroundStyle(Color.themeText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Button {
+                        path.append(.appointments(seed: nil))
+                    } label: {
+                        Label("My Appointments", systemImage: "calendar")
+                            .labelStyle(.iconOnly)
+                            .font(.headline)
+                            .foregroundStyle(Color.themeCrimsonInk)
+                            .frame(width: 46, height: 46)
+                            .glassEffect(.regular.tint(Color.themeGlassRose).interactive(), in: Circle())
+                            .environment(\.colorScheme, .light)
                     }
-                    .overlay(alignment: .bottom) {
-                        Rectangle()
-                            .fill(Color.themeDivider)
-                            .frame(height: 1)
-                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, Theme.contentInset)
+                .padding(.top, 12)
 
                 DoctorSearchBar(
                     searchText: $viewModel.searchText,
                     favoritesOnly: $viewModel.favoritesOnly,
                     availableOnly: $viewModel.availableOnly
                 )
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Theme.contentInset)
                 .padding(.top, 16)
 
                 DoctorSpecialtyFilters(
                     specialties: viewModel.specialties,
                     selection: $viewModel.selectedSpecialty
                 )
-                .padding(.top, 24)
+                .padding(.top, 16)
 
                 ScrollView {
                     directoryContent
@@ -73,9 +73,9 @@ struct DoctorListView: View {
                 .scrollIndicators(.hidden)
                 .scrollDismissesKeyboard(.interactively)
             }
-            .frame(maxWidth: 540)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
-            .background(Color.themeCanvas.ignoresSafeArea())
+            .background { Theme.roseCanvas.ignoresSafeArea() }
             .toolbarVisibility(.hidden, for: .navigationBar)
             .navigationDestination(for: DoctorRoute.self) { route in
                 switch route {
@@ -166,7 +166,7 @@ struct DoctorListView: View {
                         )
                     }
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Theme.contentInset)
                 .padding(.top, 24)
                 .padding(.bottom, 20)
             }

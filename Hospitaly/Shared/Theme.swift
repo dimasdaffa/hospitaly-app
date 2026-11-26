@@ -26,7 +26,7 @@ enum Theme {
         )
     }
 
-    static var dashboardCanvas: LinearGradient {
+    static var roseCanvas: LinearGradient {
         LinearGradient(
             colors: [.themeGlassRose, .themeGlassCanvas, .themeGlassCanvas],
             startPoint: .top, endPoint: .bottomTrailing
@@ -43,8 +43,6 @@ extension Color {
     static let themeGlassRose = Color(hex: 0xF6E2EB)
     static let themeGlassCanvas = Color(hex: 0xFFF8FB)
     static let themeVitalAccent = Color(hex: 0xED172C)
-    static let themeDashboardHeroEnd = Color(hex: 0xFF859A)
-    static let themeDetailCanvas = Color(hex: 0xF5F7F9)
     static let themeCanvas = Color(hex: 0xF7F5F5)
     static let themeSurface = Color.white
     static let themeSubtleSurface = Color(hex: 0xF3F4F6)
@@ -100,6 +98,26 @@ extension View {
                     )
                 }
                 .shadow(color: Color.themeCrimsonDeep.opacity(onCrimson ? 0.22 : 0.13), radius: 12, y: 5)
+        }
+    }
+
+    func hospitalyPanel(cornerRadius: CGFloat = Theme.cardRadius) -> some View {
+        let shape = RoundedRectangle(cornerRadius: cornerRadius)
+
+        return background {
+            shape
+                .fill(Color.themeSurface.opacity(0.90))
+                .overlay { shape.strokeBorder(Color.themeSurface, lineWidth: 1) }
+                .shadow(color: Color.themeCrimsonDeep.opacity(0.08), radius: 8, y: 3)
+        }
+    }
+
+    func hospitalyActionBar() -> some View {
+        background {
+            Rectangle()
+                .fill(.regularMaterial)
+                .environment(\.colorScheme, .light)
+                .ignoresSafeArea(.container, edges: .bottom)
         }
     }
 }

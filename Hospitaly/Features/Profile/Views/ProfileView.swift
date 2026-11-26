@@ -83,12 +83,12 @@ struct ProfileView: View {
                     }
                 }
             }
-            .frame(maxWidth: 440)
+            .frame(maxWidth: Theme.dashboardWidth)
             .padding(24)
             .frame(maxWidth: .infinity)
         }
         .scrollBounceBehavior(.basedOnSize)
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Profile Settings")
         .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: Route.self, destination: destination)
@@ -114,22 +114,28 @@ struct ProfileView: View {
             }
 
             Text(profile.name)
-                .font(.title2.bold())
-                .foregroundStyle(Color.themeText)
+                .font(.title.bold())
+                .foregroundStyle(Color.themeSurface)
 
             if let patientNumber = profile.patientNumber {
                 Text("Patient ID #\(patientNumber)")
                     .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.themeSecondaryText)
+                    .foregroundStyle(Color.themeSurface.opacity(0.88))
             }
 
             Text(profile.email)
                 .font(.footnote)
-                .foregroundStyle(Color.themeSecondaryText)
+                .foregroundStyle(Color.themeSurface.opacity(0.84))
         }
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 4)
+        .padding(.vertical, 24)
+        .padding(.horizontal, 16)
+        .background {
+            RoundedRectangle(cornerRadius: Theme.heroRadius)
+                .fill(Theme.crimsonGradient)
+                .shadow(color: Color.themeCrimsonDeep.opacity(0.22), radius: 12, y: 6)
+        }
     }
 
     private func heading(_ title: String) -> some View {
@@ -176,7 +182,7 @@ struct ProfileView: View {
             }
         }
         .padding(14)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 17))
+        .hospitalyPanel(cornerRadius: 20)
         .contentShape(.rect)
     }
 

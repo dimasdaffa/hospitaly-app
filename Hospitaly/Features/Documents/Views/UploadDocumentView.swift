@@ -42,7 +42,7 @@ struct UploadDocumentView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle(model.original == nil ? "Upload Document" : "Edit Document")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -95,7 +95,7 @@ struct UploadDocumentView: View {
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity, minHeight: 154)
                 .padding(12)
-                .background(Color.themePrimary.opacity(0.035), in: .rect(cornerRadius: 20))
+                .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: 20))
                 .overlay {
                     RoundedRectangle(cornerRadius: 20)
                         .strokeBorder(Color.themePrimary, style: StrokeStyle(lineWidth: 1.2, dash: [5, 4]))
@@ -197,7 +197,7 @@ struct UploadDocumentView: View {
                     .foregroundStyle(selected ? Color.themePrimary : .themeOutline)
             }
             .padding(11)
-            .background(Color.themeSurface, in: .rect(cornerRadius: 14))
+            .background(selected ? Color.themeGlassRose : Color.themeSurface, in: .rect(cornerRadius: 14))
             .overlay {
                 RoundedRectangle(cornerRadius: 14)
                     .strokeBorder(selected ? Color.themePrimary : .themeOutline, lineWidth: selected ? 1.5 : 1)
@@ -231,7 +231,7 @@ struct UploadDocumentView: View {
         .padding(.horizontal, 20)
         .padding(.vertical, 11)
         .frame(maxWidth: .infinity)
-        .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+        .hospitalyActionBar()
         .overlay(alignment: .top) { Divider() }
     }
 

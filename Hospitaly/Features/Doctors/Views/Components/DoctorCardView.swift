@@ -26,8 +26,8 @@ struct DoctorCardView: View {
                             .foregroundStyle(Color.themeText)
 
                         Text(doctor.specialty)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.themeSecondaryText)
+                            .font(.subheadline.weight(.medium))
+                            .foregroundStyle(Color.themeCrimsonInk)
 
                         Label(doctor.hospital, systemImage: "mappin")
                             .font(.caption)
@@ -53,8 +53,8 @@ struct DoctorCardView: View {
                                 .foregroundStyle(isFavorite ? Color.themePrimary : Color.themeMutedText)
                         }
                     }
-                    .frame(width: 40, height: 42)
-                    .background(Color.themeSubtleSurface, in: Circle())
+                    .frame(width: 44, height: 44)
+                    .background(Color.themeGlassRose.opacity(0.65), in: Circle())
                 }
                 .buttonStyle(.plain)
                 .disabled(isSavingFavorite)
@@ -83,7 +83,7 @@ struct DoctorCardView: View {
                     Text(doctor.isAvailable ? "Book" : "Details")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(doctor.isAvailable ? Color.themeSurface : Color.themeSecondaryText)
-                        .frame(minWidth: doctor.isAvailable ? 83 : 95, minHeight: 40)
+                        .frame(minWidth: doctor.isAvailable ? 83 : 95, minHeight: 44)
                         .background(doctor.isAvailable ? Color.themePrimary : Color.themeSubtleSurface, in: Capsule())
                         .shadow(color: doctor.isAvailable ? Color.themePrimary.opacity(0.25) : .clear, radius: 4, y: 3)
                 }
@@ -91,12 +91,7 @@ struct DoctorCardView: View {
             }
         }
         .padding(16)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 18))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(Color.themeCardBorder, lineWidth: 1)
-        }
-        .shadow(color: Color.themeCardShadow, radius: 2, y: 1)
+        .hospitalyPanel()
     }
 }
 
@@ -107,5 +102,5 @@ struct DoctorCardView: View {
         }
     }
     .padding()
-    .background(Color.themeCanvas)
+    .background(Theme.roseCanvas)
 }

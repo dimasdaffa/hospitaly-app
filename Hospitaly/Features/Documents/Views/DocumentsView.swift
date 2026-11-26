@@ -42,7 +42,7 @@ struct DocumentsView: View {
             .padding(20)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Documents & BPJS")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -169,7 +169,7 @@ struct DocumentsView: View {
             .multilineTextAlignment(.center)
             .frame(maxWidth: .infinity, minHeight: 140)
             .padding(10)
-            .background(Color.themeSurface, in: .rect(cornerRadius: 20))
+            .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: 20))
             .overlay {
                 RoundedRectangle(cornerRadius: 20)
                     .strokeBorder(Color.themePrimary, style: StrokeStyle(lineWidth: 1.2, dash: [5, 4]))
@@ -207,7 +207,7 @@ struct DocumentsView: View {
             managementMenu(document)
         }
         .padding(14)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 17))
+        .hospitalyPanel(cornerRadius: 20)
     }
 
     private func fileCard(_ document: PatientDocument) -> some View {
@@ -239,7 +239,7 @@ struct DocumentsView: View {
             }
             .padding(13)
             .frame(maxWidth: .infinity, minHeight: 133, alignment: .topLeading)
-            .background(Color.themeSurface, in: .rect(cornerRadius: 17))
+            .hospitalyPanel(cornerRadius: 20)
             .overlay { RoundedRectangle(cornerRadius: 17).strokeBorder(Color.themeCardBorder) }
             .contentShape(.rect)
         }
@@ -296,7 +296,7 @@ struct DocumentsView: View {
             .foregroundStyle(Color.themeSecondaryText)
             .padding(14)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.themeSurface, in: .rect(cornerRadius: 17))
+            .hospitalyPanel(cornerRadius: 20)
     }
 
     private func fileDetails(_ document: PatientDocument) -> String {

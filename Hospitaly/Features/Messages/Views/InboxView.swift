@@ -36,9 +36,9 @@ struct InboxView: View {
             .padding(.horizontal, 20)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.themeCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Messages")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarTitleDisplayMode(.large)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("New Message", systemImage: "square.and.pencil") { showsCompose = true }
@@ -122,17 +122,15 @@ struct InboxView: View {
     }
 
     private func list(_ rows: [Conversation]) -> some View {
-        LazyVStack(spacing: 0) {
+        LazyVStack(spacing: 10) {
             ForEach(rows) { conversation in
                 NavigationLink(value: conversation.peer) {
                     ConversationRow(conversation: conversation, patientID: patientID)
                 }
                 .buttonStyle(.plain)
-
-                Divider()
-                    .padding(.leading, 62)
             }
         }
+        .padding(.vertical, 12)
     }
 
     private func refresh() async {

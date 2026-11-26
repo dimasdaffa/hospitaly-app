@@ -16,7 +16,7 @@ struct ProfileAvatar: View {
     var body: some View {
         portrait
             .frame(width: size, height: size)
-            .background(Color.themePrimary.opacity(0.08), in: .circle)
+            .background(Color.themeGlassRose, in: .circle)
             .clipShape(Circle())
             .overlay { Circle().strokeBorder(Color.themeSurface, lineWidth: 3) }
     }

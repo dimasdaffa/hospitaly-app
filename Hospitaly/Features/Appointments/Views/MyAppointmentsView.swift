@@ -46,7 +46,7 @@ struct MyAppointmentsView: View {
                 }
             }
             .padding(4)
-            .background(Color.themeOutline, in: Capsule())
+            .hospitalyGlassSurface(in: Capsule())
             .padding(.horizontal, 16)
             .padding(.top, 12)
 
@@ -88,7 +88,7 @@ struct MyAppointmentsView: View {
         }
         .frame(maxWidth: 540)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .background(Color.themeCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("My Appointments")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -163,16 +163,16 @@ struct MyAppointmentsView: View {
                 if let count, count > 0 {
                     Text(count, format: .number)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(Color.themePrimary)
+                        .foregroundStyle(selected ? Color.themeSurface : Color.themeCrimsonInk)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(Color.themePrimary.opacity(0.09), in: Capsule())
+                        .background(selected ? Color.themeSurface.opacity(0.19) : Color.themeGlassRose, in: Capsule())
                 }
             }
             .font(.subheadline.weight(selected ? .semibold : .medium))
-            .foregroundStyle(selected ? Color.themePrimary : Color.themeSecondaryText)
+            .foregroundStyle(selected ? Color.themeSurface : Color.themeSecondaryText)
             .frame(maxWidth: .infinity, minHeight: 42)
-            .background(selected ? Color.themeSurface : .clear, in: Capsule())
+            .background(selected ? Color.themeCrimsonInk : .clear, in: Capsule())
         }
         .buttonStyle(.plain)
     }

@@ -32,6 +32,7 @@ struct NotificationSettingsView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Notifications")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(model.isSaving)
@@ -43,7 +44,10 @@ struct NotificationSettingsView: View {
 
         return Form {
             Section {
-                Toggle("Appointment Updates", isOn: $model.appointmentUpdates)
+                Toggle(isOn: $model.appointmentUpdates) {
+                    Label("Appointment Updates", systemImage: "bell.badge")
+                }
+                .tint(Color.themePrimary)
             } footer: {
                 Text("Receive updates in the app when the hospital reviews your appointments.")
             }
@@ -57,6 +61,8 @@ struct NotificationSettingsView: View {
                     .foregroundStyle(Color.themeAvailableText)
             }
         }
+        .scrollContentBackground(.hidden)
+        .environment(\.colorScheme, .light)
         .disabled(model.isSaving)
         .safeAreaInset(edge: .bottom, spacing: 0) {
             PrimaryActionButton(title: model.isSaving ? "Saving…" : "Save Preferences") {
@@ -65,7 +71,7 @@ struct NotificationSettingsView: View {
             .disabled(!model.canSave)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+            .hospitalyActionBar()
         }
     }
 }

@@ -74,6 +74,9 @@ struct PersonalInfoView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .environment(\.colorScheme, .light)
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .disabled(model.isBusy)
         .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Personal Information")
@@ -87,7 +90,7 @@ struct PersonalInfoView: View {
             .disabled(!model.canSave)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+            .hospitalyActionBar()
         }
         .navigationBarBackButtonHidden(model.isSaving)
         .task(id: selection) {

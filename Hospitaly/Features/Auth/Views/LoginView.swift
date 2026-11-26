@@ -23,19 +23,26 @@ struct LoginView: View {
             VStack(alignment: .leading, spacing: 24) {
                 header
 
-                VStack(spacing: 16) {
+                VStack(spacing: 12) {
                     TextField("Email", text: $model.email)
                         .textContentType(.username)
                         .keyboardType(.emailAddress)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
+                        .padding(14)
+                        .background(Color.themeGlassCanvas, in: .rect(cornerRadius: 12))
 
                     SecureField("Password", text: $model.password)
                         .textContentType(.password)
                         .submitLabel(.go)
                         .onSubmit(signIn)
+                        .padding(14)
+                        .background(Color.themeGlassCanvas, in: .rect(cornerRadius: 12))
                 }
-                .textFieldStyle(.roundedBorder)
+                .textFieldStyle(.plain)
+                .padding(14)
+                .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+                .environment(\.colorScheme, .light)
                 .disabled(viewModel.isSigningIn)
 
                 if let message = viewModel.errorMessage {
@@ -58,6 +65,7 @@ struct LoginView: View {
                 if onRegister != nil {
                     Button("Create Patient Account") { showsRegistration = true }
                         .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.themeCrimsonInk)
                         .disabled(viewModel.isSigningIn)
                 }
 
@@ -71,7 +79,7 @@ struct LoginView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         .foregroundStyle(Color.themeText)
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .sheet(isPresented: $showsRegistration) {
             if let onRegister {
                 NavigationStack {
@@ -88,17 +96,22 @@ struct LoginView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 8) {
             Image(systemName: "cross.case.fill")
-                .font(.title)
-                .foregroundStyle(Color.themePrimary)
-                .padding(.bottom, 8)
+                .font(.title2)
+                .frame(width: 48, height: 48)
+                .background(Color.themeSurface.opacity(0.18), in: .rect(cornerRadius: 14))
+                .padding(.bottom, 6)
 
             Text("RS Permata Sehat")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Color.themePrimary)
+                .foregroundStyle(Color.themeSurface.opacity(0.90))
 
             Text("Patient Sign In")
                 .font(.largeTitle.bold())
         }
+        .foregroundStyle(Color.themeSurface)
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.crimsonGradient, in: .rect(cornerRadius: Theme.heroRadius))
     }
 
     #if DEBUG

@@ -48,7 +48,7 @@ struct HomeView: View {
             .refreshable { await refresh() }
             .ignoresSafeArea(.container, edges: .top)
         }
-        .background { Theme.dashboardCanvas.ignoresSafeArea() }
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .task(id: isActive) {
             if isActive { await refresh() }
         }

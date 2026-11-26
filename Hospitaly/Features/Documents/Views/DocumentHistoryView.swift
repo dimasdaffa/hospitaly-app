@@ -44,7 +44,7 @@ struct DocumentHistoryView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Document History")
         .navigationBarTitleDisplayMode(.inline)
         .modifier(PrivateFileExportModifier(file: $download, download: actions.download))
@@ -96,6 +96,7 @@ struct DocumentHistoryView: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
+        .environment(\.colorScheme, .light)
     }
 
     private func row(_ document: PatientDocument) -> some View {

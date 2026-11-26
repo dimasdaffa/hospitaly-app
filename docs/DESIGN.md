@@ -1,6 +1,6 @@
 # Hospitaly design direction
 
-**Theme, Home dashboard, and doctor details · 27 November 2026**
+**Patient screens · 27 November 2026**
 
 The visual reference brings the next step into focus with a colored header, a prominent care card, a search field across the transition to the page, and compact service shortcuts. Hospitaly uses that hierarchy with its crimson brand, glass surfaces, and the patient flows already connected to Vapor.
 
@@ -9,11 +9,13 @@ The visual reference brings the next step into focus with a colored header, a pr
 | Token | Value or treatment | Use |
 | --- | --- | --- |
 | Primary crimson | `#DB143C` | Brand, action emphasis, and selection |
-| Hero gradient | `#510D2A` to `#B01B45` | Dashboard header with white type and subtle curved highlights |
+| Hero gradient | `#510D2A` to `#B01B45` | Headers, visit summaries, and outgoing messages |
 | Crimson ink | `#A31138` | Text and symbols on light rose surfaces |
-| Dashboard canvas | `#FFF8FB` with a soft `#F6E2EB` wash | Scrolling content beneath the hero |
-| Glass content | Thin material, a tint, a fine highlight, and a restrained shadow | Appointment card, search surface, and care plan cards |
-| Interactive glass | Native Liquid Glass | Header controls, including notifications and Help Center |
+| Rose canvas | `#FFF8FB` with a soft `#F6E2EB` wash | Patient screen backgrounds |
+| Glass content | Thin material, a tint, a fine highlight, and a restrained shadow | Search, visit confirmation, charts, and other focal surfaces |
+| Reading panels | Near-white fill, fine border, and soft shadow | Repeated rows, records, and form sections |
+| Bottom action bars | Regular material over the canvas | Booking, form submission, file export, and message composer |
+| Interactive glass | Native Liquid Glass | Header controls, including notifications, Help Center, and the appointment calendar |
 
 Use system typography and sentence-case labels. Keep appointment facts on a light inset panel so the time and actions remain readable over the saturated header. The dashboard uses 20 pt horizontal insets, 28 pt section spacing, and 24 pt cards. Shared theme tokens and the glass surface modifier live in [Theme.swift](../Hospitaly/Shared/Theme.swift). [Apple guidance on materials](https://developer.apple.com/design/human-interface-guidelines/materials)
 
@@ -34,6 +36,14 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 - Schedule displays the doctor’s weekly practice hours. Appointment also shows those hours when there are no bookable slots in the next 14 clinic days.
 - About holds the biography and practice address. Profile details, practice hours, and availability continue to use the existing Vapor endpoints.
 
+## Remaining patient screens
+
+- The doctor directory uses a left-aligned title, a glass search field, and specialty filters. Directory cards keep the existing availability, favorite, and booking actions.
+- Booking, appointment details, rescheduling, and cancellation use a crimson visit summary. Date cards and time pills match between booking and rescheduling. Appointment history separates upcoming and past visits, with the date and time on a dedicated line and server status beside the doctor. Confirmations keep the server status and reference.
+- Medical Records and Lab Results use prominent headers and light reading panels. Lab flags, status colors, and attachment access follow the existing data and actions. Health Tracker keeps its selectable chart and wheel entry with the rose canvas and crimson metric selection.
+- Documents and BPJS uses a glass upload area, light file cards, and a rose selection state for the document category. History keeps active and deleted document groups.
+- Messages uses inset inbox cards and crimson outgoing bubbles. Profile places the patient identity in a crimson header, while account and notification settings, Help Center, and sign-in and registration use the same canvas and surfaces.
+
 ## Rollout
 
 | Phase | Screen direction |
@@ -42,5 +52,6 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 | 2 · Doctors and booking | Give the clinician’s portrait and specialty a prominent header. Keep dates and slots easy to scan, with clear selected and unavailable states. |
 | 3 · Visits and clinical records | Put visit status and timing ahead of secondary actions. Use lighter surfaces for reports, attachments, and lab values. |
 | 4 · Chat and account | Apply the palette to inbox navigation and account rows. Keep message threads and patient forms quiet with light reading surfaces. |
+| 5 · Main navigation | Redesign the tab bar and its Quick Access sheet after the patient screens. |
 
 Keep route behavior, authorization, and clinical date handling consistent with [TECHREQ.md](TECHREQ.md).

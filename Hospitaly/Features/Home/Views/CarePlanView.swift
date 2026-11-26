@@ -127,13 +127,13 @@ struct CarePlanView: View {
         onMarkTaken: { _ in }
     )
     .padding()
-    .background(Theme.dashboardCanvas)
+    .background(Theme.roseCanvas)
 }
 
 #Preview("Empty Care Plan") {
     CarePlanView(viewModel: CarePlanViewModel(phase: .loaded([])), onRetry: {}, onMarkTaken: { _ in })
         .padding()
-        .background(Theme.dashboardCanvas)
+        .background(Theme.roseCanvas)
 }
 
 #Preview("Care Plan Failed") {
@@ -143,5 +143,5 @@ struct CarePlanView: View {
         onMarkTaken: { _ in }
     )
     .padding()
-    .background(Theme.dashboardCanvas)
+    .background(Theme.roseCanvas)
 }

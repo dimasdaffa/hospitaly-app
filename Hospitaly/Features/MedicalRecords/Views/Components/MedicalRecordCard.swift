@@ -14,7 +14,7 @@ struct MedicalRecordCard: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Label(entry.kind.rawValue.uppercased(), systemImage: entry.kind.symbol)
-                    .font(.caption2.bold())
+                    .font(.caption.weight(.semibold))
                     .foregroundStyle(accent)
                     .padding(.horizontal, 9)
                     .padding(.vertical, 5)
@@ -57,8 +57,7 @@ struct MedicalRecordCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 17))
-        .overlay { RoundedRectangle(cornerRadius: 17).strokeBorder(Color.themeCardBorder) }
+        .hospitalyPanel()
     }
 
     private var accent: Color {
@@ -73,5 +72,5 @@ struct MedicalRecordCard: View {
 #Preview {
     MedicalRecordCard(entry: .lab(.sample))
         .padding()
-        .background(Color.themeDetailCanvas)
+        .background(Theme.roseCanvas)
 }

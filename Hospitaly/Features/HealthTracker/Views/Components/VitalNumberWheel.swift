@@ -47,7 +47,7 @@ struct VitalNumberWheel: View {
             }
             .background {
                 RoundedRectangle(cornerRadius: 27)
-                    .fill(Color.themeDetailCanvas)
+                    .fill(Color.themeGlassRose.opacity(0.7))
                     .overlay { selectionHighlight }
             }
             .sensoryFeedback(.selection, trigger: selection)
@@ -58,7 +58,7 @@ struct VitalNumberWheel: View {
     private var selectionHighlight: some View {
         RoundedRectangle(cornerRadius: 16)
             .fill(Color.themeSurface)
-            .strokeBorder(Color.themePrimary.opacity(0.17), lineWidth: 1)
+            .strokeBorder(Color.themePrimary.opacity(0.23), lineWidth: 1)
             .frame(height: rowHeight)
             .padding(.horizontal, 8)
     }

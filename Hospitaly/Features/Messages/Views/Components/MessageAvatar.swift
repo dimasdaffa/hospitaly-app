@@ -22,7 +22,7 @@ struct MessageAvatar: View {
             }
         }
         .frame(width: size, height: size)
-        .background(Color.themeOutline.opacity(0.55), in: Circle())
+        .background(Color.themeGlassRose, in: Circle())
         .clipShape(Circle())
     }
 }

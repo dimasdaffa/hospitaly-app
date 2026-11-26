@@ -16,7 +16,7 @@ struct DoctorSearchBar: View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 17, weight: .medium))
-                .foregroundStyle(Color.themeMutedText)
+                .foregroundStyle(Color.themeCrimsonInk)
 
             TextField(
                 "Search doctor or specialty...",
@@ -36,7 +36,7 @@ struct DoctorSearchBar: View {
                 Image(systemName: "slider.horizontal.3")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(Color.themePrimary)
-                    .frame(width: 32, height: 44)
+                    .frame(width: 44, height: 44)
                     .background {
                         if favoritesOnly || availableOnly {
                             Circle()
@@ -48,8 +48,8 @@ struct DoctorSearchBar: View {
         }
         .padding(.leading, 15)
         .padding(.trailing, 10)
-        .frame(minHeight: 46)
-        .background(Color.themeSurface, in: Capsule())
+        .frame(minHeight: 52)
+        .hospitalyGlassSurface(in: Capsule())
     }
 }
 
@@ -62,5 +62,5 @@ struct DoctorSearchBar: View {
         availableOnly: $viewModel.availableOnly
     )
     .padding()
-    .background(Color.themeCanvas)
+    .background(Theme.roseCanvas)
 }

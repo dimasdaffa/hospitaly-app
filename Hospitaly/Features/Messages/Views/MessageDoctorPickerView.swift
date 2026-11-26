@@ -37,6 +37,7 @@ struct MessageDoctorPickerView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("New Message")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -86,7 +87,9 @@ struct MessageDoctorPickerView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .listStyle(.plain)
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .environment(\.colorScheme, .light)
         }
     }
 

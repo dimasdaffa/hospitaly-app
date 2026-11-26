@@ -60,7 +60,7 @@ struct ConversationView: View {
                 if let id { reader.scrollTo(id, anchor: .bottom) }
             }
         }
-        .background(Color.themeCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle(model.peer.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -143,13 +143,24 @@ struct ConversationView: View {
 
     private func bubble(_ message: Message) -> some View {
         let outgoing = message.senderId == model.patientID
+        let shape = UnevenRoundedRectangle(
+            topLeadingRadius: 18, bottomLeadingRadius: outgoing ? 18 : 6,
+            bottomTrailingRadius: outgoing ? 6 : 18, topTrailingRadius: 18
+        )
+
         return VStack(alignment: outgoing ? .trailing : .leading, spacing: 4) {
             Text(message.content)
                 .font(.subheadline)
                 .foregroundStyle(outgoing ? Color.themeSurface : .themeText)
                 .padding(.horizontal, 14)
                 .padding(.vertical, 9)
-                .background(outgoing ? Color.themePrimary : .themeSurface, in: .rect(cornerRadius: 16))
+                .background {
+                    if outgoing {
+                        shape.fill(Theme.crimsonGradient)
+                    } else {
+                        shape.fill(Color.themeSurface)
+                    }
+                }
 
             if let date = message.createdAt {
                 Text(messageDate(date))
@@ -188,7 +199,9 @@ struct ConversationView: View {
                     .lineLimit(1...4)
                     .padding(.horizontal, 13)
                     .padding(.vertical, 10)
-                    .background(Color.themeSubtleSurface, in: .rect(cornerRadius: 17))
+                    .foregroundStyle(Color.themeText)
+                    .background(Color.themeGlassCanvas, in: .rect(cornerRadius: 18))
+                    .overlay { RoundedRectangle(cornerRadius: 18).strokeBorder(Color.themeGlassRose) }
                     .disabled(model.isSending || model.needsHistoryCheck)
 
                 Button {
@@ -205,8 +218,8 @@ struct ConversationView: View {
                                 .foregroundStyle(Color.themeSurface)
                         }
                     }
-                    .frame(width: 42, height: 42)
-                    .background(model.canSend || model.isSending ? Color.themePrimary : .themeMutedText, in: Circle())
+                    .frame(width: 44, height: 44)
+                    .background(model.canSend || model.isSending ? Color.themeCrimsonInk : .themeMutedText, in: Circle())
                 }
                 .buttonStyle(.plain)
                 .disabled(!model.canSend)
@@ -222,7 +235,7 @@ struct ConversationView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 9)
         .frame(maxWidth: .infinity)
-        .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+        .hospitalyActionBar()
         .overlay(alignment: .top) { Divider() }
     }
 

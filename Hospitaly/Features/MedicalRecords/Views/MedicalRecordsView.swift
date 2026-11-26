@@ -28,7 +28,7 @@ struct MedicalRecordsView: View {
             .padding(16)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Medical Records")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -64,7 +64,7 @@ struct MedicalRecordsView: View {
                 .foregroundStyle(selected ? Color.themeSurface : Color.themeSecondaryText)
                 .padding(.horizontal, 15)
                 .padding(.vertical, 9)
-                .background(selected ? Color.themePrimary : Color.themeSurface, in: Capsule())
+                .background(selected ? Color.themeCrimsonInk : Color.themeSurface.opacity(0.86), in: Capsule())
                 .overlay { Capsule().strokeBorder(Color.themeOutline.opacity(selected ? 0 : 0.85)) }
         }
         .buttonStyle(.plain)
@@ -142,7 +142,7 @@ struct MedicalRecordsView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(entry.provider ?? entry.title)
-                        .font(.title2.bold())
+                        .font(.title.bold())
                     Text(visitCaption(entry))
                         .font(.subheadline)
                         .foregroundStyle(Color.themeSurface.opacity(0.85))
@@ -171,7 +171,7 @@ struct MedicalRecordsView: View {
         .foregroundStyle(Color.themeSurface)
         .background {
             RoundedRectangle(cornerRadius: 22)
-                .fill(LinearGradient(colors: [.themePrimary, .themeDashboardHeroEnd], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .fill(Theme.crimsonGradient)
                 .shadow(color: Color.themePrimary.opacity(0.19), radius: 6, y: 4)
         }
     }

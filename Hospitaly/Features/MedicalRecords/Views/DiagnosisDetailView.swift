@@ -45,7 +45,7 @@ struct DiagnosisDetailView: View {
             .padding(16)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle(record?.recordType == "vaccination" ? "Vaccination Details" : "Diagnosis Details")
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
@@ -82,7 +82,7 @@ struct DiagnosisDetailView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 10)
         .frame(maxWidth: .infinity)
-        .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+        .hospitalyActionBar()
     }
 
     @ContentBuilder
@@ -152,7 +152,7 @@ struct DiagnosisDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(16)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 17))
+        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
     }
 
     private func diagnosisCard(_ record: MedicalRecord) -> some View {
@@ -173,7 +173,7 @@ struct DiagnosisDetailView: View {
             VStack(alignment: .leading, spacing: 9) {
                 Text(record.diagnosis)
                     .font(.title2.bold())
-                    .foregroundStyle(Color.themeText)
+                    .foregroundStyle(Color.themeCrimsonInk)
 
                 if !record.symptoms.isEmpty {
                     Text(record.symptoms)
@@ -190,7 +190,7 @@ struct DiagnosisDetailView: View {
                                     .foregroundStyle(Color.themeSecondaryText)
                                     .padding(.horizontal, 9)
                                     .padding(.vertical, 6)
-                                    .background(Color.themeSubtleSurface, in: .rect(cornerRadius: 7))
+                                    .background(Color.themeGlassRose.opacity(0.75), in: Capsule())
                             }
                         }
                     }
@@ -199,7 +199,7 @@ struct DiagnosisDetailView: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.themeSurface, in: .rect(cornerRadius: 17))
+            .hospitalyPanel(cornerRadius: 20)
         }
     }
 
@@ -232,7 +232,7 @@ struct DiagnosisDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(15)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 17))
+        .hospitalyPanel(cornerRadius: 20)
     }
 
     private func textSection(_ title: String, text: String) -> some View {
@@ -243,7 +243,7 @@ struct DiagnosisDetailView: View {
                 .foregroundStyle(Color.themeSecondaryText)
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.themeSurface, in: .rect(cornerRadius: 17))
+                .hospitalyPanel(cornerRadius: 20)
         }
     }
 
@@ -305,7 +305,7 @@ struct DiagnosisDetailView: View {
                 }
             }
             .padding(13)
-            .background(Color.themeSurface, in: .rect(cornerRadius: 14))
+            .hospitalyPanel(cornerRadius: 16)
         }
         .buttonStyle(.plain)
         .disabled(download != nil || attachment.file == nil)

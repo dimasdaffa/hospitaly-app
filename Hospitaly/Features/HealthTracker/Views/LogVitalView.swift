@@ -72,7 +72,7 @@ struct LogVitalView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.themeSurface.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Group {
                 if model.saveUnconfirmed {
@@ -89,7 +89,7 @@ struct LogVitalView: View {
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
-            .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+            .hospitalyActionBar()
             .overlay(alignment: .top) { Divider() }
         }
         .interactiveDismissDisabled(model.isSaving || model.saveUnconfirmed)
@@ -158,7 +158,7 @@ struct LogVitalView: View {
     private var lastReadingCard: some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "info.circle")
-                .foregroundStyle(Color.themeExperienceAccent)
+                .foregroundStyle(Color.themeCrimsonInk)
                 .padding(.top, 1)
             VStack(alignment: .leading, spacing: 4) {
                 Text("Last Reading")
@@ -171,7 +171,7 @@ struct LogVitalView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(16)
-        .background(Color.themeExperienceBackground, in: .rect(cornerRadius: 20))
+        .hospitalyPanel(cornerRadius: 20)
     }
 
     private var lastReadingDescription: String {

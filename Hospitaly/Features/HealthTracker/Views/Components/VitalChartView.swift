@@ -43,8 +43,7 @@ struct VitalChartView: View {
                 }
             }
             .padding(18)
-            .background(Color.themeSurface, in: .rect(cornerRadius: 20))
-            .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(Color.themeCardBorder) }
+            .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
 
             HStack(spacing: 10) {
                 statistic("Average", value: average)
@@ -62,11 +61,11 @@ struct VitalChartView: View {
 
             HStack(alignment: .firstTextBaseline, spacing: 7) {
                 Text(numberLabel(average))
-                    .font(.title.bold())
+                    .font(.largeTitle.bold())
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                    .foregroundStyle(Color.themeText)
+                    .foregroundStyle(Color.themeCrimsonInk)
                 Text(metric.unit)
                     .font(.caption.weight(.medium))
                     .foregroundStyle(Color.themeSecondaryText)
@@ -75,7 +74,10 @@ struct VitalChartView: View {
 
                 Text(metric == .bloodPressure ? "Systolic trend" : "Last \(days) days")
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(Color.themeSecondaryText)
+                    .foregroundStyle(Color.themeCrimsonInk)
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(Color.themeGlassRose, in: Capsule())
             }
         }
     }
@@ -116,7 +118,7 @@ struct VitalChartView: View {
                 )
                 .interpolationMethod(.monotone)
                 .foregroundStyle(
-                    LinearGradient(colors: [Color.themeVitalAccent.opacity(0.24), .clear], startPoint: .top, endPoint: .bottom)
+                    LinearGradient(colors: [Color.themeCrimsonShade.opacity(0.28), .clear], startPoint: .top, endPoint: .bottom)
                 )
                 .alignsMarkStylesWithPlotArea()
             }
@@ -244,13 +246,12 @@ struct VitalChartView: View {
         .minimumScaleFactor(0.75)
         .frame(maxWidth: .infinity, minHeight: 64)
         .padding(.horizontal, 4)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 20))
-        .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(Color.themeCardBorder) }
+        .hospitalyPanel(cornerRadius: 18)
     }
 }
 
 #Preview {
     VitalChartView(metric: .bloodPressure, readings: HealthReading.samples, days: 7, range: HealthTrackerViewModel().range)
         .padding()
-        .background(Color.themeCanvas)
+        .background(Theme.roseCanvas)
 }

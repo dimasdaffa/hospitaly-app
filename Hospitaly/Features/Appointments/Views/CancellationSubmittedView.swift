@@ -18,7 +18,7 @@ struct CancellationSubmittedView: View {
                     .font(.system(size: 32))
                     .foregroundStyle(Color.themePrimary)
                     .frame(width: 84, height: 84)
-                    .background(Color.themePrimary.opacity(0.08), in: Circle())
+                    .hospitalyGlassSurface(in: Circle())
 
                 Text("Cancellation Request Submitted")
                     .font(.title2.bold())

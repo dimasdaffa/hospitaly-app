@@ -40,7 +40,7 @@ struct LabResultDetailView: View {
             .padding(16)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.themeCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Lab Results")
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom) {
@@ -53,7 +53,7 @@ struct LabResultDetailView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
                 .frame(maxWidth: .infinity)
-                .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+                .hospitalyActionBar()
             }
         }
         .modifier(PrivateFileExportModifier(file: $download, download: actions.download))
@@ -64,8 +64,8 @@ struct LabResultDetailView: View {
     private func report(_ result: LabResult) -> some View {
         VStack(alignment: .leading, spacing: 7) {
             Text(result.title)
-                .font(.title2.bold())
-                .foregroundStyle(Color.themeText)
+                .font(.title.bold())
+                .foregroundStyle(Color.themeSurface)
             Label(result.laboratory, systemImage: "mappin")
             Label(
                 ClinicDate.label(result.collectedAt, as: .dateTime.day().month(.abbreviated).year().hour().minute()),
@@ -73,7 +73,10 @@ struct LabResultDetailView: View {
             )
         }
         .font(.subheadline)
-        .foregroundStyle(Color.themeSecondaryText)
+        .foregroundStyle(Color.themeSurface.opacity(0.86))
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.crimsonGradient, in: .rect(cornerRadius: Theme.cardRadius))
 
         if let alert = result.alert, !alert.isEmpty {
             callout("Attention Needed", detail: alert, icon: "exclamationmark.triangle.fill", accent: .themePrimary)
@@ -122,8 +125,7 @@ struct LabResultDetailView: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 19))
-        .overlay { RoundedRectangle(cornerRadius: 19).strokeBorder(Color.themeCardBorder) }
+        .hospitalyPanel()
     }
 
     private func measurementRow(_ measurement: LabResult.Measurement) -> some View {
@@ -177,7 +179,7 @@ struct LabResultDetailView: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.themeSurface, in: .rect(cornerRadius: 16))
+            .hospitalyPanel(cornerRadius: 20)
         }
     }
 

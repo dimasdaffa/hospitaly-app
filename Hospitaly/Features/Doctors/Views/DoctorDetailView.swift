@@ -56,7 +56,7 @@ struct DoctorDetailView: View {
                 )
             }
         }
-        .background { Theme.dashboardCanvas.ignoresSafeArea() }
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Doctor Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarVisibility(.visible, for: .navigationBar)
@@ -206,8 +206,7 @@ struct DoctorDetailView: View {
         @Bindable var model = viewModel
         return AppointmentSlotPicker(
             days: model.days, dateRange: model.dateRange, selectedDate: $model.selectedDate,
-            slots: model.slots, selectedSlot: model.selectedSlot, onSelectSlot: model.selectSlot,
-            isCompact: true
+            slots: model.slots, selectedSlot: model.selectedSlot, onSelectSlot: model.selectSlot
         )
     }
 }

@@ -19,19 +19,19 @@ struct AppointmentSummaryView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(doctor.name)
                         .font(.headline)
-                        .foregroundStyle(Color.themeText)
+                        .foregroundStyle(Color.themeSurface)
 
                     Text(doctor.specialty)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.themePrimary)
+                        .foregroundStyle(Color.themeSurface.opacity(0.88))
 
                     Label(doctor.hospital, systemImage: "mappin")
                         .font(.footnote)
-                        .foregroundStyle(Color.themeSecondaryText)
+                        .foregroundStyle(Color.themeSurface.opacity(0.82))
                 }
             }
 
-            Divider()
+            Rectangle().fill(Color.themeSurface.opacity(0.24)).frame(height: 1)
 
             HStack(spacing: 16) {
                 detail("DATE", value: slot.dateLabel, icon: "calendar")
@@ -40,28 +40,28 @@ struct AppointmentSummaryView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 18))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(Color.themeCardBorder, lineWidth: 1)
+        .background {
+            RoundedRectangle(cornerRadius: Theme.cardRadius)
+                .fill(Theme.crimsonGradient)
+                .shadow(color: Color.themeCrimsonDeep.opacity(0.20), radius: 10, y: 5)
         }
     }
 
     private func detail(_ title: LocalizedStringKey, value: String, icon: String) -> some View {
         HStack(spacing: 9) {
             Image(systemName: icon)
-                .foregroundStyle(Color.themePrimary)
+                .foregroundStyle(Color.themeSurface.opacity(0.88))
                 .frame(width: 36, height: 36)
-                .background(Color.themePrimary.opacity(0.08), in: Circle())
+                .background(Color.themeSurface.opacity(0.16), in: Circle())
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.caption2.weight(.semibold))
-                    .foregroundStyle(Color.themeMutedText)
+                    .foregroundStyle(Color.themeSurface.opacity(0.82))
 
                 Text(value)
                     .font(.footnote.bold())
-                    .foregroundStyle(Color.themeText)
+                    .foregroundStyle(Color.themeSurface)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -71,5 +71,5 @@ struct AppointmentSummaryView: View {
 #Preview {
     AppointmentSummaryView(doctor: Doctor.samples[0], slot: .sample())
         .padding()
-        .background(Color.themeDetailCanvas)
+        .background(Theme.roseCanvas)
 }

@@ -36,7 +36,7 @@ struct AppointmentDetailView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
-                .background(Color.themeSurface, in: .rect(cornerRadius: 16))
+                .hospitalyPanel(cornerRadius: 18)
 
                 if let onReschedule, let onCancel {
                     PrimaryActionButton(title: "Reschedule", icon: "calendar", action: onReschedule)
@@ -47,14 +47,14 @@ struct AppointmentDetailView: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(Color.themePrimary)
-                    .background(Color.themeSurface, in: .rect(cornerRadius: 16))
+                    .hospitalyPanel(cornerRadius: 18)
                 }
             }
             .frame(maxWidth: 508)
             .padding(20)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Appointment Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

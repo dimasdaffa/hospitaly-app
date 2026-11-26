@@ -33,7 +33,7 @@ struct HealthTrackerView: View {
             .padding(16)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.themeCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .safeAreaInset(edge: .bottom, alignment: .trailing, spacing: 0) {
             Button {
                 sheet = .log
@@ -43,7 +43,7 @@ struct HealthTrackerView: View {
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(Color.themeSurface)
                     .frame(width: 54, height: 54)
-                    .background(Color.themeVitalAccent, in: Circle())
+                    .background(Theme.crimsonGradient, in: Circle())
                     .shadow(color: Color.themeVitalAccent.opacity(0.24), radius: 6, y: 3)
             }
             .buttonStyle(.plain)
@@ -75,14 +75,17 @@ struct HealthTrackerView: View {
                 .presentationDetents([.fraction(0.80), .large])
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(32)
-                .presentationBackground(Color.themeSurface)
+                .presentationBackground(Color.themeGlassCanvas)
             case .history:
                 NavigationStack {
                     List(model.readings) { reading in
                         VitalLogRow(metric: model.metric, reading: reading)
                             .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                     }
                     .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .background { Theme.roseCanvas.ignoresSafeArea() }
                     .navigationTitle("\(model.metric.title) Logs")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {

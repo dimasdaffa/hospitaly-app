@@ -64,6 +64,8 @@ struct BookingFormView: View {
                     }
                 }
                 .foregroundStyle(Color.themeText)
+                .padding(16)
+                .hospitalyPanel()
                 .disabled(viewModel.hasAttempt || viewModel.slotUnavailable)
 
                 if viewModel.slotUnavailable {
@@ -98,9 +100,9 @@ struct BookingFormView: View {
             .padding(.horizontal, 24)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
-            .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+            .hospitalyActionBar()
         }
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Appointment Details")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(viewModel.isSubmitting)

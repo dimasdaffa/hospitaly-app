@@ -32,7 +32,7 @@ struct VitalLogRow: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(12)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 18))
+        .hospitalyPanel(cornerRadius: 18)
     }
 }
 
@@ -40,6 +40,6 @@ struct VitalLogRow: View {
     if let reading = HealthReading.samples.first {
         VitalLogRow(metric: .weight, reading: reading)
             .padding()
-            .background(Color.themeCanvas)
+            .background(Theme.roseCanvas)
     }
 }

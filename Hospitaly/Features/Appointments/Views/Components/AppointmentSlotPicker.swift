@@ -15,7 +15,6 @@ struct AppointmentSlotPicker: View {
     let slots: [AppointmentSlot]
     let selectedSlot: AppointmentSlot?
     let onSelectSlot: (AppointmentSlot) -> Void
-    var isCompact = false
 
     @State private var showsCalendar = false
 
@@ -24,7 +23,7 @@ struct AppointmentSlotPicker: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack {
-                Text(isCompact ? "Available Date & Time" : "Schedules")
+                Text("Available Date & Time")
                     .font(.title3.bold())
                     .foregroundStyle(Color.themeText)
 
@@ -40,7 +39,7 @@ struct AppointmentSlotPicker: View {
                     }
                     .font(.subheadline.weight(.medium))
                     .foregroundStyle(Color.themePrimary)
-                    .frame(minHeight: isCompact ? 44 : nil)
+                    .frame(minHeight: 44)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -103,22 +102,22 @@ struct AppointmentSlotPicker: View {
 
     private func dayButton(_ date: Date) -> some View {
         let selected = ClinicDate.calendar.isDate(date, inSameDayAs: selectedDate)
-        let shape = RoundedRectangle(cornerRadius: isCompact ? 16 : 24)
+        let shape = RoundedRectangle(cornerRadius: 16)
 
         return Button {
             selectedDate = date
         } label: {
-            VStack(spacing: isCompact ? 4 : 8) {
-                Text(ClinicDate.label(date, as: .dateTime.weekday(.abbreviated)))
-                    .font(.caption)
-                    .foregroundStyle(selected ? Color.themeSurface : Color.themeMutedText)
-
+            VStack(spacing: 4) {
                 Text(ClinicDate.label(date, as: .dateTime.day()))
                     .font(.title2.bold())
                     .foregroundStyle(selected ? Color.themeSurface : Color.themeText)
+
+                Text(ClinicDate.label(date, as: .dateTime.weekday(.abbreviated)))
+                    .font(.caption)
+                    .foregroundStyle(selected ? Color.themeSurface : Color.themeSecondaryText)
             }
-            .frame(width: isCompact ? 54 : 65, height: isCompact ? 66 : 89)
-            .background(selected ? Color.themePrimary : Color.themeSurface, in: shape)
+            .frame(width: 54, height: 66)
+            .background(selected ? Color.themeCrimsonInk : Color.themeSurface, in: shape)
             .overlay { shape.strokeBorder(Color.themeCardBorder, lineWidth: selected ? 0 : 1) }
             .shadow(color: selected ? Color.themePrimary.opacity(0.22) : .clear, radius: 4, y: 3)
         }
@@ -134,9 +133,7 @@ struct AppointmentSlotPicker: View {
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(slots) { slot in
                     let selected = selectedSlot?.id == slot.id
-                    let filled = selected && isCompact
-                    let shape = RoundedRectangle(cornerRadius: isCompact ? 22 : 14)
-                    let selectedLabelColor = filled ? Color.themeSurface : Color.themePrimary
+                    let shape = Capsule()
                     let labelColor = slot.isAvailable ? Color.themeText : Color.themeMutedText.opacity(0.65)
 
                     Button {
@@ -144,16 +141,13 @@ struct AppointmentSlotPicker: View {
                     } label: {
                         Text(slot.timeLabel)
                             .font(.subheadline.weight(selected ? .semibold : .medium))
-                            .foregroundStyle(selected ? selectedLabelColor : labelColor)
+                            .foregroundStyle(selected ? Color.themeSurface : labelColor)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
                             .frame(maxWidth: .infinity, minHeight: 44)
-                            .background(filled ? Color.themePrimary : Color.themeSurface, in: shape)
+                            .background(selected ? Color.themeCrimsonInk : Color.themeSurface, in: shape)
                             .overlay {
-                                shape.strokeBorder(
-                                    selected ? Color.themePrimary : Color.themeCardBorder,
-                                    lineWidth: selected ? 2 : 1
-                                )
+                                shape.strokeBorder(Color.themeCardBorder, lineWidth: selected ? 0 : 1)
                             }
                     }
                     .buttonStyle(.plain)
@@ -175,5 +169,5 @@ struct AppointmentSlotPicker: View {
         )
         .padding()
     }
-    .background(Color.themeDetailCanvas)
+    .background(Theme.roseCanvas)
 }

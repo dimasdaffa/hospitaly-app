@@ -85,10 +85,10 @@ struct RescheduleView: View {
                 .frame(maxWidth: 508)
                 .padding(16)
                 .frame(maxWidth: .infinity)
-                .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+                .hospitalyActionBar()
             }
         }
-        .background(Color.themeDetailCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Reschedule Appointment")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {

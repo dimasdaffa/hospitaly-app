@@ -37,7 +37,7 @@ struct NotificationsView: View {
             .padding(16)
             .frame(maxWidth: .infinity)
         }
-        .background(Color.themeCanvas.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Notifications")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -127,11 +127,7 @@ struct NotificationsView: View {
             }
         }
         .padding(16)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 18))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18)
-                .strokeBorder(Color.themeCardBorder, lineWidth: 1)
-        }
+        .hospitalyPanel()
     }
 
     private func presentation(for type: String) -> (title: LocalizedStringKey, message: LocalizedStringKey, symbol: String) {

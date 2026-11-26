@@ -46,9 +46,9 @@ struct BookingConfirmationView: View {
             .padding(.horizontal, 24)
             .padding(.vertical, 14)
             .frame(maxWidth: .infinity)
-            .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+            .hospitalyActionBar()
         }
-        .background(Color.themeSurface.ignoresSafeArea())
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Confirmation")
         .navigationBarTitleDisplayMode(.inline)
     }
@@ -117,12 +117,7 @@ struct BookingConfirmationView: View {
         }
         .foregroundStyle(Color.themeText)
         .padding(20)
-        .background(Color.themeSurface, in: .rect(cornerRadius: 20))
-        .overlay {
-            RoundedRectangle(cornerRadius: 20)
-                .strokeBorder(Color.themeCardBorder, lineWidth: 1)
-        }
-        .shadow(color: Color.themeCardShadow.opacity(0.5), radius: 10, y: 5)
+        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
     }
 
     private func row(_ title: LocalizedStringKey, value: String, icon: String, subtitle: String? = nil) -> some View {
@@ -131,7 +126,7 @@ struct BookingConfirmationView: View {
                 .font(.subheadline)
                 .foregroundStyle(Color.themeSecondaryText)
                 .frame(width: 38, height: 38)
-                .background(Color.themeSubtleSurface, in: Circle())
+                .background(Color.themeGlassRose.opacity(0.75), in: Circle())
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)

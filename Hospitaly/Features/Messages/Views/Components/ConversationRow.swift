@@ -57,8 +57,9 @@ struct ConversationRow: View {
                 }
             }
         }
-        .padding(.vertical, 12)
-        .contentShape(Rectangle())
+        .padding(14)
+        .hospitalyPanel(cornerRadius: 20)
+        .contentShape(.rect(cornerRadius: 20))
     }
 
     private var previewText: String {

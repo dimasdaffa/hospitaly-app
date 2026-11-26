@@ -20,7 +20,7 @@ struct DoctorSpecialtyFilters: View {
                     chip(specialty, specialty: specialty)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Theme.contentInset)
             .padding(.bottom, 6)
         }
         .scrollIndicators(.hidden)
@@ -36,8 +36,8 @@ struct DoctorSpecialtyFilters: View {
                 .font(.subheadline.weight(.medium))
                 .foregroundStyle(isSelected ? Color.themeSurface : Color.themeSecondaryText)
                 .padding(.horizontal, 20)
-                .frame(height: 36)
-                .background(isSelected ? Color.themePrimary : Color.themeSurface, in: Capsule())
+                .frame(minHeight: 40)
+                .background(isSelected ? Color.themeCrimsonInk : Color.themeSurface.opacity(0.88), in: Capsule())
                 .overlay {
                     Capsule()
                         .strokeBorder(Color.themeOutline, lineWidth: isSelected ? 0 : 1)
@@ -56,5 +56,5 @@ struct DoctorSpecialtyFilters: View {
         selection: $viewModel.selectedSpecialty
     )
     .padding(.vertical)
-    .background(Color.themeCanvas)
+    .background(Theme.roseCanvas)
 }

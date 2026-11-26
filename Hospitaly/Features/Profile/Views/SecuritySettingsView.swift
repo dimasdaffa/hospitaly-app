@@ -41,6 +41,9 @@ struct SecuritySettingsView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .environment(\.colorScheme, .light)
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .disabled(model.isSaving)
         .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Security")
@@ -53,7 +56,7 @@ struct SecuritySettingsView: View {
             .disabled(!model.canSave)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+            .hospitalyActionBar()
         }
     }
 

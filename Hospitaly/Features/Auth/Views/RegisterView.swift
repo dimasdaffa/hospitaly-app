@@ -44,6 +44,9 @@ struct RegisterView: View {
                 }
             }
         }
+        .scrollContentBackground(.hidden)
+        .environment(\.colorScheme, .light)
+        .background { Theme.roseCanvas.ignoresSafeArea() }
         .disabled(model.isSubmitting)
         .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Create Patient Account")
@@ -67,7 +70,7 @@ struct RegisterView: View {
             .disabled(!model.canRegister)
             .padding(.horizontal, 20)
             .padding(.vertical, 10)
-            .background(Color.themeSurface, ignoresSafeAreaEdges: .bottom)
+            .hospitalyActionBar()
         }
     }
 

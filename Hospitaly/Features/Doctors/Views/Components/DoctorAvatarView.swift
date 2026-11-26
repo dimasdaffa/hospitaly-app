@@ -76,7 +76,7 @@ struct DoctorAvatarView: View {
         }
     }
     .padding()
-    .background(Color.themeCanvas)
+    .background(Theme.roseCanvas)
 }
 
 #Preview("Missing Portrait") {

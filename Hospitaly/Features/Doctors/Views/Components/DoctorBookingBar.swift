@@ -62,12 +62,7 @@ struct DoctorBookingBar: View {
         .padding(.top, 14)
         .padding(.bottom, 10)
         .frame(maxWidth: .infinity)
-        .background {
-            Rectangle()
-                .fill(.regularMaterial)
-                .environment(\.colorScheme, .light)
-                .ignoresSafeArea(.container, edges: .bottom)
-        }
+        .hospitalyActionBar()
         .overlay(alignment: .top) {
             Rectangle()
                 .fill(Color.themeDivider)
@@ -81,10 +76,10 @@ struct DoctorBookingBar: View {
         DoctorBookingBar(slot: .sample(), fee: 150_000, onContinue: { _ in })
         DoctorBookingBar(slot: nil, fee: 150_000, onContinue: { _ in })
     }
-    .background(Theme.dashboardCanvas)
+    .background(Theme.roseCanvas)
 }
 
 #Preview("Fee Unavailable") {
     DoctorBookingBar(slot: .sample(), fee: nil, onContinue: { _ in })
-        .background(Theme.dashboardCanvas)
+        .background(Theme.roseCanvas)
 }
