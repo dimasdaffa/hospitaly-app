@@ -9,33 +9,14 @@ import SwiftUI
 
 struct VitalMetricTabs: View {
     @Binding var selection: HealthMetric
-    var metrics = HealthMetric.allCases
 
     var body: some View {
-        HStack(spacing: 4) {
-            ForEach(metrics) { metric in
-                Button {
-                    selection = metric
-                } label: {
-                    Text(metric.title)
-                        .font(.caption.weight(.semibold))
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.8)
-                        .foregroundStyle(selection == metric ? Color.themeSurface : Color.themeSecondaryText)
-                        .frame(maxWidth: .infinity, minHeight: 39)
-                        .background {
-                            if selection == metric {
-                                RoundedRectangle(cornerRadius: 13)
-                                    .fill(Color.themeCrimsonInk)
-                            }
-                        }
-                        .contentShape(.rect)
-                }
-                .buttonStyle(.plain)
+        Picker("Vital Metric", selection: $selection) {
+            ForEach(HealthMetric.allCases) { metric in
+                Text(metric.title).tag(metric)
             }
         }
-        .padding(4)
-        .hospitalyGlassSurface(in: Capsule())
+        .pickerStyle(.segmented)
     }
 }
 

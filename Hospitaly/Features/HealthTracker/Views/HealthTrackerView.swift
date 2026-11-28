@@ -16,7 +16,7 @@ struct HealthTrackerView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel = HealthTrackerViewModel()
     @State private var sheet: Sheet?
-    @State private var showsDateRange = false
+    @State private var opensHistoryAfterEntry = false
 
     let actions: HealthTrackerActions
 
@@ -29,8 +29,9 @@ struct HealthTrackerView: View {
 
                 content
             }
-            .frame(maxWidth: 540)
-            .padding(16)
+            .padding(.horizontal, Theme.contentInset)
+            .padding(.vertical, 16)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }
@@ -47,8 +48,10 @@ struct HealthTrackerView: View {
                     .shadow(color: Color.themeVitalAccent.opacity(0.24), radius: 6, y: 3)
             }
             .buttonStyle(.plain)
-            .padding(.horizontal, 20)
+            .padding(.trailing, Theme.contentInset)
             .padding(.vertical, 10)
+            .frame(maxWidth: Theme.dashboardWidth, alignment: .trailing)
+            .frame(maxWidth: .infinity)
         }
         .navigationTitle("Health Tracker")
         .navigationBarTitleDisplayMode(.inline)
@@ -57,15 +60,18 @@ struct HealthTrackerView: View {
                 Button("Close") { dismiss() }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button("Date Range", systemImage: "calendar") { showsDateRange = true }
-                    .confirmationDialog("Date Range", isPresented: $showsDateRange, titleVisibility: .visible) {
+                Menu {
+                    Picker("Date Range", selection: $model.days) {
                         ForEach([7, 30, 90], id: \.self) { days in
-                            Button("Last \(days) days") { model.days = days }
+                            Text("Last \(days) days").tag(days)
                         }
                     }
+                } label: {
+                    Label("Date Range", systemImage: "calendar")
+                }
             }
         }
-        .sheet(item: $sheet) { selection in
+        .sheet(item: $sheet, onDismiss: openPendingHistory) { selection in
             switch selection {
             case .log:
                 LogVitalView(
@@ -78,20 +84,8 @@ struct HealthTrackerView: View {
                 .presentationBackground(Color.themeGlassCanvas)
             case .history:
                 NavigationStack {
-                    List(model.readings) { reading in
-                        VitalLogRow(metric: model.metric, reading: reading)
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
-                    }
-                    .listStyle(.plain)
-                    .scrollContentBackground(.hidden)
-                    .background { Theme.roseCanvas.ignoresSafeArea() }
-                    .navigationTitle("\(model.metric.title) Logs")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") { sheet = nil }
-                        }
+                    VitalLogHistoryView(model: viewModel) {
+                        await viewModel.load(using: actions.load)
                     }
                 }
                 .tint(Color.themePrimary)
@@ -143,12 +137,12 @@ struct HealthTrackerView: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Text("Recent Logs")
-                        .font(.headline)
+                        .font(.title3.bold())
                         .foregroundStyle(Color.themeText)
                     Spacer()
                     Button("View All") { sheet = .history }
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.themeVitalAccent)
+                        .font(.subheadline.weight(.semibold))
+                        .tint(Color.themeCrimsonInk)
                 }
 
                 ForEach(viewModel.readings.prefix(3)) { reading in
@@ -170,11 +164,18 @@ struct HealthTrackerView: View {
     }
 
     private func checkLogs(_ metric: HealthMetric) {
+        opensHistoryAfterEntry = true
         if viewModel.metric == metric {
             reload()
         } else {
             viewModel.metric = metric
         }
+    }
+
+    private func openPendingHistory() {
+        guard opensHistoryAfterEntry else { return }
+        opensHistoryAfterEntry = false
+        sheet = .history
     }
 }
 

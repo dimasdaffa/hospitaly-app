@@ -19,6 +19,8 @@ The visual reference brings the next step into focus with a colored header, a pr
 
 Use system typography and sentence-case labels. Keep appointment facts on a light inset panel so the time and actions remain readable over the saturated header. Main screens use a shared crimson backdrop, 20 pt horizontal insets, and 24 pt cards. Place the first search field or settings panel across the transition from the header to the rose canvas. [Theme.swift](../Hospitaly/Shared/UI/Theme.swift) · [Apple guidance on materials](https://developer.apple.com/design/human-interface-guidelines/materials)
 
+Use the system segmented picker for fixed choices such as vital metrics, appointment views, doctor detail sections, and record types. The system draws the selected segment and handles interactions.
+
 ## Home layout and behavior
 
 1. The crimson header extends behind the status bar and Dynamic Island. The greeting, notification inbox, and Help Center controls sit below the top safe area.
@@ -49,10 +51,15 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 - Diagnosis Details puts the diagnosis, reported severity, and symptoms first. The care provider, medicines, notes, and attachments follow in light panels. Book Follow-up and Chat Doctor stay in the bottom action bar when available.
 - Lab Results shows any published alert above the result panels. Measurements show their values, units, reference ranges, and reported statuses. Download PDF stays at the bottom when the report has a file.
 
+## Health tracker
+
+- The tracker shows the selected metric and period above a selectable trend chart. The crimson summary contains the average and date range. The blood pressure curve follows systolic values, and selecting a point shows both pressures.
+- Recent Logs shows up to three of the newest readings. View All opens the selected metric and period, with entries grouped by clinic date, newest first. Both screens support pull-to-refresh and preserve loaded readings on refresh failure.
+- Log Vitals opens as a sheet with centered, scrollable number wheels. Blood pressure has one wheel for each pressure. Heart rate and weight use one wheel each, with a decimal step for weight. The sheet also shows the last reading and offers keyboard entry. If a save cannot be confirmed, Check Recent Logs opens the history and refreshes the readings.
+
 ## Other patient screens
 
 - Our Specialists places the title and appointment shortcut in the crimson hero. A glass search field overlaps its lower edge, followed by specialty chips and the result count. Doctor cards show ratings and experience on one line when possible, with a rose booking strip that groups availability and the action.
-- Health Tracker keeps its selectable chart and wheel entry with the rose canvas and crimson metric selection.
 - Documents and BPJS places the upload action first and groups insurance and recent files into readable rows with download and management actions. Upload and Edit Document show the file in a crimson picker, metadata in a glass form section, and categories in an adaptive grid. History uses separate glass groups for active and deleted files.
 - Messages uses a crimson title, a glass compose button, an overlapping search field, and inset inbox cards. Conversation threads use light incoming bubbles and crimson outgoing bubbles.
 - Profile combines the patient's identity and editable portrait in a full-width header. Account settings share one glass panel. Photo editing and password settings use crimson focal panels, and notification preferences use a glass settings card.

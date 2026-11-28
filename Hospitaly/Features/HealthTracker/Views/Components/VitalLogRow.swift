@@ -10,29 +10,40 @@ import SwiftUI
 struct VitalLogRow: View {
     let metric: HealthMetric
     let reading: HealthReading
+    var showsDate = true
 
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: metric.symbol)
-                .foregroundStyle(Color.themePrimary)
-                .frame(width: 42, height: 42)
-                .background(Color.themePrimary.opacity(0.10), in: Circle())
+                .font(.headline)
+                .foregroundStyle(Color.themeCrimsonInk)
+                .frame(width: 44, height: 44)
+                .background(Color.themeGlassRose, in: .rect(cornerRadius: 14))
 
             VStack(alignment: .leading, spacing: 4) {
                 if let value = reading.measurement(for: metric) {
                     Text(metric.format(primary: value.primary, secondary: value.secondary))
-                        .font(.subheadline.bold())
+                        .font(.headline)
+                        .monospacedDigit()
                         .foregroundStyle(Color.themeText)
                 }
 
-                Text(reading.dateLabel)
-                    .font(.caption)
-                    .foregroundStyle(Color.themeSecondaryText)
+                if let timestamp {
+                    Text(timestamp)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.themeSecondaryText)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(12)
+        .padding(14)
         .hospitalyPanel(cornerRadius: 18)
+    }
+
+    private var timestamp: String? {
+        if showsDate { return reading.dateLabel }
+        guard let recordedAt = reading.recordedAt else { return nil }
+        return ClinicDate.dayString(recordedAt) == reading.date ? ClinicDate.time(recordedAt) : reading.dateLabel
     }
 }
 

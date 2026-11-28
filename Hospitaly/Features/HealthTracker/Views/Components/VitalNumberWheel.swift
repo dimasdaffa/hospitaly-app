@@ -23,7 +23,7 @@ struct VitalNumberWheel: View {
             Text(title.uppercased())
                 .font(.caption.weight(.semibold))
                 .tracking(0.8)
-                .foregroundStyle(Color.themeMutedText)
+                .foregroundStyle(Color.themeSecondaryText)
 
             ScrollView(.vertical) {
                 LazyVStack(spacing: 0) {
@@ -47,7 +47,12 @@ struct VitalNumberWheel: View {
             }
             .background {
                 RoundedRectangle(cornerRadius: 27)
-                    .fill(Color.themeGlassRose.opacity(0.7))
+                    .fill(
+                        LinearGradient(
+                            colors: [.themeGlassRose, .themeGlassCanvas],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
                     .overlay { selectionHighlight }
             }
             .sensoryFeedback(.selection, trigger: selection)
@@ -58,7 +63,10 @@ struct VitalNumberWheel: View {
     private var selectionHighlight: some View {
         RoundedRectangle(cornerRadius: 16)
             .fill(Color.themeSurface)
-            .strokeBorder(Color.themePrimary.opacity(0.23), lineWidth: 1)
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(Color.themePrimary.opacity(0.23))
+            }
             .frame(height: rowHeight)
             .padding(.horizontal, 8)
     }
@@ -72,7 +80,7 @@ struct VitalNumberWheel: View {
             Text(label)
                 .font(.system(size: selected ? digitSize : 25, weight: selected ? .bold : .medium))
                 .monospacedDigit()
-                .foregroundStyle(selected ? Color.themePrimary : Color.themeMutedText)
+                .foregroundStyle(selected ? Color.themeCrimsonInk : Color.themeMutedText)
 
             if selected {
                 Text(unit)

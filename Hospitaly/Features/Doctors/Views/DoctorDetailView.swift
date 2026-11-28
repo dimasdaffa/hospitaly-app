@@ -74,6 +74,8 @@ struct DoctorDetailView: View {
     private var detailPanel: some View {
         VStack(spacing: 0) {
             sectionTabs
+                .padding(.horizontal, Theme.contentInset)
+                .padding(.top, 14)
 
             VStack(alignment: .leading, spacing: 20) {
                 switch section {
@@ -93,32 +95,12 @@ struct DoctorDetailView: View {
     }
 
     private var sectionTabs: some View {
-        HStack(spacing: 0) {
+        Picker("Doctor Information", selection: $section) {
             ForEach(Section.allCases, id: \.self) { tab in
-                let selected = section == tab
-                Button {
-                    section = tab
-                } label: {
-                    Text(tab.rawValue)
-                        .font(.subheadline.weight(selected ? .semibold : .medium))
-                        .foregroundStyle(selected ? Color.themeCrimsonInk : Color.themeSecondaryText)
-                        .frame(maxWidth: .infinity, minHeight: 48)
-                        .contentShape(Rectangle())
-                        .overlay(alignment: .bottom) {
-                            if selected {
-                                Capsule()
-                                    .fill(Color.themePrimary)
-                                    .frame(height: 2)
-                                    .padding(.horizontal, 8)
-                            }
-                        }
-                }
-                .buttonStyle(.plain)
-                .accessibilityAddTraits(selected ? .isSelected : [])
+                Text(tab.rawValue).tag(tab)
             }
         }
-        .padding(.horizontal, 12)
-        .background(alignment: .bottom) { Divider() }
+        .pickerStyle(.segmented)
     }
 
     private var aboutContent: some View {

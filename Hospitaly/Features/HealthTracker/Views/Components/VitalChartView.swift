@@ -30,19 +30,27 @@ struct VitalChartView: View {
         let points = chartPoints
 
         VStack(spacing: 20) {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 0) {
                 header(average)
 
-                if points.isEmpty {
-                    Text("No dated readings to plot.")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.themeSecondaryText)
-                        .frame(maxWidth: .infinity, minHeight: 120)
-                } else {
-                    plot(points)
+                VStack(alignment: .leading, spacing: 12) {
+                    if points.isEmpty {
+                        Text("No dated readings to plot.")
+                            .font(.subheadline)
+                            .foregroundStyle(Color.themeSecondaryText)
+                            .frame(maxWidth: .infinity, minHeight: 120)
+                    } else {
+                        if metric == .bloodPressure {
+                            Label("Systolic trend", systemImage: "waveform.path.ecg")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Color.themeCrimsonInk)
+                        }
+                        plot(points)
+                    }
                 }
+                .padding(18)
             }
-            .padding(18)
+            .clipShape(.rect(cornerRadius: Theme.cardRadius))
             .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
 
             HStack(spacing: 10) {
@@ -54,10 +62,17 @@ struct VitalChartView: View {
     }
 
     private func header(_ average: HealthReading.Measurement?) -> some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text("Average \(metric.title)")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(Color.themeSecondaryText)
+        VStack(alignment: .leading, spacing: 7) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("Average \(metric.title)")
+                    .font(.subheadline.weight(.semibold))
+                Spacer(minLength: 0)
+                Text("Last \(days) days")
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 9)
+                    .padding(.vertical, 5)
+                    .background(.white.opacity(0.16), in: Capsule())
+            }
 
             HStack(alignment: .firstTextBaseline, spacing: 7) {
                 Text(numberLabel(average))
@@ -65,21 +80,15 @@ struct VitalChartView: View {
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
-                    .foregroundStyle(Color.themeCrimsonInk)
                 Text(metric.unit)
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(Color.themeSecondaryText)
-
-                Spacer()
-
-                Text(metric == .bloodPressure ? "Systolic trend" : "Last \(days) days")
-                    .font(.caption2.weight(.semibold))
-                    .foregroundStyle(Color.themeCrimsonInk)
-                    .padding(.horizontal, 9)
-                    .padding(.vertical, 5)
-                    .background(Color.themeGlassRose, in: Capsule())
+                    .font(.subheadline)
+                    .foregroundStyle(Color.themeSurface.opacity(0.84))
             }
         }
+        .foregroundStyle(Color.themeSurface)
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background { CrimsonHeaderBackdrop() }
     }
 
     private var dateDomain: ClosedRange<Date> {
@@ -130,15 +139,21 @@ struct VitalChartView: View {
                     .foregroundStyle(Color.themeVitalAccent)
             }
 
-            ForEach(points) { point in
-                dot(point)
+            if let inspected {
+                RuleMark(x: .value("Selected time", inspected.date))
+                    .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                    .foregroundStyle(Color.themeCrimsonInk.opacity(0.30))
             }
 
-            if let inspected {
-                dot(inspected)
-                    .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart))) {
-                        tooltip(inspected.measurement)
-                    }
+            ForEach(points) { point in
+                if inspected?.id == point.id {
+                    dot(point)
+                        .annotation(position: .top, spacing: 6, overflowResolution: .init(x: .fit(to: .chart))) {
+                            tooltip(point.measurement)
+                        }
+                } else {
+                    dot(point)
+                }
             }
         }
         .chartXScale(domain: dateDomain, range: .plotDimension(padding: 5))
@@ -234,8 +249,8 @@ struct VitalChartView: View {
 
     private func statistic(_ title: String, value: HealthReading.Measurement?) -> some View {
         VStack(spacing: 5) {
-            Text(title.uppercased())
-                .font(.system(size: 9, weight: .semibold))
+            Text(title)
+                .font(.caption2.weight(.semibold))
                 .foregroundStyle(Color.themeSecondaryText)
             Text(value.map(statisticLabel) ?? "—")
                 .font(.subheadline.bold())

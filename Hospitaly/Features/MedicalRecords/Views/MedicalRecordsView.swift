@@ -99,33 +99,15 @@ struct MedicalRecordsView: View {
     }
 
     private var filters: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 8) {
-                filterButton("All Records", kind: nil)
-                ForEach(MedicalRecordEntry.Kind.allCases) { kind in
-                    filterButton(kind.rawValue, kind: kind)
-                }
-            }
-        }
-        .scrollIndicators(.hidden)
-    }
+        @Bindable var model = model
 
-    private func filterButton(_ title: String, kind: MedicalRecordEntry.Kind?) -> some View {
-        let selected = model.filter == kind
-        return Button {
-            model.filter = kind
-        } label: {
-            Text(title)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(selected ? Color.themeSurface : Color.themeSecondaryText)
-                .padding(.horizontal, 15)
-                .padding(.vertical, 10)
-                .background(selected ? Color.themeCrimsonInk : Color.themeSurface.opacity(0.86), in: Capsule())
-                .overlay { Capsule().strokeBorder(Color.themeOutline.opacity(selected ? 0 : 0.85)) }
-                .frame(minHeight: 44)
-                .contentShape(Rectangle())
+        return Picker("Record Type", selection: $model.filter) {
+            Text("All").tag(nil as MedicalRecordEntry.Kind?)
+            Text("Diagnosis").tag(Optional(MedicalRecordEntry.Kind.diagnosis))
+            Text("Labs").tag(Optional(MedicalRecordEntry.Kind.lab))
+            Text("Vaccines").tag(Optional(MedicalRecordEntry.Kind.vaccination))
         }
-        .buttonStyle(.plain)
+        .pickerStyle(.segmented)
     }
 
     @ContentBuilder

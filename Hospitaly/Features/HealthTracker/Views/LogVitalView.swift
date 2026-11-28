@@ -36,7 +36,7 @@ struct LogVitalView: View {
                 header
 
                 VStack(spacing: 22) {
-                    VitalMetricTabs(selection: $model.metric, metrics: [.bloodPressure, .heartRate, .weight])
+                    VitalMetricTabs(selection: $model.metric)
 
                     if model.usesKeyboard {
                         HStack(alignment: .top, spacing: 12) {
@@ -59,16 +59,18 @@ struct LogVitalView: View {
                 lastReadingCard
 
                 if let message = model.errorMessage {
-                    Text(message)
+                    Label(message, systemImage: "exclamationmark.circle.fill")
                         .font(.footnote)
-                        .foregroundStyle(Color.themePrimary)
+                        .foregroundStyle(Color.themeCrimsonInk)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(14)
+                        .background(Color.themeGlassRose, in: .rect(cornerRadius: 16))
                 }
             }
-            .frame(maxWidth: 508)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Theme.contentInset)
             .padding(.top, 20)
             .padding(.bottom, 12)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
@@ -85,9 +87,9 @@ struct LogVitalView: View {
                     .disabled(!model.canSave)
                 }
             }
-            .frame(maxWidth: 508)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Theme.contentInset)
             .padding(.vertical, 12)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
             .hospitalyActionBar()
             .overlay(alignment: .top) { Divider() }
@@ -99,7 +101,7 @@ struct LogVitalView: View {
     private var header: some View {
         VStack(spacing: 4) {
             Text("Log Vitals")
-                .font(.title3.bold())
+                .font(.title2.bold())
                 .foregroundStyle(Color.themeText)
             Text("Enter your latest reading")
                 .font(.subheadline)
@@ -111,9 +113,9 @@ struct LogVitalView: View {
                 Label("Close", systemImage: "xmark")
                     .labelStyle(.iconOnly)
                     .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.themeSecondaryText)
-                    .frame(width: 34, height: 34)
-                    .background(Color.themeSubtleSurface, in: .circle)
+                    .foregroundStyle(Color.themeCrimsonInk)
+                    .frame(width: 44, height: 44)
+                    .hospitalyGlassSurface(in: Circle())
             }
             .buttonStyle(.plain)
             .disabled(viewModel.isSaving)
@@ -157,9 +159,16 @@ struct LogVitalView: View {
 
     private var lastReadingCard: some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "info.circle")
-                .foregroundStyle(Color.themeCrimsonInk)
-                .padding(.top, 1)
+            Group {
+                if case .loading = viewModel.lastReading {
+                    ProgressView()
+                } else {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .foregroundStyle(Color.themeCrimsonInk)
+                }
+            }
+            .frame(width: 36, height: 36)
+            .background(Color.themeGlassRose, in: .rect(cornerRadius: 11))
             VStack(alignment: .leading, spacing: 4) {
                 Text("Last Reading")
                     .font(.subheadline.weight(.semibold))
@@ -181,7 +190,7 @@ struct LogVitalView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(16)
-        .hospitalyPanel(cornerRadius: 20)
+        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: 20))
     }
 
     private var lastReadingDescription: String {

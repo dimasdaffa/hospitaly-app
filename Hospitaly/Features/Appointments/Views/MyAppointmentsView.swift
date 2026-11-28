@@ -38,16 +38,12 @@ struct MyAppointmentsView: View {
         let nextAppointment = showsHistory ? nil : upcoming.first { $0.slot.start > .now }
 
         VStack(spacing: 18) {
-            HStack(spacing: 4) {
-                tab("Upcoming", selected: !showsHistory, count: upcoming.count) {
-                    showsHistory = false
-                }
-                tab("History", selected: showsHistory) {
-                    showsHistory = true
-                }
+            Picker("Appointment List", selection: $showsHistory) {
+                Text(upcoming.isEmpty ? "Upcoming" : "Upcoming (\(upcoming.count))")
+                    .tag(false)
+                Text("History").tag(true)
             }
-            .padding(4)
-            .hospitalyGlassSurface(in: Capsule())
+            .pickerStyle(.segmented)
             .padding(.horizontal, Theme.contentInset)
             .padding(.top, 12)
 
@@ -177,31 +173,6 @@ struct MyAppointmentsView: View {
 
     private func canManage(_ appointment: Appointment) -> Bool {
         management != nil && viewModel.phase == .loaded && appointment.canBeChanged
-    }
-
-    private func tab(
-        _ title: LocalizedStringKey, selected: Bool, count: Int? = nil, action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            HStack(spacing: 7) {
-                Text(title)
-
-                if let count, count > 0 {
-                    Text(count, format: .number)
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(selected ? Color.themeSurface : Color.themeCrimsonInk)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(selected ? Color.themeSurface.opacity(0.19) : Color.themeGlassRose, in: Capsule())
-                }
-            }
-            .font(.subheadline.weight(selected ? .semibold : .medium))
-            .foregroundStyle(selected ? Color.themeSurface : Color.themeSecondaryText)
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(selected ? Color.themeCrimsonInk : .clear, in: Capsule())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
