@@ -35,8 +35,9 @@ struct MyAppointmentsView: View {
         let upcoming = appointments.filter(\.isUpcoming).sorted { $0.slot.start < $1.slot.start }
         let history = appointments.filter { !$0.isUpcoming }.sorted { $0.slot.start > $1.slot.start }
         let visibleAppointments = showsHistory ? history : upcoming
+        let nextAppointment = showsHistory ? nil : upcoming.first { $0.slot.start > .now }
 
-        VStack(spacing: 14) {
+        VStack(spacing: 18) {
             HStack(spacing: 4) {
                 tab("Upcoming", selected: !showsHistory, count: upcoming.count) {
                     showsHistory = false
@@ -47,25 +48,37 @@ struct MyAppointmentsView: View {
             }
             .padding(4)
             .hospitalyGlassSurface(in: Capsule())
-            .padding(.horizontal, 16)
+            .padding(.horizontal, Theme.contentInset)
             .padding(.top, 12)
 
             ScrollView {
-                LazyVStack(spacing: 14) {
+                LazyVStack(alignment: .leading, spacing: 14) {
                     listStatus(isEmpty: visibleAppointments.isEmpty)
-                    ForEach(visibleAppointments) { appointment in
+
+                    if let nextAppointment {
+                        appointmentCard(nextAppointment, isFeatured: true)
+
+                        if visibleAppointments.count > 1 {
+                            Text("Other Appointments")
+                                .font(.headline)
+                                .foregroundStyle(Color.themeText)
+                                .padding(.top, 6)
+                        }
+                    }
+
+                    ForEach(visibleAppointments.filter { $0.id != nextAppointment?.id }) { appointment in
                         appointmentCard(appointment)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 20)
+                .padding(.horizontal, Theme.contentInset)
+                .padding(.bottom, 24)
             }
             .scrollIndicators(.hidden)
             .refreshable {
                 if let loadAppointments { await viewModel.refresh(using: loadAppointments) }
             }
         }
-        .frame(maxWidth: 540)
+        .frame(maxWidth: Theme.dashboardWidth)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("My Appointments")
@@ -112,6 +125,7 @@ struct MyAppointmentsView: View {
         switch viewModel.phase {
         case .loading:
             LoadingStateView(isEmpty ? "Loading appointments…" : "Refreshing appointments…")
+                .frame(maxWidth: .infinity)
                 .padding(.vertical, isEmpty ? 32 : 6)
         case .failed(let message):
             if isEmpty {
@@ -139,11 +153,12 @@ struct MyAppointmentsView: View {
         }
     }
 
-    private func appointmentCard(_ appointment: Appointment) -> AppointmentCardView {
+    private func appointmentCard(_ appointment: Appointment, isFeatured: Bool = false) -> AppointmentCardView {
         let showsActions = canManage(appointment)
         return AppointmentCardView(
             appointment: appointment,
             onOpen: { change = .details(appointment) },
+            isFeatured: isFeatured,
             onReschedule: showsActions ? { change = .reschedule(appointment) } : nil,
             onCancel: showsActions ? { change = .cancel(appointment) } : nil
         )
@@ -182,10 +197,11 @@ struct MyAppointmentsView: View {
             }
             .font(.subheadline.weight(selected ? .semibold : .medium))
             .foregroundStyle(selected ? Color.themeSurface : Color.themeSecondaryText)
-            .frame(maxWidth: .infinity, minHeight: 42)
+            .frame(maxWidth: .infinity, minHeight: 44)
             .background(selected ? Color.themeCrimsonInk : .clear, in: Capsule())
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 

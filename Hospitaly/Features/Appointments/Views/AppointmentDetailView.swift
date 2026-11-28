@@ -17,43 +17,46 @@ struct AppointmentDetailView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                AppointmentSummaryView(doctor: appointment.doctor, slot: appointment.slot)
+                AppointmentSummaryView(appointment: appointment)
 
                 VStack(alignment: .leading, spacing: 12) {
-                    AppointmentStatusBadge(status: appointment.status)
-                    field("Reference", value: appointment.referenceNumber)
-                    field("Reason for Visit", value: appointment.reason)
+                    Text("Reason for Visit")
+                        .font(.title3.bold())
+                        .foregroundStyle(Color.themeText)
+                    Text(appointment.reason)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.themeText)
 
                     if !appointment.complaints.isEmpty {
-                        field("Complaints", value: appointment.complaints)
-                    }
-
-                    if appointment.status == .cancellationRequested {
-                        Text("The hospital is reviewing your cancellation request.")
-                            .font(.footnote)
-                            .foregroundStyle(Color.themeSecondaryText)
+                        Divider()
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text("Complaints")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Color.themeSecondaryText)
+                            Text(appointment.complaints)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.themeText)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(16)
-                .hospitalyPanel(cornerRadius: 18)
+                .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
 
-                if let onReschedule, let onCancel {
-                    PrimaryActionButton(title: "Reschedule", icon: "calendar", action: onReschedule)
-                    Button(role: .destructive, action: onCancel) {
-                        Text(appointment.status == .pending ? "Cancel Request" : "Cancel Appointment")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity, minHeight: 48)
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(Color.themePrimary)
-                    .hospitalyPanel(cornerRadius: 18)
+                if appointment.status == .cancellationRequested {
+                    Label("The hospital is reviewing your cancellation request.", systemImage: "clock")
+                        .font(.footnote)
+                        .foregroundStyle(Color.themePendingText)
+                        .padding(14)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.themePendingBackground, in: .rect(cornerRadius: 16))
                 }
             }
-            .frame(maxWidth: 508)
-            .padding(20)
+            .padding(Theme.contentInset)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
+        .safeAreaInset(edge: .bottom, spacing: 0) { actionBar }
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Appointment Details")
         .navigationBarTitleDisplayMode(.inline)
@@ -64,14 +67,31 @@ struct AppointmentDetailView: View {
         }
     }
 
-    private func field(_ label: LocalizedStringKey, value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(Color.themeSecondaryText)
-            Text(value)
-                .font(.subheadline)
-                .foregroundStyle(Color.themeText)
+    @ViewBuilder
+    private var actionBar: some View {
+        if onReschedule != nil || onCancel != nil {
+            VStack(spacing: 8) {
+                if let onReschedule {
+                    PrimaryActionButton(title: "Reschedule", icon: "calendar.badge.clock", action: onReschedule)
+                }
+
+                if let onCancel {
+                    Button(role: .destructive, action: onCancel) {
+                        Text(appointment.status == .pending ? "Cancel Request" : "Cancel Appointment")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.themeCrimsonInk)
+                            .frame(maxWidth: .infinity, minHeight: 44)
+                            .background(Color.themeGlassCanvas, in: .rect(cornerRadius: 16))
+                            .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(Color.themeGlassRose) }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, Theme.contentInset)
+            .padding(.vertical, 10)
+            .frame(maxWidth: Theme.dashboardWidth)
+            .frame(maxWidth: .infinity)
+            .hospitalyActionBar()
         }
     }
 }

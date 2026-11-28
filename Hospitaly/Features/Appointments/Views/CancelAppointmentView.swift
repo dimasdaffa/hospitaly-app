@@ -20,13 +20,13 @@ struct CancelAppointmentView: View {
     var body: some View {
         Group {
             if let submitted {
-                CancellationSubmittedView(appointment: submitted) { dismiss() }
+                AppointmentChangeConfirmationView(appointment: submitted, change: .cancellation) { dismiss() }
             } else {
                 form
             }
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }
-        .navigationTitle("Cancel Appointment")
+        .navigationTitle(submitted == nil ? "Cancel Appointment" : "Confirmation")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
@@ -42,82 +42,106 @@ struct CancelAppointmentView: View {
 
         return ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                AppointmentSummaryView(doctor: appointment.doctor, slot: appointment.slot)
-
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Reason for Cancellation")
-                        .font(.title3.bold())
-                        .foregroundStyle(Color.themeText)
-                    Text("Tell us why you’re cancelling so we can improve our service.")
-                        .font(.subheadline)
-                        .foregroundStyle(Color.themeSecondaryText)
-                }
-
-                VStack(spacing: 0) {
-                    ForEach(CancellationRequest.Reason.allCases) { reason in
-                        Button {
-                            model.reason = reason
-                        } label: {
-                            HStack {
-                                Text(reason.title)
-                                    .foregroundStyle(Color.themeText)
-                                Spacer()
-                                Image(systemName: model.reason == reason ? "largecircle.fill.circle" : "circle")
-                                    .foregroundStyle(model.reason == reason ? Color.themePrimary : Color.themeMutedText)
-                            }
-                            .padding(16)
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        if reason != .other {
-                            Divider()
-                        }
-                    }
-                }
-                .hospitalyPanel(cornerRadius: 18)
-                .disabled(model.hasAttempt)
-
-                TextField("Please specify (optional)", text: $model.note, axis: .vertical)
-                    .lineLimit(3...5)
-                    .padding(16)
-                    .hospitalyPanel(cornerRadius: 18)
-                    .disabled(model.hasAttempt)
+                AppointmentSummaryView(appointment: appointment)
 
                 Label(
-                    "The hospital will review your request. Finding another available slot may take time.",
-                    systemImage: "exclamationmark.circle.fill"
+                    "The hospital reviews your request before cancelling the appointment.",
+                    systemImage: "clock"
                 )
                 .font(.subheadline)
-                .foregroundStyle(Color.themePrimary)
+                .foregroundStyle(Color.themePendingText)
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.themePrimary.opacity(0.08), in: .rect(cornerRadius: 14))
+                .background(Color.themePendingBackground, in: .rect(cornerRadius: 16))
 
-                if let error = model.errorMessage {
-                    Text(error)
-                        .foregroundStyle(Color.themePrimary)
-                        .font(.footnote)
-                } else if model.noteIsTooLong {
-                    Text("The note is limited to 255 bytes.")
-                        .foregroundStyle(Color.themePrimary)
-                        .font(.footnote)
-                }
+                cancellationReason
+                    .disabled(model.hasAttempt)
             }
-            .frame(maxWidth: 508)
-            .padding(20)
+            .padding(Theme.contentInset)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !model.appointmentChanged {
+        .safeAreaInset(edge: .bottom, spacing: 0) { submitBar }
+    }
+
+    private var cancellationReason: some View {
+        @Bindable var model = viewModel
+
+        return VStack(alignment: .leading, spacing: 14) {
+            Text("Reason for Cancellation")
+                .font(.title3.bold())
+                .foregroundStyle(Color.themeText)
+
+            VStack(spacing: 0) {
+                ForEach(CancellationRequest.Reason.allCases) { reason in
+                    let isSelected = model.reason == reason
+
+                    Button {
+                        model.reason = reason
+                    } label: {
+                        HStack(spacing: 12) {
+                            Text(reason.title)
+                            Spacer(minLength: 8)
+                            Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                                .foregroundStyle(isSelected ? Color.themeCrimsonInk : Color.themeMutedText)
+                        }
+                        .font(.subheadline.weight(isSelected ? .semibold : .regular))
+                        .foregroundStyle(isSelected ? Color.themeCrimsonInk : Color.themeText)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 48)
+                        .background(isSelected ? Color.themeGlassRose : Color.themeSurface)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
+
+                    if reason != CancellationRequest.Reason.allCases.last { Divider() }
+                }
+            }
+            .clipShape(.rect(cornerRadius: 14))
+            .overlay { RoundedRectangle(cornerRadius: 14).strokeBorder(Color.themeGlassRose) }
+
+            VStack(alignment: .leading, spacing: 7) {
+                Text("Additional Notes")
+                    .font(.subheadline.weight(.semibold))
+                TextField("Optional", text: $model.note, axis: .vertical)
+                    .lineLimit(3...5)
+                    .padding(12)
+                    .background(Color.themeGlassCanvas, in: .rect(cornerRadius: 14))
+                    .overlay { RoundedRectangle(cornerRadius: 14).strokeBorder(Color.themeGlassRose) }
+            }
+            .foregroundStyle(Color.themeText)
+        }
+        .padding(16)
+        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        .environment(\.colorScheme, .light)
+    }
+
+    private var submitBar: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let error = viewModel.errorMessage {
+                Label(error, systemImage: "exclamationmark.circle")
+                    .font(.footnote)
+                    .foregroundStyle(Color.themeCrimsonInk)
+            } else if viewModel.noteIsTooLong {
+                Text("The note is limited to 255 bytes.")
+                    .font(.footnote)
+                    .foregroundStyle(Color.themeCrimsonInk)
+            }
+
+            if viewModel.appointmentChanged {
+                PrimaryActionButton(title: "Return to Appointments", icon: "arrow.right") { dismiss() }
+            } else {
                 PrimaryActionButton(title: submitTitle, action: confirm)
-                    .disabled(!model.canSubmit)
-                    .frame(maxWidth: 508)
-                    .padding(16)
-                    .frame(maxWidth: .infinity)
-                    .hospitalyActionBar()
+                    .disabled(!viewModel.canSubmit)
             }
         }
+        .padding(.horizontal, Theme.contentInset)
+        .padding(.vertical, 10)
+        .frame(maxWidth: Theme.dashboardWidth)
+        .frame(maxWidth: .infinity)
+        .hospitalyActionBar()
     }
 
     private var submitTitle: LocalizedStringKey {

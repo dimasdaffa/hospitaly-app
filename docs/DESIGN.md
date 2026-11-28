@@ -36,10 +36,16 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 - Schedule displays the doctor’s weekly practice hours. Appointment also shows those hours when there are no bookable slots in the next 14 clinic days.
 - About holds the biography and practice address. Profile details, practice hours, and availability continue to use the existing Vapor endpoints.
 
+## Appointment management
+
+- My Appointments highlights the earliest future visit in Upcoming. Other visits and history use compact rows led by the clinic date and time. Eligible visits offer shortcuts to reschedule or request cancellation.
+- The featured visit, details, forms, and confirmations share a crimson summary with a light panel for the date, time, location, and server reference and status when available. Details keep the reason and complaints in a separate panel. Reschedule and cancellation actions stay at the bottom of eligible details.
+- Reschedule displays the current visit before the replacement picker. The action bar shows the selected time before submission. The confirmation uses the returned time, reference, and status, including pending approval when applicable.
+- The cancellation form explains hospital review and makes the selected reason visible. Its confirmation shows the returned cancellation status. Both outcomes provide an action back to My Appointments.
+
 ## Other patient screens
 
 - Our Specialists places the title and appointment shortcut in the crimson hero. A glass search field overlaps its lower edge, followed by specialty chips and the result count. Doctor cards show ratings and experience on one line when possible, with a rose booking strip that groups availability and the action.
-- Booking, appointment details, rescheduling, and cancellation use a crimson visit summary. Date cards and time pills match between booking and rescheduling. Appointment history separates upcoming and past visits, with the date and time on a dedicated line and server status beside the doctor. Confirmations keep the server status and reference.
 - Medical Records and Lab Results use prominent headers and light reading panels. Lab flags, status colors, and attachment access follow the existing data and actions. Health Tracker keeps its selectable chart and wheel entry with the rose canvas and crimson metric selection.
 - Documents and BPJS places the upload action first and groups insurance and recent files into readable rows with download and management actions. Upload and Edit Document show the file in a crimson picker, metadata in a glass form section, and categories in an adaptive grid. History uses separate glass groups for active and deleted files.
 - Messages uses a crimson title, a glass compose button, an overlapping search field, and inset inbox cards. Conversation threads use light incoming bubbles and crimson outgoing bubbles.

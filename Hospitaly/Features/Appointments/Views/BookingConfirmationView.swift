@@ -16,11 +16,11 @@ struct BookingConfirmationView: View {
         ScrollView {
             VStack(spacing: 26) {
                 confirmationHeader
-                confirmationCard
+                AppointmentSummaryView(appointment: appointment)
             }
-            .frame(maxWidth: 508)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Theme.contentInset)
             .padding(.vertical, 28)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -42,9 +42,9 @@ struct BookingConfirmationView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .frame(maxWidth: 508)
-            .padding(.horizontal, 24)
+            .padding(.horizontal, Theme.contentInset)
             .padding(.vertical, 14)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
             .hospitalyActionBar()
         }
@@ -74,75 +74,6 @@ struct BookingConfirmationView: View {
         }
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
-    }
-
-    private var confirmationCard: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
-                Text("STATUS")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.themeMutedText)
-
-                Spacer()
-
-                AppointmentStatusBadge(status: appointment.status)
-            }
-
-            HStack(spacing: 14) {
-                DoctorAvatarView(doctor: appointment.doctor, size: 60, showsAvailability: false)
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(appointment.doctor.name)
-                        .font(.headline)
-
-                    if !appointment.doctor.specialty.isEmpty {
-                        Text(appointment.doctor.specialty)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.themeSecondaryText)
-                    }
-                }
-            }
-
-            Divider()
-
-            row(
-                "DATE & TIME", value: appointment.slot.dateLabel, icon: "calendar",
-                subtitle: "\(appointment.slot.timeLabel) – \(ClinicDate.time(appointment.slot.end))"
-            )
-            row(
-                "LOCATION", value: appointment.doctor.hospital, icon: "mappin",
-                subtitle: appointment.doctor.practiceLocation.isEmpty ? nil : appointment.doctor.practiceLocation
-            )
-            row("REFERENCE ID", value: appointment.referenceNumber, icon: "doc.text")
-        }
-        .foregroundStyle(Color.themeText)
-        .padding(20)
-        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
-    }
-
-    private func row(_ title: LocalizedStringKey, value: String, icon: String, subtitle: String? = nil) -> some View {
-        HStack(alignment: .top, spacing: 14) {
-            Image(systemName: icon)
-                .font(.subheadline)
-                .foregroundStyle(Color.themeSecondaryText)
-                .frame(width: 38, height: 38)
-                .background(Color.themeGlassRose.opacity(0.75), in: Circle())
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.caption)
-                    .foregroundStyle(Color.themeMutedText)
-
-                Text(value)
-                    .font(.subheadline.weight(.semibold))
-
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.footnote)
-                        .foregroundStyle(Color.themeSecondaryText)
-                }
-            }
-        }
     }
 }
 

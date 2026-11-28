@@ -136,12 +136,12 @@ Hospitaly/                                  # iOS repository root
 │   │   │       ├── AppointmentDetailView.swift   # Read an appointment and open available actions
 │   │   │       ├── RescheduleView.swift           # Pick and confirm a replacement time
 │   │   │       ├── CancelAppointmentView.swift    # Submit a cancellation reason
-│   │   │       ├── CancellationSubmittedView.swift # Show the pending hospital review
+│   │   │       ├── AppointmentChangeConfirmationView.swift # Show the server result of rescheduling or cancellation
 │   │   │       └── Components/
-│   │   │           ├── AppointmentCardView.swift    # Appointment list row
+│   │   │           ├── AppointmentCardView.swift    # Featured upcoming visit and compact history row
 │   │   │           ├── AppointmentSlotPicker.swift  # Date and slot controls shared with Doctors
 │   │   │           ├── AppointmentStatusBadge.swift # Status styling
-│   │   │           └── AppointmentSummaryView.swift # Doctor and chosen time
+│   │   │           └── AppointmentSummaryView.swift # Doctor, time, location, and server visit metadata
 │   │   ├── Home/
 │   │   │   ├── Models/
 │   │   │   │   ├── CarePlanActions.swift              # Authenticated reads and dose updates

@@ -11,6 +11,7 @@ import SwiftUI
 struct RescheduleView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var viewModel: RescheduleViewModel
+    @State private var submitted: Appointment?
 
     let management: AppointmentManagement
     let onUpdated: (Appointment) -> Void
@@ -27,19 +28,42 @@ struct RescheduleView: View {
     }
 
     var body: some View {
+        Group {
+            if let submitted {
+                AppointmentChangeConfirmationView(appointment: submitted, change: .reschedule) { dismiss() }
+            } else {
+                form
+            }
+        }
+        .background { Theme.roseCanvas.ignoresSafeArea() }
+        .navigationTitle(submitted == nil ? "Reschedule Appointment" : "Confirmation")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Close") { dismiss() }
+                    .disabled(viewModel.isSubmitting)
+            }
+        }
+        .interactiveDismissDisabled(viewModel.isSubmitting)
+        .task(id: viewModel.loadAttempt) {
+            await viewModel.load(using: management.loadSlots)
+        }
+    }
+
+    private var form: some View {
         @Bindable var model = viewModel
 
-        ScrollView {
+        return ScrollView {
             VStack(alignment: .leading, spacing: 20) {
-                Text("Current Appointment")
-                    .font(.headline)
-                    .foregroundStyle(Color.themeText)
-                AppointmentSummaryView(doctor: model.appointment.doctor, slot: model.appointment.slot)
+                AppointmentSummaryView(appointment: model.appointment, heading: "Current Appointment")
 
                 if let message = model.submissionError {
-                    Text(message)
+                    Label(message, systemImage: "exclamationmark.circle")
                         .font(.footnote)
-                        .foregroundStyle(Color.themePrimary)
+                        .foregroundStyle(Color.themeCrimsonInk)
+                        .padding(12)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.themeGlassRose, in: .rect(cornerRadius: 14))
                 }
 
                 switch model.phase {
@@ -63,6 +87,8 @@ struct RescheduleView: View {
                             slots: model.slotsForSelectedDate, selectedSlot: model.selectedSlot,
                             onSelectSlot: model.selectSlot
                         )
+                        .padding(16)
+                        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
                         .disabled(model.isSubmitting)
                     } else {
                         ContentUnavailableView(
@@ -72,34 +98,36 @@ struct RescheduleView: View {
                     }
                 }
             }
-            .frame(maxWidth: 508)
-            .padding(20)
+            .padding(Theme.contentInset)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if model.phase == .loaded && model.hasAvailableSlots {
-                PrimaryActionButton(
-                    title: model.isSubmitting ? "Saving…" : "Confirm New Time", action: confirm
-                )
-                .disabled(model.selectedSlot == nil || model.isSubmitting)
-                .frame(maxWidth: 508)
-                .padding(16)
+                VStack(alignment: .leading, spacing: 10) {
+                    if let slot = model.selectedSlot {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("New Time")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(Color.themeCrimsonInk)
+                            Text("\(slot.dateLabel) · \(slot.timeLabel)")
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(Color.themeText)
+                        }
+                    }
+
+                    PrimaryActionButton(
+                        title: model.isSubmitting ? "Saving…" : "Confirm New Time", icon: "arrow.right",
+                        action: confirm
+                    )
+                    .disabled(model.selectedSlot == nil || model.isSubmitting)
+                }
+                .padding(.horizontal, Theme.contentInset)
+                .padding(.vertical, 10)
+                .frame(maxWidth: Theme.dashboardWidth)
                 .frame(maxWidth: .infinity)
                 .hospitalyActionBar()
             }
-        }
-        .background { Theme.roseCanvas.ignoresSafeArea() }
-        .navigationTitle("Reschedule Appointment")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close") { dismiss() }
-                    .disabled(model.isSubmitting)
-            }
-        }
-        .interactiveDismissDisabled(model.isSubmitting)
-        .task(id: model.loadAttempt) {
-            await model.load(using: management.loadSlots)
         }
     }
 
@@ -108,7 +136,7 @@ struct RescheduleView: View {
             let attempt = viewModel.loadAttempt
             if let updated = await viewModel.submit(using: management.reschedule) {
                 onUpdated(updated)
-                dismiss()
+                submitted = updated
             } else if viewModel.loadAttempt != attempt {
                 onRefresh()
             }
