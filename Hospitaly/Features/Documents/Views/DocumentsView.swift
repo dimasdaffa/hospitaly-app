@@ -42,6 +42,9 @@ struct DocumentsView: View {
             .padding(20)
             .frame(maxWidth: .infinity)
         }
+        .pullToRefresh(isEnabled: !model.isLoading && !isBusy) {
+            await model.load(using: actions.load)
+        }
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Documents & BPJS")
         .navigationBarTitleDisplayMode(.inline)
@@ -80,7 +83,6 @@ struct DocumentsView: View {
         }
         .modifier(PrivateFileExportModifier(file: $download, download: actions.download))
         .task(id: loadAttempt) { await model.load(using: actions.load) }
-        .refreshable { await model.load(using: actions.load) }
     }
 
     private var isBusy: Bool { download != nil || model.deletingID != nil }
@@ -232,7 +234,7 @@ struct DocumentsView: View {
     @ContentBuilder
     private func managementMenu(_ document: PatientDocument) -> some View {
         if model.deletingID == document.id {
-            ProgressView()
+            LoadingStateView()
                 .frame(width: 44, height: 44)
         } else if document.canManage {
             Menu {
@@ -253,7 +255,7 @@ struct DocumentsView: View {
     @ContentBuilder
     private func downloadIcon(_ document: PatientDocument) -> some View {
         if download?.source == .document(document.id) {
-            ProgressView()
+            LoadingStateView()
         } else if document.download != nil {
             Label("Download", systemImage: "arrow.down.to.line")
                 .labelStyle(.iconOnly)

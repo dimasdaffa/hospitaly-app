@@ -82,7 +82,7 @@ struct LogVitalView: View {
                 } else {
                     PrimaryActionButton(
                         title: model.isSaving ? "Saving…" : "Save Entry", icon: "arrow.right",
-                        cornerRadius: 27, action: save
+                        cornerRadius: 27, isLoading: model.isSaving, action: save
                     )
                     .disabled(!model.canSave)
                 }
@@ -161,7 +161,7 @@ struct LogVitalView: View {
         HStack(alignment: .top, spacing: 10) {
             Group {
                 if case .loading = viewModel.lastReading {
-                    ProgressView()
+                    LoadingStateView()
                 } else {
                     Image(systemName: "clock.arrow.circlepath")
                         .foregroundStyle(Color.themeCrimsonInk)

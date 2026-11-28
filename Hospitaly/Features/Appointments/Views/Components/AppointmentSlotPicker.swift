@@ -119,7 +119,6 @@ struct AppointmentSlotPicker: View {
             .frame(width: 54, height: 66)
             .background(selected ? Color.themeCrimsonInk : Color.themeSurface, in: shape)
             .overlay { shape.strokeBorder(Color.themeCardBorder, lineWidth: selected ? 0 : 1) }
-            .shadow(color: selected ? Color.themePrimary.opacity(0.22) : .clear, radius: 4, y: 3)
         }
         .buttonStyle(.plain)
     }

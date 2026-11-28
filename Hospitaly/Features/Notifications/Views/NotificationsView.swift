@@ -29,7 +29,9 @@ struct NotificationsView: View {
             .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
-        .refreshable { await viewModel.load(using: loadNotifications) }
+        .pullToRefresh(isEnabled: viewModel.phase != .loading && viewModel.markingReadID == nil) {
+            await viewModel.load(using: loadNotifications)
+        }
         .safeAreaInset(edge: .top, spacing: 0) {
             if let error = viewModel.readError {
                 markReadError(error)
@@ -168,7 +170,7 @@ struct NotificationsView: View {
                 } label: {
                     HStack(spacing: 6) {
                         if viewModel.markingReadID == notification.id {
-                            ProgressView()
+                            LoadingStateView()
                             Text("Marking as read…")
                         } else {
                             Image(systemName: "checkmark")

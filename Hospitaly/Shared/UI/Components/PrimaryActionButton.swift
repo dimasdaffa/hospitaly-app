@@ -13,6 +13,7 @@ struct PrimaryActionButton: View {
     let title: LocalizedStringKey
     var icon: String?
     var cornerRadius: CGFloat = 16
+    var isLoading = false
     let action: () -> Void
 
     var body: some View {
@@ -21,7 +22,9 @@ struct PrimaryActionButton: View {
                 Text(title)
                     .font(.headline)
 
-                if let icon {
+                if isLoading {
+                    LoadingStateView(showsLightBackdrop: true)
+                } else if let icon {
                     Image(systemName: icon)
                         .font(.subheadline.weight(.semibold))
                 }
@@ -45,6 +48,7 @@ struct PrimaryActionButton: View {
             }
         }
         .buttonStyle(.plain)
+        .disabled(isLoading)
     }
 }
 
@@ -53,6 +57,7 @@ struct PrimaryActionButton: View {
         PrimaryActionButton(title: "Continue to Reason", icon: "arrow.right") {}
         PrimaryActionButton(title: "Confirm Appointment") {}
             .disabled(true)
+        PrimaryActionButton(title: "Saving…", isLoading: true) {}
     }
     .padding()
 }

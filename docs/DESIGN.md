@@ -21,13 +21,15 @@ Use system typography and sentence-case labels. Keep appointment facts on a ligh
 
 Use the system segmented picker for fixed choices such as vital metrics, appointment views, doctor detail sections, and record types. The system draws the selected segment and handles interactions.
 
+Use the bundled Lottie loader for asynchronous screen states and compact in-progress controls. Pull-to-refresh displays one loading indicator while the request runs. Static screens display their bundled content immediately.
+
 ## Home layout and behavior
 
 1. The crimson header extends behind the status bar and Dynamic Island. The greeting, notification inbox, and Help Center controls sit below the top safe area.
 2. The next-appointment card shows the actual doctor, status, clinic date and time, and existing detail and reschedule actions. The page includes loading, empty, and recoverable error states.
 3. The search field overlaps the header edge and sends the entered doctor or specialty query to the existing directory.
 4. Care shortcuts open Appointments, Health Tracker, Medical Records, and Documents & BPJS. Labels can wrap, and the grid uses two columns at accessibility text sizes.
-5. Today’s Care Plan keeps the actual doses from Vapor, including the existing Mark as Taken action and confirmation.
+5. Today’s Care Plan shows doses from Vapor in a horizontally scrolling row with light panels. The row leaves space around card shadows and keeps the first card aligned with the section title. Mark as Taken shows progress until Vapor confirms it.
 
 The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and events describe separate features. Those sections require their own product decisions and backend contracts before they can represent live patient data.
 
@@ -65,7 +67,7 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 - Messages uses a crimson title, a glass compose button, an overlapping search field, and inset inbox cards. Conversation threads use light incoming bubbles and crimson outgoing bubbles.
 - New Message places a glass search field across the bottom of its crimson header. Search matches doctor names and specialties. Each doctor card opens a conversation with the selected doctor's linked account.
 - Profile combines the patient's identity and editable portrait in a full-width header. Account settings share one glass panel. Photo editing and password settings use crimson focal panels, and notification preferences use a glass settings card.
-- Help Center presents the hospital's FAQ as expandable reading panels. Previously loaded topics remain visible during a refresh and after a refresh failure.
+- Help Center displays three bundled FAQ topics in expandable reading panels, including offline.
 - Register pairs a crimson hospital header with a glass form. Field labels stay visible while typing, and the action bar shows submission progress. A confirmed registration returns to sign-in with the registered email filled in.
 
 ## Main navigation

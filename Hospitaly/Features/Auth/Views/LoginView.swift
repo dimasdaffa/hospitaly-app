@@ -58,6 +58,7 @@ struct LoginView: View {
                 PrimaryActionButton(
                     title: viewModel.isSigningIn ? "Signing In…" : "Sign In",
                     icon: "arrow.right",
+                    isLoading: viewModel.isSigningIn,
                     action: signIn
                 )
                 .disabled(!viewModel.canSignIn)

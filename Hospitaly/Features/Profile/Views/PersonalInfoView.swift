@@ -84,7 +84,7 @@ struct PersonalInfoView: View {
         .navigationTitle("Personal Information")
         .navigationBarTitleDisplayMode(.inline)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            PrimaryActionButton(title: model.isSaving ? "Saving…" : "Save Changes") {
+            PrimaryActionButton(title: model.isSaving ? "Saving…" : "Save Changes", isLoading: model.isSaving) {
                 Task {
                     if await model.save(using: actions) { dismiss() }
                 }
@@ -116,9 +116,12 @@ struct PersonalInfoView: View {
                     .buttonStyle(.borderless)
 
                     if model.isPreparingPhoto {
-                        ProgressView("Opening photo…")
-                            .font(.footnote)
-                            .tint(.themeSurface)
+                        HStack(spacing: 6) {
+                            LoadingStateView(showsLightBackdrop: true)
+                            Text("Opening photo…")
+                                .font(.footnote)
+                                .foregroundStyle(Color.themeSurface)
+                        }
                     }
 
                     if model.photo != nil || model.removesPhoto {

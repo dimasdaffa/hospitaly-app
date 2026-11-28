@@ -34,6 +34,7 @@ struct HealthTrackerView: View {
             .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
+        .pullToRefresh(isEnabled: model.phase != .loading) { await model.load(using: actions.load) }
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .safeAreaInset(edge: .bottom, alignment: .trailing, spacing: 0) {
             Button {
@@ -92,7 +93,6 @@ struct HealthTrackerView: View {
             }
         }
         .task(id: model.filter) { await model.load(using: actions.load) }
-        .refreshable { await model.load(using: actions.load) }
     }
 
     @ViewBuilder

@@ -146,10 +146,8 @@ struct ProfileView: View {
             }
 
             VStack(spacing: 0) {
-                if settings != nil {
-                    routeLink(.help)
-                    rowDivider
-                }
+                routeLink(.help)
+                rowDivider
 
                 Button(role: .destructive, action: signOut) {
                     row(
@@ -233,7 +231,7 @@ struct ProfileView: View {
                     )
                 }
             case .help:
-                if let settings { HelpCenterView(loadTopics: settings.loadHelp) }
+                HelpCenterView()
             }
         }
         .toolbarVisibility(.visible, for: .navigationBar)

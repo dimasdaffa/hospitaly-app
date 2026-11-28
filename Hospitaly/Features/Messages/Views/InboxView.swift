@@ -43,7 +43,7 @@ struct InboxView: View {
             }
             .scrollIndicators(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .refreshable { await refresh() }
+            .pullToRefresh(isEnabled: canPullToRefresh) { await refresh() }
             .ignoresSafeArea(.container, edges: .top)
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }
@@ -183,6 +183,11 @@ struct InboxView: View {
             }
         }
         .padding(.vertical, 12)
+    }
+
+    private var canPullToRefresh: Bool {
+        let phase = model.searchTerm.isEmpty ? model.phase : model.searchPhase
+        return isActive && phase != .loading
     }
 
     private func refresh() async {

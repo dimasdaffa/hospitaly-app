@@ -61,6 +61,9 @@ struct ConversationView: View {
                 .frame(maxWidth: .infinity)
             }
             .scrollDismissesKeyboard(.interactively)
+            .pullToRefresh(isEnabled: !model.isLoading && !model.isSending && !model.isMarkingRead) {
+                await refresh()
+            }
             .onChange(of: model.messages.last?.id, initial: true) { _, id in
                 if let id { reader.scrollTo(id, anchor: .bottom) }
             }
@@ -79,7 +82,6 @@ struct ConversationView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) { composer }
-        .refreshable { await refresh() }
         .task { await refresh() }
     }
 
@@ -215,8 +217,7 @@ struct ConversationView: View {
                 } label: {
                     Group {
                         if model.isSending {
-                            ProgressView()
-                                .tint(.themeSurface)
+                            LoadingStateView(showsLightBackdrop: true)
                         } else {
                             Label("Send", systemImage: "arrow.up")
                                 .labelStyle(.iconOnly)

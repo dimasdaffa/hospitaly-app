@@ -46,8 +46,7 @@ struct HomeView: View {
             }
             .scrollIndicators(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .refreshable {
-                guard !isPullRefreshing else { return }
+            .pullToRefresh(isEnabled: isActive && !viewModel.isLoading && !carePlan.isLoading) {
                 isPullRefreshing = true
                 defer { isPullRefreshing = false }
                 await refresh()

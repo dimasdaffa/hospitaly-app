@@ -52,8 +52,7 @@ struct DoctorCardView: View {
         Button(action: onFavorite) {
             Group {
                 if isSavingFavorite {
-                    ProgressView()
-                        .controlSize(.small)
+                    LoadingStateView()
                 } else {
                     Label(
                         isFavorite ? "Remove Favorite" : "Add Favorite",

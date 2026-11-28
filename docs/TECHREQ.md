@@ -78,7 +78,7 @@ Hospitaly/                                  # iOS repository root
 │   │   │   │   ├── UserProfile.swift          # Authenticated patient identity and biodata
 │   │   │   │   ├── ProfileUpdateRequest.swift # Changed profile fields
 │   │   │   │   ├── ProfilePhoto.swift         # Selected image thumbnail and JPEG upload
-│   │   │   │   ├── HelpTopic.swift            # Server-provided question and answer
+│   │   │   │   ├── HelpTopic.swift            # Bundled question and answer content
 │   │   │   │   └── ProfileSettingsActions.swift # Authenticated settings callbacks
 │   │   │   ├── Services/ProfileService.swift  # Read and update biodata, upload photo, and fetch help
 │   │   │   ├── ViewModels/
@@ -239,7 +239,8 @@ Hospitaly/                                  # iOS repository root
 │           ├── Theme.swift                    # Color palette, layout tokens, and glass surfaces
 │           ├── Components/
 │           │   ├── CrimsonHeaderBackdrop.swift # Crimson gradient and curved highlights
-│           │   ├── LoadingStateView.swift       # Bundled Lottie loop with a system progress fallback
+│           │   ├── LoadingStateView.swift       # Bundled Lottie loader in page and compact sizes
+│           │   ├── PullToRefreshModifier.swift # Refresh on scroll release with feature-owned feedback
 │           │   ├── PrimaryActionButton.swift    # Shared primary action button
 │           │   └── RefreshFailureView.swift     # Recoverable error above previously loaded content
 │           └── FileExport/
@@ -303,7 +304,7 @@ Hospitaly/
 | Patient documents and BPJS | [Documents](<../../RS Permata Sehat/Document Screen.png>) · [Upload](<../../RS Permata Sehat/Upload Docs.png>) | Profile opens the insurance and recent files list. Users can upload and download files, edit their own document metadata, replace attachments, and confirm deletion. History shows active and deleted records. Clinical attachments are available for download. |
 | Health tracker and vital entry | [Blood pressure](<../../RS Permata Sehat/My Health.png>) · [Weight](<../../RS Permata Sehat/My Health-1.png>) · [Heart rate](<../../RS Permata Sehat/My Health-2.png>) · [BP entry](<../../RS Permata Sehat/Entry BP.png>) · [Weight entry](<../../RS Permata Sehat/Entry Weight.png>) · [Heart rate entry](<../../RS Permata Sehat/Entry Heart Rate.png>) | The Health Tracker shortcut on Home opens the tracker. The native segmented picker selects a metric, and the chart and logs cover the selected 7, 30, or 90 clinic days. The blood pressure curve follows systolic readings, and a selected point shows the full pair. View All opens the log history grouped by clinic day. The entry sheet uses scroll wheels with an optional keyboard and saves one metric at a time. An unconfirmed save opens the history to check the record. |
 | Messages | [Messages](<../../RS Permata Sehat/Message Doctor.png>) | The inbox, unread badges, server search, doctor picker, paged conversations, send, and mark-as-read are integrated in source. Incoming messages appear when the conversation opens or refreshes. |
-| Profile | [Profile Settings](<../../RS Permata Sehat/Profile Screen.png>) | Biodata and photo editing, password change, appointment notification preferences, Help Center, and logout are integrated in source. The server-confirmed profile updates the Home greeting. |
+| Profile | [Profile Settings](<../../RS Permata Sehat/Profile Screen.png>) | Biodata and photo editing, password change, appointment notification preferences, and logout are integrated in source. Help Center reads its FAQ from bundled content. The server-confirmed profile updates the Home greeting. |
 | Authentication | Sign-in and registration use the app theme. | Patient registration, login, session restoration, and Debug reachability are integrated in source. Password recovery requires backend support. |
 
 ## 6. API integration requirements
@@ -325,10 +326,10 @@ Use the [patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-apl
 | Clinical history and files | Combine `GET /api/medical-records` and `GET /api/lab-results` for the timeline. Details use `GET /api/medical-records/:id`, `GET /api/medical-records/:id/documents`, and `GET /api/lab-results/:id`. Offer an authenticated export at `GET /api/documents/:id/download` or `GET /api/lab-results/:id/pdf` when the report includes the corresponding download path. |
 | Messages | Load the inbox with `GET /api/messages/conversations` and search with `q`. Load a peer’s history with `GET /api/messages?peerId=…&limit=50&page=…`. For new messages, use the doctor’s account UUID from `userId` or the clinical record’s nested `user.id` and send `{receiverId,content}` with `POST /api/messages`. Limit trimmed content to 255 characters. Use `PUT /api/messages/:id/read` only for incoming unread messages. An unconfirmed send keeps the draft and refreshes the thread before allowing a retry. |
 | Patient documents | List current files using `GET /api/documents` and historical records using `GET /api/documents/history`. Create a document with `POST /api/documents` and multipart `name`, `category`, `file`, and optional `cardNumber`. Update with `PUT /api/documents/:id`. Send JSON to keep the current file or multipart to replace it. Create and replacement accept PDF, JPEG, or PNG up to 5 MiB. `DELETE /api/documents/:id` returns 204 and retains history metadata. The list applies confirmed server changes and offers `GET /api/documents/:id/download` when available. For an unconfirmed save, compare server metadata and any selected file bytes before offering a retry. |
-| Profile and preferences | Send changed biodata fields with `PUT /api/users/me` and apply the response to the session. Upload a selected JPEG with `POST /api/upload` and save the returned public URL as `avatarURL`. An empty `avatarURL` clears the photo from the profile. Read and save `appointmentUpdates` with `GET` and `PUT /api/users/me/notification-settings`. Load help topics with `GET /api/help-center`. |
+| Profile and preferences | Send changed biodata fields with `PUT /api/users/me` and apply the response to the session. Upload a selected JPEG with `POST /api/upload` and save the returned public URL as `avatarURL`. An empty `avatarURL` clears the photo from the profile. Read and save `appointmentUpdates` with `GET` and `PUT /api/users/me/notification-settings`. Help Center uses bundled FAQ content. |
 | Registration and password | Create patient accounts using `POST /api/auth/register` with `role: "patient"`, then return to sign-in. Change passwords with authenticated `POST /api/auth/change-password`. Vapor returns 401 for a wrong current password. Recheck the JWT through `GET /api/users/me` before clearing the local session. Email-based password recovery is pending in the backend. |
 | Presentation states | API-backed lists need loading, data, empty, and recoverable error states. Use API dates, availability, currency, statuses, and identifiers when the feature is integrated. Carry the server-created appointment from confirmation into refreshed history. |
-| Refresh and cancellation | Dashboard refresh awaits both appointment and care-plan requests. Lists keep previously loaded data during a refresh and show an inline Retry if it fails. Keep filtered results scoped to their query or date range. Treat request cancellation as a lifecycle event, and distinguish offline and timeout errors. Mutations retain their own submit state, retry policy, and reconciliation behavior. |
+| Refresh and cancellation | A shared SwiftUI modifier starts the refresh when the user releases the pull. The screen shows its Lottie loading state while awaiting the request. Dashboard refresh awaits both appointment and care-plan requests. Lists keep previously loaded data during a refresh and show an inline Retry if it fails. Keep filtered results scoped to their query or date range. Treat request cancellation as a lifecycle event, and distinguish offline and timeout errors. Mutations retain their own submit state, retry policy, and reconciliation behavior. |
 
 ## 7. Delivery sequence and verification
 

@@ -118,7 +118,7 @@ struct RescheduleView: View {
 
                     PrimaryActionButton(
                         title: model.isSubmitting ? "Saving…" : "Confirm New Time", icon: "arrow.right",
-                        action: confirm
+                        isLoading: model.isSubmitting, action: confirm
                     )
                     .disabled(model.selectedSlot == nil || model.isSubmitting)
                 }

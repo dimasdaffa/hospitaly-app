@@ -135,10 +135,6 @@ final class SessionStore {
         profileService.avatarURL(profile)
     }
 
-    func helpTopics() async throws -> [HelpTopic] {
-        try await withPatientToken { try await profileService.helpTopics(token: $0) }
-    }
-
     func changePassword(_ request: ChangePasswordRequest) async throws {
         try await withPatientToken { token in
             do {

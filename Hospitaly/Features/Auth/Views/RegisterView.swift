@@ -140,15 +140,11 @@ struct RegisterView: View {
     }
 
     private var actionBar: some View {
-        Group {
-            if model.isSubmitting {
-                LoadingStateView("Creating account…")
-                    .foregroundStyle(Color.themeText)
-            } else {
-                PrimaryActionButton(title: "Create Account", icon: "arrow.right", action: register)
-                    .disabled(!model.canRegister)
-            }
-        }
+        PrimaryActionButton(
+            title: model.isSubmitting ? "Creating Account…" : "Create Account",
+            icon: "arrow.right", isLoading: model.isSubmitting, action: register
+        )
+        .disabled(!model.canRegister)
         .padding(.horizontal, Theme.contentInset)
         .padding(.vertical, 10)
         .frame(maxWidth: Theme.dashboardWidth)

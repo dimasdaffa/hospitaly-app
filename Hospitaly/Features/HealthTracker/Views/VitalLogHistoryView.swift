@@ -24,6 +24,7 @@ struct VitalLogHistoryView: View {
             .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
+        .pullToRefresh(isEnabled: model.phase != .loading) { await onRefresh() }
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Vital Logs")
         .navigationBarTitleDisplayMode(.inline)
@@ -32,7 +33,6 @@ struct VitalLogHistoryView: View {
                 Button("Done") { dismiss() }
             }
         }
-        .refreshable { await onRefresh() }
     }
 
     private var header: some View {

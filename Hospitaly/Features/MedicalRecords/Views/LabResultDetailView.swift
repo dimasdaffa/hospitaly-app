@@ -48,7 +48,8 @@ struct LabResultDetailView: View {
         .safeAreaInset(edge: .bottom) {
             if let file = result?.pdf {
                 PrimaryActionButton(
-                    title: download == nil ? "Download PDF" : "Preparing PDF…", icon: "arrow.down.to.line"
+                    title: download == nil ? "Download PDF" : "Preparing PDF…",
+                    icon: "arrow.down.to.line", isLoading: download != nil
                 ) { download = file }
                 .disabled(download != nil)
                 .padding(.horizontal, Theme.contentInset)

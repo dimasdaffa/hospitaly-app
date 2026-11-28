@@ -102,7 +102,9 @@ struct DoctorListView: View {
             }
             .scrollIndicators(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .refreshable { await viewModel.load(using: loadDoctors) }
+            .pullToRefresh(isEnabled: viewModel.phase != .loading) {
+                await viewModel.load(using: loadDoctors)
+            }
             .ignoresSafeArea(.container, edges: .top)
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }

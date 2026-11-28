@@ -221,8 +221,7 @@ struct RootView: View {
             },
             saveNotificationSettings: { settings in
                 try await session.withPatientToken { try await notificationService.updateSettings(settings, token: $0) }
-            },
-            loadHelp: session.helpTopics
+            }
         )
     }
 

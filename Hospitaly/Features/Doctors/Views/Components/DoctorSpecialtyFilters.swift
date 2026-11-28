@@ -42,7 +42,6 @@ struct DoctorSpecialtyFilters: View {
                     Capsule()
                         .strokeBorder(Color.themeGlassRose, lineWidth: isSelected ? 0 : 1)
                 }
-                .shadow(color: isSelected ? Color.themePrimary.opacity(0.20) : .clear, radius: 4, y: 2)
         }
         .buttonStyle(.plain)
     }

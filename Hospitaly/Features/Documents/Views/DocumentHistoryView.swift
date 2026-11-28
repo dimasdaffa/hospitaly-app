@@ -15,61 +15,12 @@ struct DocumentHistoryView: View {
     let actions: DocumentsActions
 
     var body: some View {
-        Group {
-            switch model.phase {
-            case .loading:
-                LoadingStateView("Loading history…")
-            case .failed(let message):
-                if model.documents.isEmpty {
-                    ContentUnavailableView {
-                        Label("Couldn’t Load History", systemImage: "exclamationmark.circle")
-                    } description: {
-                        Text(message)
-                    } actions: {
-                        Button("Retry") { loadAttempt += 1 }
-                            .buttonStyle(.borderedProminent)
-                    }
-                } else {
-                    history(loadError: message)
-                }
-            case .loaded:
-                if model.documents.isEmpty {
-                    ContentUnavailableView {
-                        Label("No Document History", systemImage: "clock.arrow.circlepath")
-                    } description: {
-                        Text("Uploaded and deleted documents will appear here.")
-                    } actions: {
-                        Button(model.isLoading ? "Refreshing…" : "Refresh") { loadAttempt += 1 }
-                            .buttonStyle(.bordered)
-                            .disabled(model.isLoading)
-                    }
-                } else {
-                    history()
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background { Theme.roseCanvas.ignoresSafeArea() }
-        .navigationTitle("Document History")
-        .navigationBarTitleDisplayMode(.inline)
-        .modifier(PrivateFileExportModifier(file: $download, download: actions.download))
-        .task(id: loadAttempt) { await model.load(using: actions.loadHistory) }
-        .refreshable { await model.load(using: actions.loadHistory) }
-    }
-
-    private func history(loadError: String? = nil) -> some View {
         let active = model.documents.filter { $0.deletedAt == nil }
         let deleted = model.documents.filter { $0.deletedAt != nil }
 
-        return ScrollView {
+        ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                if model.isLoading {
-                    LoadingStateView("Refreshing history…")
-                        .frame(maxWidth: .infinity)
-                } else if let loadError {
-                    RefreshFailureView(message: loadError) { loadAttempt += 1 }
-                }
-
+                status
                 if !active.isEmpty { documentGroup("Active", documents: active) }
                 if !deleted.isEmpty { documentGroup("Deleted", documents: deleted) }
             }
@@ -78,6 +29,45 @@ struct DocumentHistoryView: View {
             .frame(maxWidth: .infinity)
         }
         .scrollIndicators(.hidden)
+        .pullToRefresh(isEnabled: !model.isLoading && download == nil) {
+            await model.load(using: actions.loadHistory)
+        }
+        .background { Theme.roseCanvas.ignoresSafeArea() }
+        .navigationTitle("Document History")
+        .navigationBarTitleDisplayMode(.inline)
+        .modifier(PrivateFileExportModifier(file: $download, download: actions.download))
+        .task(id: loadAttempt) { await model.load(using: actions.loadHistory) }
+    }
+
+    @ViewBuilder
+    private var status: some View {
+        if model.isLoading || model.phase == .loading {
+            LoadingStateView(model.documents.isEmpty ? "Loading history…" : "Refreshing history…")
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, model.documents.isEmpty ? 32 : 6)
+        } else if case .failed(let message) = model.phase {
+            if model.documents.isEmpty {
+                ContentUnavailableView {
+                    Label("Couldn’t Load History", systemImage: "exclamationmark.circle")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Retry") { loadAttempt += 1 }
+                        .buttonStyle(.borderedProminent)
+                }
+            } else {
+                RefreshFailureView(message: message) { loadAttempt += 1 }
+            }
+        } else if model.documents.isEmpty {
+            ContentUnavailableView {
+                Label("No Document History", systemImage: "clock.arrow.circlepath")
+            } description: {
+                Text("Uploaded and deleted documents will appear here.")
+            } actions: {
+                Button("Refresh") { loadAttempt += 1 }
+                    .buttonStyle(.bordered)
+            }
+        }
     }
 
     private func documentGroup(_ title: LocalizedStringKey, documents: [PatientDocument]) -> some View {
@@ -133,7 +123,7 @@ struct DocumentHistoryView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             if download?.source == .document(document.id) {
-                ProgressView()
+                LoadingStateView()
             } else if document.download != nil {
                 Image(systemName: "arrow.down.to.line")
                     .font(.subheadline.weight(.semibold))

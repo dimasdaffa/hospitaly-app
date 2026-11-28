@@ -12,13 +12,14 @@ import SwiftUI
 struct LoadingStateView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    let title: LocalizedStringKey
-    var showsLightBackdrop: Bool
+    let title: LocalizedStringKey?
+    let showsLightBackdrop: Bool
 
     private static let animation = LottieAnimation.named("loading", bundle: .main)
+        ?? LottieAnimation.named("loading", bundle: .main, subdirectory: "Animations")
         ?? LottieAnimation.named("loading", bundle: .main, subdirectory: "Resources/Animations")
 
-    init(_ title: LocalizedStringKey, showsLightBackdrop: Bool = false) {
+    init(_ title: LocalizedStringKey? = nil, showsLightBackdrop: Bool = false) {
         self.title = title
         self.showsLightBackdrop = showsLightBackdrop
     }
@@ -30,24 +31,31 @@ struct LoadingStateView: View {
                     LottieView(animation: animation)
                         .resizable()
                         .looping()
-                        .frame(width: 60, height: 44)
-                        .background(showsLightBackdrop ? Color.themeSurface : .clear, in: Capsule())
                 } else {
-                    ProgressView()
-                        .frame(width: 60, height: 44)
+                    Image(systemName: "hourglass")
+                        .font(title == nil ? .caption.weight(.semibold) : .title3)
+                        .foregroundStyle(Color.themeCrimsonInk)
                 }
             }
+            .frame(width: title == nil ? 24 : 60, height: title == nil ? 20 : 44)
+            .background(showsLightBackdrop ? Color.themeSurface : .clear, in: Capsule())
             .accessibilityHidden(true)
 
-            Text(title)
-                .font(.subheadline)
+            if let title {
+                Text(title)
+                    .font(.subheadline)
+            }
         }
         .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text(title ?? "In progress"))
     }
 }
 
 #Preview {
-    LoadingStateView("Loading appointments…")
-        .padding()
-        .background(Theme.roseCanvas)
+    VStack(spacing: 16) {
+        LoadingStateView("Loading appointments…")
+        LoadingStateView()
+    }
+    .padding()
+    .background(Theme.roseCanvas)
 }

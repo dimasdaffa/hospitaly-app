@@ -319,7 +319,7 @@ struct DiagnosisDetailView: View {
                 Spacer()
 
                 if download?.source == .document(attachment.id) {
-                    ProgressView()
+                    LoadingStateView()
                 } else if attachment.file != nil {
                     Image(systemName: "arrow.down.to.line")
                         .foregroundStyle(Color.themePrimary)

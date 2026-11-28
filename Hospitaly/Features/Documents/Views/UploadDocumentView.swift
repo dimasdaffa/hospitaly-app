@@ -66,7 +66,7 @@ struct UploadDocumentView: View {
                 HStack(spacing: 14) {
                     Group {
                         if model.isPicking {
-                            ProgressView().tint(.themeSurface)
+                            LoadingStateView(showsLightBackdrop: true)
                         } else {
                             Image(systemName: model.file == nil ? "doc.badge.plus" : "checkmark")
                                 .font(.title3.weight(.semibold))
@@ -232,12 +232,15 @@ struct UploadDocumentView: View {
             }
 
             if model.needsCheck {
-                PrimaryActionButton(title: model.isSubmitting ? "Checking…" : "Check Documents", icon: "arrow.clockwise") {
+                PrimaryActionButton(
+                    title: model.isSubmitting ? "Checking…" : "Check Documents",
+                    icon: "arrow.clockwise", isLoading: model.isSubmitting
+                ) {
                     Task { await checkUpload() }
                 }
                 .disabled(model.isBusy)
             } else {
-                PrimaryActionButton(title: submitTitle) {
+                PrimaryActionButton(title: submitTitle, isLoading: model.isSubmitting) {
                     Task { await upload() }
                 }
                 .disabled(!model.canSubmit)

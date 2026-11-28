@@ -61,7 +61,7 @@ struct SecuritySettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(model.isSaving)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            PrimaryActionButton(title: model.isSaving ? "Updating…" : "Update Password") {
+            PrimaryActionButton(title: model.isSaving ? "Updating…" : "Update Password", isLoading: model.isSaving) {
                 Task { await model.save(using: changePassword) }
             }
             .disabled(!model.canSave)

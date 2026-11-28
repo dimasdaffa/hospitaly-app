@@ -92,8 +92,10 @@ struct BookingFormView: View {
                 if viewModel.slotUnavailable {
                     PrimaryActionButton(title: "Choose Another Time", action: onChooseAnotherTime)
                 } else {
-                    PrimaryActionButton(title: submitTitle, icon: "arrow.right", action: confirm)
-                        .disabled(!viewModel.canSubmit)
+                    PrimaryActionButton(
+                        title: submitTitle, icon: "arrow.right", isLoading: viewModel.isSubmitting, action: confirm
+                    )
+                    .disabled(!viewModel.canSubmit)
                 }
             }
             .frame(maxWidth: 508)

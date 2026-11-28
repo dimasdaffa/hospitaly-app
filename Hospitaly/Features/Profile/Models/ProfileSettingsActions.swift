@@ -13,7 +13,6 @@ struct ProfileSettingsActions {
     let changePassword: @MainActor (ChangePasswordRequest) async throws -> Void
     let loadNotificationSettings: @MainActor () async throws -> AppointmentNotificationSettings
     let saveNotificationSettings: @MainActor (AppointmentNotificationSettings) async throws -> AppointmentNotificationSettings
-    let loadHelp: @MainActor () async throws -> [HelpTopic]
 }
 
 extension ProfileSettingsActions {
@@ -24,8 +23,7 @@ extension ProfileSettingsActions {
             uploadPhoto: { _ in "/uploads/preview.jpg" },
             changePassword: { _ in },
             loadNotificationSettings: { preferences },
-            saveNotificationSettings: { preferences = $0; return $0 },
-            loadHelp: { [HelpTopic(title: "Book an appointment", answer: "Choose a doctor, a time, and a reason for your visit.")] }
+            saveNotificationSettings: { preferences = $0; return $0 }
         )
     }
 }

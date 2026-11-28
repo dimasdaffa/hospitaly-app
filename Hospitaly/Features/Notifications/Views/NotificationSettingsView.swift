@@ -83,7 +83,7 @@ struct NotificationSettingsView: View {
         .environment(\.colorScheme, .light)
         .disabled(model.isSaving)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            PrimaryActionButton(title: model.isSaving ? "Saving…" : "Save Preferences") {
+            PrimaryActionButton(title: model.isSaving ? "Saving…" : "Save Preferences", isLoading: model.isSaving) {
                 Task { await model.save(using: saveSettings) }
             }
             .disabled(!model.canSave)

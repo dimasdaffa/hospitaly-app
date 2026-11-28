@@ -34,7 +34,9 @@ struct MedicalRecordsView: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-            .refreshable { await model.load(using: actions.loadHistory) }
+            .pullToRefresh(isEnabled: model.phase != .loading) {
+                await model.load(using: actions.loadHistory)
+            }
             .ignoresSafeArea(.container, edges: .top)
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }

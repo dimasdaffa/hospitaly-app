@@ -133,7 +133,7 @@ struct CancelAppointmentView: View {
             if viewModel.appointmentChanged {
                 PrimaryActionButton(title: "Return to Appointments", icon: "arrow.right") { dismiss() }
             } else {
-                PrimaryActionButton(title: submitTitle, action: confirm)
+                PrimaryActionButton(title: submitTitle, isLoading: viewModel.isSubmitting, action: confirm)
                     .disabled(!viewModel.canSubmit)
             }
         }

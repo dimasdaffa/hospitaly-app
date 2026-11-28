@@ -70,7 +70,7 @@ struct MyAppointmentsView: View {
                 .padding(.bottom, 24)
             }
             .scrollIndicators(.hidden)
-            .refreshable {
+            .pullToRefresh(isEnabled: loadAppointments != nil && viewModel.phase != .loading) {
                 if let loadAppointments { await viewModel.refresh(using: loadAppointments) }
             }
         }

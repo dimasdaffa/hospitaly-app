@@ -57,9 +57,11 @@ struct CarePlanView: View {
                                 doseCard(entry)
                             }
                         }
-                        .padding(.vertical, 7)
+                        .padding(.vertical, 12)
                     }
+                    .contentMargins(.horizontal, Theme.contentInset, for: .scrollContent)
                     .scrollIndicators(.hidden)
+                    .padding(.horizontal, -Theme.contentInset)
                 }
             }
         }
@@ -107,11 +109,18 @@ struct CarePlanView: View {
                 Button {
                     onMarkTaken(entry)
                 } label: {
-                    Text(viewModel.savingID == entry.id ? "Saving…" : "Mark as Taken")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.themeCrimsonInk)
-                        .frame(maxWidth: .infinity, minHeight: 44)
-                        .background(Color.themeGlassRose, in: .capsule)
+                    HStack(spacing: 6) {
+                        if viewModel.savingID == entry.id {
+                            LoadingStateView()
+                            Text("Saving…")
+                        } else {
+                            Text("Mark as Taken")
+                        }
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.themeCrimsonInk)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .background(Color.themeGlassRose, in: .capsule)
                 }
                 .buttonStyle(.plain)
                 .disabled(viewModel.savingID != nil || viewModel.isLoading)
@@ -119,7 +128,7 @@ struct CarePlanView: View {
         }
         .padding(16)
         .frame(width: 244, alignment: .leading)
-        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        .hospitalyPanel()
     }
 }
 
@@ -129,7 +138,7 @@ struct CarePlanView: View {
         onRetry: {},
         onMarkTaken: { _ in }
     )
-    .padding()
+    .padding(Theme.contentInset)
     .background(Theme.roseCanvas)
 }
 

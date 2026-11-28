@@ -43,8 +43,4 @@ struct ProfileService {
     func avatarURL(_ profile: UserProfile) -> URL? {
         profile.avatarURL.flatMap(client.publicImageURL)
     }
-
-    func helpTopics(token: String) async throws -> [HelpTopic] {
-        try await client.get("api/help-center", token: token)
-    }
 }
