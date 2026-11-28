@@ -17,29 +17,85 @@ struct MedicalRecordsView: View {
     var onChat: ((Doctor) -> Void)? = nil
 
     var body: some View {
-        @Bindable var model = model
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: -Theme.heroOverlap) {
+                    header
+                        .hospitalyPageHero(topInset: geometry.safeAreaInsets.top)
 
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                filters
-                content
+                    LazyVStack(alignment: .leading, spacing: 16) {
+                        searchBar
+                        filters
+                        content
+                    }
+                    .padding(.horizontal, Theme.contentInset)
+                    .frame(maxWidth: Theme.dashboardWidth)
+                    .padding(.bottom, 24)
+                }
             }
-            .frame(maxWidth: 540)
-            .padding(16)
-            .frame(maxWidth: .infinity)
+            .scrollDismissesKeyboard(.interactively)
+            .refreshable { await model.load(using: actions.loadHistory) }
+            .ignoresSafeArea(.container, edges: .top)
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }
-        .navigationTitle("Medical Records")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close") { dismiss() }
-            }
-        }
-        .searchable(text: $model.query, prompt: "Search medical records")
+        .toolbarVisibility(.hidden, for: .navigationBar)
         .navigationDestination(for: MedicalRecordEntry.Route.self, destination: destination)
         .task(id: loadAttempt) { await model.load(using: actions.loadHistory) }
-        .refreshable { await model.load(using: actions.loadHistory) }
+    }
+
+    private var header: some View {
+        HStack(spacing: 12) {
+            Text("Medical Records")
+                .font(.largeTitle.bold())
+                .tracking(-0.8)
+                .foregroundStyle(Color.themeSurface)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                dismiss()
+            } label: {
+                Label("Close", systemImage: "xmark")
+                    .labelStyle(.iconOnly)
+                    .font(.headline)
+                    .foregroundStyle(Color.themeSurface)
+                    .frame(width: 44, height: 44)
+                    .glassEffect(.regular.tint(Color.themeCrimsonDeep.opacity(0.35)).interactive(), in: Circle())
+                    .environment(\.colorScheme, .dark)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var searchBar: some View {
+        @Bindable var model = model
+
+        return HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Color.themeCrimsonInk)
+
+            TextField("Search medical records", text: $model.query)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+                .foregroundStyle(Color.themeText)
+
+            if !model.query.isEmpty {
+                Button {
+                    model.query = ""
+                } label: {
+                    Label("Clear Search", systemImage: "xmark.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .foregroundStyle(Color.themeSecondaryText)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .font(.subheadline)
+        .padding(.leading, 16)
+        .padding(.trailing, 6)
+        .frame(minHeight: Theme.heroOverlap * 2)
+        .hospitalyGlassSurface(in: Capsule())
+        .environment(\.colorScheme, .light)
     }
 
     private var filters: some View {
@@ -63,9 +119,11 @@ struct MedicalRecordsView: View {
                 .font(.subheadline.weight(.semibold))
                 .foregroundStyle(selected ? Color.themeSurface : Color.themeSecondaryText)
                 .padding(.horizontal, 15)
-                .padding(.vertical, 9)
+                .padding(.vertical, 10)
                 .background(selected ? Color.themeCrimsonInk : Color.themeSurface.opacity(0.86), in: Capsule())
                 .overlay { Capsule().strokeBorder(Color.themeOutline.opacity(selected ? 0 : 0.85)) }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -122,20 +180,28 @@ struct MedicalRecordsView: View {
 
             if !months.isEmpty {
                 Text(latest == nil ? "Records" : "Past Records")
-                    .font(.headline)
+                    .font(.title3.bold())
                     .foregroundStyle(Color.themeText)
+                    .padding(.top, 4)
             }
 
             ForEach(months) { month in
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(month.title.uppercased())
-                        .font(.caption.weight(.bold))
-                        .tracking(0.6)
-                        .foregroundStyle(Color.themeSecondaryText)
-
+                Section {
                     ForEach(month.entries) { entry in
                         NavigationLink(value: entry.id) { MedicalRecordCard(entry: entry) }
                             .buttonStyle(.plain)
+                    }
+                } header: {
+                    HStack(spacing: 8) {
+                        Circle()
+                            .fill(Color.themeCrimsonInk)
+                            .frame(width: 7, height: 7)
+                        Text(month.title)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.themeSecondaryText)
+                        Rectangle()
+                            .fill(Color.themeGlassRose)
+                            .frame(height: 1)
                     }
                 }
             }
@@ -144,49 +210,50 @@ struct MedicalRecordsView: View {
 
     private func latestCard(_ entry: MedicalRecordEntry) -> some View {
         VStack(alignment: .leading, spacing: 11) {
-            Text("Last Visit")
-                .font(.subheadline.weight(.medium))
-
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.provider ?? entry.title)
-                        .font(.title.bold())
-                    Text(visitCaption(entry))
+            HStack(alignment: .top, spacing: 12) {
+                Label("Last Visit", systemImage: "calendar")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.themeCrimsonInk)
+                Spacer()
+                if let date = entry.date {
+                    Text(ClinicDate.label(date, as: .dateTime.day().month(.abbreviated).year()))
                         .font(.subheadline)
-                        .foregroundStyle(Color.themeSurface.opacity(0.85))
+                        .foregroundStyle(Color.themeSecondaryText)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(entry.title)
+                    .font(.title2.bold())
+                    .foregroundStyle(Color.themeText)
+
+                if let provider = entry.provider {
+                    Text(provider)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.themeText)
                 }
 
-                Spacer()
-
-                Image(systemName: "doc.text.fill")
-                    .font(.headline)
-                    .frame(width: 42, height: 42)
-                    .background(.white.opacity(0.18), in: .rect(cornerRadius: 12))
+                if let specialty = entry.subtitle {
+                    Text(specialty)
+                        .font(.subheadline)
+                        .foregroundStyle(Color.themeSecondaryText)
+                }
             }
 
-            Rectangle().fill(.white.opacity(0.27)).frame(height: 1)
-
-            HStack {
+            HStack(spacing: 8) {
                 Text("View Full Report")
-                    .font(.subheadline.weight(.semibold))
                 Spacer()
                 Image(systemName: "arrow.right")
-                    .font(.subheadline.weight(.semibold))
             }
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Color.themeCrimsonInk)
+            .padding(12)
+            .background(Color.themeGlassRose, in: .rect(cornerRadius: 14))
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .foregroundStyle(Color.themeSurface)
-        .background {
-            RoundedRectangle(cornerRadius: 22)
-                .fill(Theme.crimsonGradient)
-                .shadow(color: Color.themePrimary.opacity(0.19), radius: 6, y: 4)
-        }
-    }
-
-    private func visitCaption(_ entry: MedicalRecordEntry) -> String {
-        let date = entry.date.map { ClinicDate.label($0, as: .dateTime.day().month(.abbreviated).year()) }
-        return [entry.subtitle, date].compactMap { $0 }.joined(separator: " • ")
+        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        .contentShape(.rect(cornerRadius: Theme.cardRadius))
     }
 
     @ContentBuilder

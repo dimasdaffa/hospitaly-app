@@ -41,13 +41,15 @@ struct DiagnosisDetailView: View {
                         .padding(.vertical, 38)
                 }
             }
-            .frame(maxWidth: 540)
-            .padding(16)
+            .padding(.horizontal, Theme.contentInset)
+            .padding(.vertical, 16)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle(record?.recordType == "vaccination" ? "Vaccination Details" : "Diagnosis Details")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarVisibility(.visible, for: .navigationBar)
         .safeAreaInset(edge: .bottom) {
             if let record, record.recordType != "vaccination", let clinician = record.appointment?.doctor {
                 actionBar(actions.displayDoctor(clinician))
@@ -64,12 +66,14 @@ struct DiagnosisDetailView: View {
                 Button {
                     onFollowUp(doctor)
                 } label: {
-                    Text("Book Follow-up")
+                    Label("Book Follow-up", systemImage: "calendar")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.themeText)
+                        .foregroundStyle(Color.themeCrimsonInk)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 8)
                         .frame(maxWidth: .infinity, minHeight: 54)
-                        .background(Color.themeSurface, in: .rect(cornerRadius: 16))
-                        .overlay { RoundedRectangle(cornerRadius: 16).strokeBorder(Color.themeOutline) }
+                        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: 16))
+                        .contentShape(.rect(cornerRadius: 16))
                 }
                 .buttonStyle(.plain)
 
@@ -78,17 +82,17 @@ struct DiagnosisDetailView: View {
                 PrimaryActionButton(title: "Book Follow-up", icon: "calendar") { onFollowUp(doctor) }
             }
         }
-        .frame(maxWidth: 540)
-        .padding(.horizontal, 16)
+        .padding(.horizontal, Theme.contentInset)
         .padding(.vertical, 10)
+        .frame(maxWidth: Theme.dashboardWidth)
         .frame(maxWidth: .infinity)
         .hospitalyActionBar()
     }
 
     @ContentBuilder
     private func details(_ record: MedicalRecord) -> some View {
-        providerCard(record)
         diagnosisCard(record)
+        providerCard(record)
 
         if let medications = record.medications, !medications.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
@@ -152,14 +156,18 @@ struct DiagnosisDetailView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(16)
-        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+        .hospitalyPanel()
     }
 
     private func diagnosisCard(_ record: MedicalRecord) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                sectionTitle(record.recordType == "vaccination" ? "Vaccination" : "The Diagnosis")
-                Spacer()
+        let vaccination = record.recordType == "vaccination"
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline, spacing: 12) {
+                Label(vaccination ? "Vaccination" : "Diagnosis", systemImage: vaccination ? "syringe" : "cross.case")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.themeCrimsonInk)
+                Spacer(minLength: 0)
                 if let severity = record.severity, !severity.isEmpty {
                     Text(severity.capitalized)
                         .font(.caption.weight(.semibold))
@@ -170,58 +178,64 @@ struct DiagnosisDetailView: View {
                 }
             }
 
-            VStack(alignment: .leading, spacing: 9) {
-                Text(record.diagnosis)
-                    .font(.title2.bold())
-                    .foregroundStyle(Color.themeCrimsonInk)
+            Text(record.diagnosis)
+                .font(.title.bold())
+                .foregroundStyle(Color.themeText)
 
-                if !record.symptoms.isEmpty {
-                    Text(record.symptoms)
-                        .font(.subheadline)
-                        .foregroundStyle(Color.themeSecondaryText)
-                }
+            if !record.symptoms.isEmpty {
+                Text(record.symptoms)
+                    .font(.body)
+                    .foregroundStyle(Color.themeSecondaryText)
+            }
 
-                if let tags = record.symptomTags, !tags.isEmpty {
-                    ScrollView(.horizontal) {
-                        HStack(spacing: 6) {
-                            ForEach(Array(Set(tags)).sorted(), id: \.self) { tag in
-                                Text(tag)
-                                    .font(.caption.weight(.medium))
-                                    .foregroundStyle(Color.themeSecondaryText)
-                                    .padding(.horizontal, 9)
-                                    .padding(.vertical, 6)
-                                    .background(Color.themeGlassRose.opacity(0.75), in: Capsule())
-                            }
+            if let tags = record.symptomTags, !tags.isEmpty {
+                ScrollView(.horizontal) {
+                    HStack(spacing: 6) {
+                        ForEach(Array(Set(tags)).sorted(), id: \.self) { tag in
+                            Text(tag)
+                                .font(.caption.weight(.medium))
+                                .foregroundStyle(Color.themeCrimsonInk)
+                                .padding(.horizontal, 9)
+                                .padding(.vertical, 6)
+                                .background(Color.themeGlassRose, in: Capsule())
                         }
                     }
-                    .scrollIndicators(.hidden)
                 }
+                .scrollIndicators(.hidden)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .hospitalyPanel(cornerRadius: 20)
         }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
     }
 
     private func medicationCard(_ medication: MedicalRecord.Medication) -> some View {
         HStack(alignment: .top, spacing: 12) {
             Image(systemName: "pills.fill")
-                .foregroundStyle(Color.themeExperienceAccent)
+                .foregroundStyle(Color.themeCrimsonInk)
                 .frame(width: 38, height: 38)
-                .background(Color.themeExperienceBackground, in: .rect(cornerRadius: 10))
+                .background(Color.themeGlassRose, in: .rect(cornerRadius: 10))
 
             VStack(alignment: .leading, spacing: 5) {
                 Text(medication.name)
                     .font(.headline)
                     .foregroundStyle(Color.themeText)
-                Text([medication.dose, medication.category].compactMap { $0 }.joined(separator: " • "))
-                    .font(.subheadline)
-                    .foregroundStyle(Color.themeSecondaryText)
+                let details = [medication.dose, medication.category]
+                    .compactMap { $0 }
+                    .filter { !$0.isEmpty }
+                if !details.isEmpty {
+                    Text(details.joined(separator: " • "))
+                        .font(.subheadline)
+                        .foregroundStyle(Color.themeSecondaryText)
+                }
 
                 if !medication.times.isEmpty {
                     Label(medication.times.sorted().joined(separator: " · "), systemImage: "clock")
                         .font(.caption.weight(.medium))
                         .foregroundStyle(Color.themeSecondaryText)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(Color.themeSubtleSurface, in: Capsule())
                 }
                 if let instructions = medication.instructions, !instructions.isEmpty {
                     Text(instructions)
@@ -239,7 +253,7 @@ struct DiagnosisDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             sectionTitle(title)
             Text(text)
-                .font(.subheadline)
+                .font(.body)
                 .foregroundStyle(Color.themeSecondaryText)
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -254,7 +268,9 @@ struct DiagnosisDetailView: View {
             switch attachmentPhase {
             case .loading:
                 LoadingStateView("Loading attachments…")
-                    .font(.subheadline)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .hospitalyPanel(cornerRadius: 16)
             case .failed:
                 HStack {
                     Text("Couldn’t load attachments.")
@@ -264,11 +280,16 @@ struct DiagnosisDetailView: View {
                     Button("Retry") { attachmentAttempt += 1 }
                         .font(.subheadline.weight(.semibold))
                 }
+                .padding(16)
+                .hospitalyPanel(cornerRadius: 16)
             case .loaded:
                 if attachments.isEmpty {
                     Label("No documents attached to this record.", systemImage: "doc")
                         .font(.subheadline)
                         .foregroundStyle(Color.themeSecondaryText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                        .hospitalyPanel(cornerRadius: 16)
                 } else {
                     ForEach(attachments) { attachment in attachmentRow(attachment) }
                 }
@@ -282,9 +303,9 @@ struct DiagnosisDetailView: View {
         } label: {
             HStack(spacing: 12) {
                 Image(systemName: "doc.fill")
-                    .foregroundStyle(Color.themeExperienceAccent)
+                    .foregroundStyle(Color.themeCrimsonInk)
                     .frame(width: 36, height: 36)
-                    .background(Color.themeExperienceBackground, in: .rect(cornerRadius: 9))
+                    .background(Color.themeGlassRose, in: .rect(cornerRadius: 9))
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(attachment.name)
@@ -306,16 +327,16 @@ struct DiagnosisDetailView: View {
             }
             .padding(13)
             .hospitalyPanel(cornerRadius: 16)
+            .contentShape(.rect(cornerRadius: 16))
         }
         .buttonStyle(.plain)
         .disabled(download != nil || attachment.file == nil)
     }
 
     private func sectionTitle(_ title: String) -> some View {
-        Text(title.uppercased())
-            .font(.caption.weight(.semibold))
-            .tracking(0.5)
-            .foregroundStyle(Color.themeSecondaryText)
+        Text(title)
+            .font(.headline)
+            .foregroundStyle(Color.themeText)
     }
 
     private func loadRecord() async {

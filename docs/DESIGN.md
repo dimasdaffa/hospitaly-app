@@ -43,10 +43,16 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 - Reschedule displays the current visit before the replacement picker. The action bar shows the selected time before submission. The confirmation uses the returned time, reference, and status, including pending approval when applicable.
 - The cancellation form explains hospital review and makes the selected reason visible. Its confirmation shows the returned cancellation status. Both outcomes provide an action back to My Appointments.
 
+## Medical records
+
+- Medical Records uses a crimson header with an overlapping glass search field. The Last Visit card highlights the diagnosis, date, and clinician when available. The remaining records are grouped by month, with a label and icon for each record type.
+- Diagnosis Details puts the diagnosis, reported severity, and symptoms first. The care provider, medicines, notes, and attachments follow in light panels. Book Follow-up and Chat Doctor stay in the bottom action bar when available.
+- Lab Results shows any published alert above the result panels. Measurements show their values, units, reference ranges, and reported statuses. Download PDF stays at the bottom when the report has a file.
+
 ## Other patient screens
 
 - Our Specialists places the title and appointment shortcut in the crimson hero. A glass search field overlaps its lower edge, followed by specialty chips and the result count. Doctor cards show ratings and experience on one line when possible, with a rose booking strip that groups availability and the action.
-- Medical Records and Lab Results use prominent headers and light reading panels. Lab flags, status colors, and attachment access follow the existing data and actions. Health Tracker keeps its selectable chart and wheel entry with the rose canvas and crimson metric selection.
+- Health Tracker keeps its selectable chart and wheel entry with the rose canvas and crimson metric selection.
 - Documents and BPJS places the upload action first and groups insurance and recent files into readable rows with download and management actions. Upload and Edit Document show the file in a crimson picker, metadata in a glass form section, and categories in an adaptive grid. History uses separate glass groups for active and deleted files.
 - Messages uses a crimson title, a glass compose button, an overlapping search field, and inset inbox cards. Conversation threads use light incoming bubbles and crimson outgoing bubbles.
 - Profile combines the patient's identity and editable portrait in a full-width header. Account settings share one glass panel. Photo editing and password settings use crimson focal panels, and notification preferences use a glass settings card.

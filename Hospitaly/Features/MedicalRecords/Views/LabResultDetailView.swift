@@ -36,22 +36,24 @@ struct LabResultDetailView: View {
                         .padding(.vertical, 38)
                 }
             }
-            .frame(maxWidth: 540)
-            .padding(16)
+            .padding(.horizontal, Theme.contentInset)
+            .padding(.vertical, 16)
+            .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Lab Results")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarVisibility(.visible, for: .navigationBar)
         .safeAreaInset(edge: .bottom) {
             if let file = result?.pdf {
                 PrimaryActionButton(
-                    title: download == nil ? "Download PDF" : "Downloading…", icon: "arrow.down.to.line"
+                    title: download == nil ? "Download PDF" : "Preparing PDF…", icon: "arrow.down.to.line"
                 ) { download = file }
                 .disabled(download != nil)
-                .frame(maxWidth: 540)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, Theme.contentInset)
                 .padding(.vertical, 10)
+                .frame(maxWidth: Theme.dashboardWidth)
                 .frame(maxWidth: .infinity)
                 .hospitalyActionBar()
             }
@@ -67,6 +69,7 @@ struct LabResultDetailView: View {
                 .font(.title.bold())
                 .foregroundStyle(Color.themeSurface)
             Label(result.laboratory, systemImage: "mappin")
+                .padding(.top, 4)
             Label(
                 ClinicDate.label(result.collectedAt, as: .dateTime.day().month(.abbreviated).year().hour().minute()),
                 systemImage: "clock"
@@ -76,10 +79,13 @@ struct LabResultDetailView: View {
         .foregroundStyle(Color.themeSurface.opacity(0.86))
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.crimsonGradient, in: .rect(cornerRadius: Theme.cardRadius))
+        .background {
+            CrimsonHeaderBackdrop()
+                .clipShape(.rect(cornerRadius: Theme.cardRadius))
+        }
 
         if let alert = result.alert, !alert.isEmpty {
-            callout("Attention Needed", detail: alert, icon: "exclamationmark.triangle.fill", accent: .themePrimary)
+            callout("Attention Needed", detail: alert, icon: "exclamationmark.triangle.fill", accent: .themeCrimsonInk)
         }
 
         if result.panels.isEmpty {
@@ -101,22 +107,35 @@ struct LabResultDetailView: View {
             Label("No PDF attached to this report.", systemImage: "doc")
                 .font(.subheadline)
                 .foregroundStyle(Color.themeSecondaryText)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+                .hospitalyPanel(cornerRadius: 16)
         }
     }
 
     private func panelCard(_ panel: LabResult.Panel) -> some View {
         VStack(alignment: .leading, spacing: 13) {
-            HStack {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(panel.name)
-                    .font(.headline)
+                    .font(.title3.bold())
                     .foregroundStyle(Color.themeText)
                 if let status = panel.status, !status.isEmpty {
+                    Spacer(minLength: 0)
                     statusBadge(status)
                 }
             }
 
-            ForEach(panel.measurements.indices, id: \.self) { index in
-                measurementRow(panel.measurements[index])
+            if !panel.measurements.isEmpty {
+                Divider()
+
+                VStack(spacing: 10) {
+                    ForEach(panel.measurements.indices, id: \.self) { index in
+                        if index > panel.measurements.startIndex {
+                            Divider()
+                        }
+                        measurementRow(panel.measurements[index])
+                    }
+                }
             }
 
             if let summary = panel.summary, !summary.isEmpty {
@@ -129,27 +148,38 @@ struct LabResultDetailView: View {
     }
 
     private func measurementRow(_ measurement: LabResult.Measurement) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 5) {
                 Text(measurement.name)
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.themeSecondaryText)
-                Spacer(minLength: 5)
-                Text(measurement.value)
-                    .font(.headline)
-                    .foregroundStyle(statusColor(measurement.status) == .themePrimary ? Color.themePrimary : .themeText)
-                if let unit = measurement.unit, !unit.isEmpty {
-                    Text(unit)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.themeText)
+                if let range = measurement.referenceRange, !range.isEmpty {
+                    Text("Reference range \(range)")
                         .font(.caption)
                         .foregroundStyle(Color.themeSecondaryText)
                 }
             }
 
-            if let range = measurement.referenceRange, !range.isEmpty {
-                Text("Reference range \(range)")
-                    .font(.caption)
-                    .foregroundStyle(Color.themeSecondaryText)
+            Spacer(minLength: 0)
+
+            VStack(alignment: .trailing, spacing: 5) {
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text(measurement.value)
+                        .font(.title3.bold().monospacedDigit())
+                        .foregroundStyle(statusColor(measurement.status) == .themeCrimsonInk ? Color.themeCrimsonInk : .themeText)
+
+                    if let unit = measurement.unit, !unit.isEmpty {
+                        Text(unit)
+                            .font(.caption)
+                            .foregroundStyle(Color.themeSecondaryText)
+                    }
+                }
+
+                if let status = measurement.status, !status.isEmpty {
+                    statusBadge(status)
+                }
             }
+            .multilineTextAlignment(.trailing)
         }
         .padding(.vertical, 3)
     }
@@ -174,7 +204,7 @@ struct LabResultDetailView: View {
                 }
 
                 Text(note)
-                    .font(.subheadline)
+                    .font(.body)
                     .foregroundStyle(Color.themeSecondaryText)
             }
             .padding(16)
@@ -185,24 +215,32 @@ struct LabResultDetailView: View {
 
     private func statusBadge(_ status: String) -> some View {
         let accent = statusColor(status)
-        return Text(status.capitalized)
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(accent)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(accent.opacity(0.09), in: .rect(cornerRadius: 6))
+        return HStack(spacing: 4) {
+            if accent == .themeCrimsonInk {
+                Image(systemName: "exclamationmark.triangle")
+            }
+            Text(status.capitalized)
+        }
+        .font(.caption.weight(.semibold))
+        .foregroundStyle(accent)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(accent.opacity(0.09), in: Capsule())
     }
 
     private func statusColor(_ status: String?) -> Color {
         switch status?.lowercased() {
         case "normal": .themeAvailableText
-        case "elevated", "high", "low", "critical", "abnormal": .themePrimary
+        case "elevated", "high", "low", "critical", "abnormal": .themeCrimsonInk
         default: .themeSecondaryText
         }
     }
 
     private func callout(_ title: String, detail: String, icon: String, accent: Color) -> some View {
-        Label {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .padding(.top, 2)
+
             VStack(alignment: .leading, spacing: 5) {
                 Text(title)
                     .font(.subheadline.weight(.semibold))
@@ -211,8 +249,6 @@ struct LabResultDetailView: View {
                     .foregroundStyle(Color.themeText)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-        } icon: {
-            Image(systemName: icon)
         }
         .foregroundStyle(accent)
         .padding(14)
