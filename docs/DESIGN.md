@@ -63,7 +63,10 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 - Our Specialists places the title and appointment shortcut in the crimson hero. A glass search field overlaps its lower edge, followed by specialty chips and the result count. Doctor cards show ratings and experience on one line when possible, with a rose booking strip that groups availability and the action.
 - Documents and BPJS places the upload action first and groups insurance and recent files into readable rows with download and management actions. Upload and Edit Document show the file in a crimson picker, metadata in a glass form section, and categories in an adaptive grid. History uses separate glass groups for active and deleted files.
 - Messages uses a crimson title, a glass compose button, an overlapping search field, and inset inbox cards. Conversation threads use light incoming bubbles and crimson outgoing bubbles.
+- New Message places a glass search field across the bottom of its crimson header. Search matches doctor names and specialties. Each doctor card opens a conversation with the selected doctor's linked account.
 - Profile combines the patient's identity and editable portrait in a full-width header. Account settings share one glass panel. Photo editing and password settings use crimson focal panels, and notification preferences use a glass settings card.
+- Help Center presents the hospital's FAQ as expandable reading panels. Previously loaded topics remain visible during a refresh and after a refresh failure.
+- Register pairs a crimson hospital header with a glass form. Field labels stay visible while typing, and the action bar shows submission progress. A confirmed registration returns to sign-in with the registered email filled in.
 
 ## Rollout
 
