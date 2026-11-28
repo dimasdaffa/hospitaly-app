@@ -44,6 +44,7 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 - The featured visit, details, forms, and confirmations share a crimson summary with a light panel for the date, time, location, and server reference and status when available. Details keep the reason and complaints in a separate panel. Reschedule and cancellation actions stay at the bottom of eligible details.
 - Reschedule displays the current visit before the replacement picker. The action bar shows the selected time before submission. The confirmation uses the returned time, reference, and status, including pending approval when applicable.
 - The cancellation form explains hospital review and makes the selected reason visible. Its confirmation shows the returned cancellation status. Both outcomes provide an action back to My Appointments.
+- The Home bell opens Notifications. A crimson summary shows the unread count, and each card puts the appointment outcome and clinic timestamp first. Unread cards offer Mark as read. The full appointment reference is available in an expandable section.
 
 ## Medical records
 
