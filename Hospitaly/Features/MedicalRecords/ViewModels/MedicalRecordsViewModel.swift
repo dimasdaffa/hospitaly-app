@@ -10,7 +10,7 @@ import Observation
 
 @Observable
 final class MedicalRecordsViewModel {
-    enum Phase {
+    enum Phase: Equatable {
         case loading, loaded, failed(String)
     }
 
@@ -25,6 +25,7 @@ final class MedicalRecordsViewModel {
 
     private(set) var phase = Phase.loading
     private(set) var entries: [MedicalRecordEntry] = []
+    @ObservationIgnored private var currentRequest: UUID?
     var filter: MedicalRecordEntry.Kind?
     var query = ""
 
@@ -62,16 +63,21 @@ final class MedicalRecordsViewModel {
 
     func load(using request: @MainActor () async throws -> [MedicalRecordEntry]) async {
         guard !Task.isCancelled else { return }
+        let previous = phase
+        let id = UUID()
+        currentRequest = id
         phase = .loading
         do {
             let result = try await request()
             try Task.checkCancellation()
+            guard currentRequest == id else { return }
             entries = result.sorted { ($0.date ?? .distantPast) > ($1.date ?? .distantPast) }
             phase = .loaded
-        } catch where !Task.isCancelled && !(error is CancellationError) {
-            phase = .failed(error.localizedDescription)
+        } catch is CancellationError {
+            if currentRequest == id { phase = previous }
         } catch {
-            return
+            guard currentRequest == id else { return }
+            phase = Task.isCancelled ? previous : .failed(error.localizedDescription)
         }
     }
 

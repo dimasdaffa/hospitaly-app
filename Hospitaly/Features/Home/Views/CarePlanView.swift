@@ -21,7 +21,7 @@ struct CarePlanView: View {
 
             switch viewModel.phase {
             case .loading:
-                ProgressView("Loading care plan…")
+                LoadingStateView("Loading care plan…")
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 24)
             case .failed(let message):
@@ -35,6 +35,9 @@ struct CarePlanView: View {
                 }
                 .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
             case .loaded(let entries):
+                if let error = viewModel.refreshError {
+                    RefreshFailureView(message: error, isRetrying: viewModel.isLoading, onRetry: onRetry)
+                }
                 if entries.isEmpty {
                     ContentUnavailableView(
                         "No Doses Scheduled Today", systemImage: "pills",
@@ -111,7 +114,7 @@ struct CarePlanView: View {
                         .background(Color.themeGlassRose, in: .capsule)
                 }
                 .buttonStyle(.plain)
-                .disabled(viewModel.savingID != nil)
+                .disabled(viewModel.savingID != nil || viewModel.isLoading)
             }
         }
         .padding(16)

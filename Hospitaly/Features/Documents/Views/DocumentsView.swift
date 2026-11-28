@@ -87,9 +87,14 @@ struct DocumentsView: View {
 
     @ContentBuilder
     private var content: some View {
+        if model.isLoading, !model.documents.isEmpty {
+            LoadingStateView("Refreshing documents…")
+                .frame(maxWidth: .infinity)
+        }
+
         switch model.phase {
         case .loading:
-            ProgressView("Loading documents…")
+            LoadingStateView("Loading documents…")
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 36)
         case .failed(let message):
@@ -103,14 +108,9 @@ struct DocumentsView: View {
                         .buttonStyle(.borderedProminent)
                 }
             } else {
-                HStack {
-                    Text(message)
-                        .foregroundStyle(Color.themeSecondaryText)
-                    Spacer()
-                    Button("Retry") { loadAttempt += 1 }
-                        .fontWeight(.semibold)
+                if !model.isLoading {
+                    RefreshFailureView(message: message) { loadAttempt += 1 }
                 }
-                .font(.footnote)
                 sections
             }
         case .loaded:

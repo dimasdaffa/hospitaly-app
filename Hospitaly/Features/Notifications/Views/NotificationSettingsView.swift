@@ -28,7 +28,7 @@ struct NotificationSettingsView: View {
                         .buttonStyle(.borderedProminent)
                 }
             } else {
-                ProgressView("Loading settings…")
+                LoadingStateView("Loading settings…")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

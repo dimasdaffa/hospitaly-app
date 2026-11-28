@@ -44,7 +44,7 @@ struct RescheduleView: View {
 
                 switch model.phase {
                 case .loading:
-                    ProgressView("Loading available times…")
+                    LoadingStateView("Loading available times…")
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 24)
                 case .failed(let message):

@@ -36,7 +36,7 @@ struct DiagnosisDetailView: View {
                             .buttonStyle(.borderedProminent)
                     }
                 } else {
-                    ProgressView("Loading record…")
+                    LoadingStateView("Loading record…")
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 38)
                 }
@@ -253,7 +253,7 @@ struct DiagnosisDetailView: View {
 
             switch attachmentPhase {
             case .loading:
-                ProgressView("Loading attachments…")
+                LoadingStateView("Loading attachments…")
                     .font(.subheadline)
             case .failed:
                 HStack {

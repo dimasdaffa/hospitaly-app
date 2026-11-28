@@ -30,7 +30,8 @@ final class InboxViewModel {
         guard !Task.isCancelled else { return }
         let id = UUID()
         inboxRequestID = id
-        if conversations.isEmpty { phase = .loading }
+        let previous = phase
+        phase = .loading
 
         do {
             let rows = try await request("")
@@ -38,11 +39,11 @@ final class InboxViewModel {
             guard id == inboxRequestID else { return }
             conversations = rows
             phase = .loaded
-        } catch where !Task.isCancelled && !(error is CancellationError) {
-            guard id == inboxRequestID else { return }
-            phase = .failed(error.localizedDescription)
+        } catch is CancellationError {
+            if id == inboxRequestID { phase = previous }
         } catch {
-            return
+            guard id == inboxRequestID else { return }
+            phase = Task.isCancelled ? previous : .failed(error.localizedDescription)
         }
     }
 
@@ -51,8 +52,9 @@ final class InboxViewModel {
         guard !term.isEmpty, !Task.isCancelled else { return }
         let id = UUID()
         searchRequestID = id
+        let previous = resultQuery == term ? searchPhase : .loading
+        if resultQuery != term { searchResults = [] }
         resultQuery = term
-        searchResults = []
         searchPhase = .loading
 
         do {
@@ -62,11 +64,11 @@ final class InboxViewModel {
             guard term == searchTerm, id == searchRequestID else { return }
             searchResults = rows
             searchPhase = .loaded
-        } catch where !Task.isCancelled && !(error is CancellationError) {
-            guard term == searchTerm, id == searchRequestID else { return }
-            searchPhase = .failed(error.localizedDescription)
+        } catch is CancellationError {
+            if term == searchTerm, id == searchRequestID { searchPhase = previous }
         } catch {
-            return
+            guard term == searchTerm, id == searchRequestID else { return }
+            searchPhase = Task.isCancelled ? previous : .failed(error.localizedDescription)
         }
     }
 }

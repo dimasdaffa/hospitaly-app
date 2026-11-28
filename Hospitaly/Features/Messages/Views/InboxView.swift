@@ -125,15 +125,17 @@ struct InboxView: View {
     @ContentBuilder
     private var content: some View {
         let searching = !model.searchTerm.isEmpty
-        let rows = searching ? model.searchResults : model.conversations
-        let phase = searching && model.resultQuery != model.searchTerm
+        let hasCurrentResults = model.resultQuery == model.searchTerm
+        let rows = searching ? (hasCurrentResults ? model.searchResults : []) : model.conversations
+        let phase = searching && !hasCurrentResults
             ? .loading : (searching ? model.searchPhase : model.phase)
 
         switch phase {
         case .loading:
-            ProgressView(searching ? "Searching…" : "Loading messages…")
+            LoadingStateView(searching ? "Searching…" : "Loading messages…")
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
+                .padding(.vertical, rows.isEmpty ? 40 : 6)
+            if !rows.isEmpty { list(rows) }
         case .failed(let message):
             if rows.isEmpty {
                 ContentUnavailableView {
@@ -145,14 +147,7 @@ struct InboxView: View {
                         .buttonStyle(.borderedProminent)
                 }
             } else {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(message)
-                        .font(.footnote)
-                        .foregroundStyle(Color.themeSecondaryText)
-                    Button("Retry", action: retry)
-                        .font(.footnote.weight(.semibold))
-                }
-                .padding(.vertical, 10)
+                RefreshFailureView(message: message, onRetry: retry)
                 list(rows)
             }
         case .loaded:

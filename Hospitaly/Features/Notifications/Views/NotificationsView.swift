@@ -37,6 +37,7 @@ struct NotificationsView: View {
             .padding(16)
             .frame(maxWidth: .infinity)
         }
+        .refreshable { await viewModel.load(using: loadNotifications) }
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Notifications")
         .navigationBarTitleDisplayMode(.inline)
@@ -56,11 +57,9 @@ struct NotificationsView: View {
     private var stateContent: some View {
         switch viewModel.phase {
         case .idle, .loading:
-            if viewModel.notifications.isEmpty {
-                ProgressView("Loading notifications…")
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
-            }
+            LoadingStateView(viewModel.notifications.isEmpty ? "Loading notifications…" : "Refreshing notifications…")
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, viewModel.notifications.isEmpty ? 40 : 6)
         case .loaded:
             if viewModel.notifications.isEmpty {
                 ContentUnavailableView(
@@ -69,14 +68,19 @@ struct NotificationsView: View {
                 )
             }
         case .failed(let message):
-            ContentUnavailableView {
-                Label("Couldn’t Load Notifications", systemImage: "exclamationmark.circle")
-            } description: {
-                Text(message)
-            } actions: {
-                Button("Retry", action: reload)
-                    .buttonStyle(.borderedProminent)
+            if !viewModel.notifications.isEmpty {
+                RefreshFailureView(message: message, onRetry: reload)
                     .disabled(viewModel.markingReadID != nil)
+            } else {
+                ContentUnavailableView {
+                    Label("Couldn’t Load Notifications", systemImage: "exclamationmark.circle")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Retry", action: reload)
+                        .buttonStyle(.borderedProminent)
+                        .disabled(viewModel.markingReadID != nil)
+                }
             }
         }
     }

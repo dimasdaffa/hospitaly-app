@@ -22,7 +22,7 @@ struct MessageDoctorPickerView: View {
         Group {
             switch phase {
             case .loading:
-                ProgressView("Loading doctors…")
+                LoadingStateView("Loading doctors…")
             case .failed(let message):
                 ContentUnavailableView {
                     Label("Couldn’t Load Doctors", systemImage: "exclamationmark.circle")

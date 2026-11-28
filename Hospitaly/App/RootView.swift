@@ -23,7 +23,7 @@ struct RootView: View {
         Group {
             switch session.phase {
             case .restoring:
-                ProgressView("Restoring session…")
+                LoadingStateView("Restoring session…")
             case .restoreFailed(let message):
                 restoreError(message)
             case .signedOut:

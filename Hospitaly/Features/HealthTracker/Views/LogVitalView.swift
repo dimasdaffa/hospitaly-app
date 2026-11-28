@@ -167,6 +167,16 @@ struct LogVitalView: View {
                 Text(lastReadingDescription)
                     .font(.caption)
                     .foregroundStyle(Color.themeSecondaryText)
+
+                if case .failed = viewModel.lastReading {
+                    Button("Retry") {
+                        Task {
+                            guard case .failed = viewModel.lastReading else { return }
+                            await viewModel.loadLatest(in: range, using: actions.load)
+                        }
+                    }
+                    .font(.footnote.weight(.semibold))
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }

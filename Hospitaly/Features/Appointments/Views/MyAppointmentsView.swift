@@ -50,40 +50,19 @@ struct MyAppointmentsView: View {
             .padding(.horizontal, 16)
             .padding(.top, 12)
 
-            if case .failed(let message) = viewModel.phase {
-                ContentUnavailableView {
-                    Label("Couldn’t Load Appointments", systemImage: "exclamationmark.circle")
-                } description: {
-                    Text(message)
-                } actions: {
-                    Button("Retry", action: viewModel.reload)
-                        .buttonStyle(.borderedProminent)
-                }
-            }
-
-            if viewModel.phase == .loading && visibleAppointments.isEmpty {
-                ProgressView("Loading appointments…")
-                    .padding(.vertical, 32)
-            } else if visibleAppointments.isEmpty && viewModel.phase == .loaded {
-                ContentUnavailableView(
-                    showsHistory ? "No appointment history" : "No upcoming appointments",
-                    systemImage: "calendar",
-                    description: showsHistory
-                        ? Text("Past, cancelled, and rejected appointments will appear here.")
-                        : Text("Your upcoming appointments will appear here after you request a visit.")
-                )
-                .foregroundStyle(Color.themeSecondaryText)
-            } else if !visibleAppointments.isEmpty {
-                ScrollView {
-                    LazyVStack(spacing: 14) {
-                        ForEach(visibleAppointments) { appointment in
-                            appointmentCard(appointment)
-                        }
+            ScrollView {
+                LazyVStack(spacing: 14) {
+                    listStatus(isEmpty: visibleAppointments.isEmpty)
+                    ForEach(visibleAppointments) { appointment in
+                        appointmentCard(appointment)
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 20)
                 }
-                .scrollIndicators(.hidden)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 20)
+            }
+            .scrollIndicators(.hidden)
+            .refreshable {
+                if let loadAppointments { await viewModel.refresh(using: loadAppointments) }
             }
         }
         .frame(maxWidth: 540)
@@ -125,6 +104,38 @@ struct MyAppointmentsView: View {
                 }
             }
             .tint(Color.themePrimary)
+        }
+    }
+
+    @ViewBuilder
+    private func listStatus(isEmpty: Bool) -> some View {
+        switch viewModel.phase {
+        case .loading:
+            LoadingStateView(isEmpty ? "Loading appointments…" : "Refreshing appointments…")
+                .padding(.vertical, isEmpty ? 32 : 6)
+        case .failed(let message):
+            if isEmpty {
+                ContentUnavailableView {
+                    Label("Couldn’t Load Appointments", systemImage: "exclamationmark.circle")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Retry", action: viewModel.reload)
+                        .buttonStyle(.borderedProminent)
+                }
+            } else {
+                RefreshFailureView(message: message, onRetry: viewModel.reload)
+            }
+        case .loaded:
+            if isEmpty {
+                ContentUnavailableView(
+                    showsHistory ? "No appointment history" : "No upcoming appointments",
+                    systemImage: "calendar",
+                    description: showsHistory
+                        ? Text("Past, cancelled, and rejected appointments will appear here.")
+                        : Text("Your upcoming appointments will appear here after you request a visit.")
+                )
+            }
         }
     }
 

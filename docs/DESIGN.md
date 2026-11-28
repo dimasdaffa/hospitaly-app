@@ -17,7 +17,7 @@ The visual reference brings the next step into focus with a colored header, a pr
 | Bottom action bars | Regular material over the canvas | Booking, form submission, file export, and message composer |
 | Interactive glass | Native Liquid Glass | Header controls, including notifications, Help Center, and the appointment calendar |
 
-Use system typography and sentence-case labels. Keep appointment facts on a light inset panel so the time and actions remain readable over the saturated header. Main screens use a shared crimson backdrop, 20 pt horizontal insets, and 24 pt cards. Place the first search field or settings panel across the transition from the header to the rose canvas. [Theme.swift](../Hospitaly/Shared/Theme.swift) · [Apple guidance on materials](https://developer.apple.com/design/human-interface-guidelines/materials)
+Use system typography and sentence-case labels. Keep appointment facts on a light inset panel so the time and actions remain readable over the saturated header. Main screens use a shared crimson backdrop, 20 pt horizontal insets, and 24 pt cards. Place the first search field or settings panel across the transition from the header to the rose canvas. [Theme.swift](../Hospitaly/Shared/UI/Theme.swift) · [Apple guidance on materials](https://developer.apple.com/design/human-interface-guidelines/materials)
 
 ## Home layout and behavior
 

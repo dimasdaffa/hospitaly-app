@@ -10,6 +10,8 @@ import Foundation
 enum APIError: LocalizedError {
     case invalidConfiguration
     case connectionFailed
+    case offline
+    case timedOut
     case invalidResponse
     case invalidPayload
     case httpStatus(Int)
@@ -20,6 +22,10 @@ enum APIError: LocalizedError {
             "Set HOSPITALY_API_BASE_URL to a valid API URL. Release builds require HTTPS."
         case .connectionFailed:
             "Could not reach the server. Check your connection and try again."
+        case .offline:
+            "You’re offline. Check your internet connection and try again."
+        case .timedOut:
+            "The server took too long to respond. Try again."
         case .invalidResponse, .invalidPayload:
             "The server returned an unexpected response."
         case .httpStatus(let status):

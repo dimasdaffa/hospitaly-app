@@ -12,23 +12,35 @@ struct HelpCenterView: View {
     @State private var topics: [HelpTopic]?
     @State private var loadError: String?
     @State private var loadAttempt = 0
+    @State private var isLoading = false
 
     let loadTopics: @MainActor () async throws -> [HelpTopic]
 
     var body: some View {
         Group {
             if let topics, !topics.isEmpty {
-                List(topics, id: \.self) { topic in
-                    DisclosureGroup(topic.title) {
-                        Text(topic.answer)
-                            .font(.subheadline)
-                            .foregroundStyle(Color.themeSecondaryText)
-                            .padding(.vertical, 6)
+                List {
+                    if isLoading {
+                        LoadingStateView("Refreshing help topics…")
+                            .frame(maxWidth: .infinity)
+                    } else if let loadError {
+                        RefreshFailureView(message: loadError) { loadAttempt += 1 }
+                    }
+
+                    ForEach(topics, id: \.self) { topic in
+                        DisclosureGroup(topic.title) {
+                            Text(topic.answer)
+                                .font(.subheadline)
+                                .foregroundStyle(Color.themeSecondaryText)
+                                .padding(.vertical, 6)
+                        }
                     }
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
                 .environment(\.colorScheme, .light)
+            } else if isLoading {
+                LoadingStateView("Loading help topics…")
             } else if let loadError {
                 ContentUnavailableView {
                     Label("Couldn’t Load Help Topics", systemImage: "exclamationmark.circle")
@@ -39,12 +51,16 @@ struct HelpCenterView: View {
                         .buttonStyle(.borderedProminent)
                 }
             } else if topics != nil {
-                ContentUnavailableView(
-                    "No Help Topics", systemImage: "questionmark.circle",
-                    description: Text("Hospital help topics will appear here.")
-                )
+                ContentUnavailableView {
+                    Label("No Help Topics", systemImage: "questionmark.circle")
+                } description: {
+                    Text("Hospital help topics will appear here.")
+                } actions: {
+                    Button("Refresh") { loadAttempt += 1 }
+                        .buttonStyle(.bordered)
+                }
             } else {
-                ProgressView("Loading help topics…")
+                LoadingStateView("Loading help topics…")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -56,13 +72,15 @@ struct HelpCenterView: View {
     }
 
     private func load() async {
-        loadError = nil
-        topics = nil
+        guard !isLoading, !Task.isCancelled else { return }
+        isLoading = true
+        defer { isLoading = false }
         do {
             let result = try await loadTopics()
             try Task.checkCancellation()
             var seen: Set<HelpTopic> = []
             topics = result.filter { seen.insert($0).inserted }
+            loadError = nil
         } catch where !Task.isCancelled && !(error is CancellationError) {
             loadError = error.localizedDescription
         } catch {

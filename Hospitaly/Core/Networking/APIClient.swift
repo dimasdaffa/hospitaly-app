@@ -120,6 +120,10 @@ struct APIClient: Sendable {
             throw CancellationError()
         } catch let error as URLError where error.code == .cancelled {
             throw CancellationError()
+        } catch let error as URLError where error.code == .notConnectedToInternet {
+            throw APIError.offline
+        } catch let error as URLError where error.code == .timedOut {
+            throw APIError.timedOut
         } catch {
             throw APIError.connectionFailed
         }

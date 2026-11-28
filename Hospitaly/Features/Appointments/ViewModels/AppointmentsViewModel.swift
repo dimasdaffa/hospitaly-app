@@ -48,6 +48,15 @@ final class AppointmentsViewModel {
         }
     }
 
+    func refresh(using request: @MainActor () async throws -> [Appointment]) async {
+        guard phase != .loading, !Task.isCancelled else { return }
+        let previous = phase
+        let attempt = loadAttempt
+        phase = .loading
+        await load(using: request)
+        if phase == .loading, loadAttempt == attempt { phase = previous }
+    }
+
     func apply(_ appointment: Appointment) {
         if let index = appointments.firstIndex(where: { $0.id == appointment.id }) {
             appointments[index] = appointment

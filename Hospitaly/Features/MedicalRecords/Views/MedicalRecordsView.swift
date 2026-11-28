@@ -74,19 +74,27 @@ struct MedicalRecordsView: View {
     private var content: some View {
         switch model.phase {
         case .loading:
-            ProgressView("Loading medical records…")
+            LoadingStateView(model.entries.isEmpty ? "Loading medical records…" : "Refreshing medical records…")
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 38)
+                .padding(.vertical, model.entries.isEmpty ? 38 : 6)
         case .failed(let message):
-            ContentUnavailableView {
-                Label("Couldn’t Load Records", systemImage: "exclamationmark.circle")
-            } description: {
-                Text(message)
-            } actions: {
-                Button("Retry") { loadAttempt += 1 }
-                    .buttonStyle(.borderedProminent)
+            if model.entries.isEmpty {
+                ContentUnavailableView {
+                    Label("Couldn’t Load Records", systemImage: "exclamationmark.circle")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Retry") { loadAttempt += 1 }
+                        .buttonStyle(.borderedProminent)
+                }
+            } else {
+                RefreshFailureView(message: message) { loadAttempt += 1 }
             }
         case .loaded:
+            EmptyView()
+        }
+
+        if !model.entries.isEmpty || model.phase == .loaded {
             history
         }
     }

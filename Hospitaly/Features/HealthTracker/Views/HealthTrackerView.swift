@@ -105,17 +105,21 @@ struct HealthTrackerView: View {
     private var content: some View {
         switch viewModel.phase {
         case .loading:
-            ProgressView("Loading readings…")
+            LoadingStateView(viewModel.readings.isEmpty ? "Loading readings…" : "Refreshing readings…")
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 32)
+                .padding(.vertical, viewModel.readings.isEmpty ? 32 : 6)
         case .failed(let message):
-            ContentUnavailableView {
-                Label("Couldn’t Load Readings", systemImage: "exclamationmark.circle")
-            } description: {
-                Text(message)
-            } actions: {
-                Button("Retry", action: reload)
-                    .buttonStyle(.borderedProminent)
+            if viewModel.readings.isEmpty {
+                ContentUnavailableView {
+                    Label("Couldn’t Load Readings", systemImage: "exclamationmark.circle")
+                } description: {
+                    Text(message)
+                } actions: {
+                    Button("Retry", action: reload)
+                        .buttonStyle(.borderedProminent)
+                }
+            } else {
+                RefreshFailureView(message: message, onRetry: reload)
             }
         case .loaded:
             if viewModel.readings.isEmpty {
@@ -127,26 +131,28 @@ struct HealthTrackerView: View {
                     Button("Log a Reading") { sheet = .log }
                         .buttonStyle(.borderedProminent)
                 }
-            } else {
-                VitalChartView(
-                    metric: viewModel.metric, readings: viewModel.readings,
-                    days: viewModel.days, range: viewModel.range
-                )
+            }
+        }
 
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Text("Recent Logs")
-                            .font(.headline)
-                            .foregroundStyle(Color.themeText)
-                        Spacer()
-                        Button("View All") { sheet = .history }
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Color.themeVitalAccent)
-                    }
+        if !viewModel.readings.isEmpty {
+            VitalChartView(
+                metric: viewModel.metric, readings: viewModel.readings,
+                days: viewModel.days, range: viewModel.range
+            )
 
-                    ForEach(viewModel.readings.prefix(3)) { reading in
-                        VitalLogRow(metric: viewModel.metric, reading: reading)
-                    }
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Recent Logs")
+                        .font(.headline)
+                        .foregroundStyle(Color.themeText)
+                    Spacer()
+                    Button("View All") { sheet = .history }
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.themeVitalAccent)
+                }
+
+                ForEach(viewModel.readings.prefix(3)) { reading in
+                    VitalLogRow(metric: viewModel.metric, reading: reading)
                 }
             }
         }

@@ -102,6 +102,7 @@ struct DoctorListView: View {
             }
             .scrollIndicators(.hidden)
             .scrollDismissesKeyboard(.interactively)
+            .refreshable { await viewModel.load(using: loadDoctors) }
             .ignoresSafeArea(.container, edges: .top)
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }
@@ -134,55 +135,69 @@ struct DoctorListView: View {
     private var directoryContent: some View {
         switch viewModel.phase {
         case .loading:
-            ProgressView("Loading doctors…")
+            LoadingStateView(viewModel.doctors.isEmpty ? "Loading doctors…" : "Refreshing doctors…")
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 48)
+                .padding(.vertical, viewModel.doctors.isEmpty ? 48 : 6)
         case .failed(let message):
-            ContentUnavailableView {
-                Label("Couldn’t Load Doctors", systemImage: "exclamationmark.circle")
-            } description: {
-                Text(message)
-            } actions: {
-                Button("Retry", action: viewModel.retry)
-                    .buttonStyle(.borderedProminent)
-            }
-        case .loaded:
-            let doctors = viewModel.filteredDoctors
             if viewModel.doctors.isEmpty {
                 ContentUnavailableView {
-                    Label("No Doctors Listed", systemImage: "stethoscope")
+                    Label("Couldn’t Load Doctors", systemImage: "exclamationmark.circle")
                 } description: {
-                    Text("The clinic hasn’t added any doctors yet.")
+                    Text(message)
                 } actions: {
-                    Button("Refresh", action: viewModel.retry)
-                        .buttonStyle(.bordered)
-                }
-            } else if doctors.isEmpty {
-                ContentUnavailableView {
-                    Label("No Matching Doctors", systemImage: "magnifyingglass")
-                } description: {
-                    Text("Try a different search or clear your filters.")
-                } actions: {
-                    Button("Clear Filters", action: viewModel.resetFilters)
-                        .buttonStyle(.bordered)
+                    Button("Retry", action: viewModel.retry)
+                        .buttonStyle(.borderedProminent)
                 }
             } else {
-                LazyVStack(alignment: .leading, spacing: 14) {
-                    Text(doctors.count == 1 ? "1 specialist" : "\(doctors.count) specialists")
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(Color.themeSecondaryText)
+                RefreshFailureView(message: message, onRetry: viewModel.retry)
+            }
+        case .loaded:
+            EmptyView()
+        }
 
-                    ForEach(doctors) { doctor in
-                        DoctorCardView(
-                            doctor: doctor,
-                            isFavorite: viewModel.favoriteDoctorIDs.contains(doctor.id),
-                            isSavingFavorite: viewModel.savingFavoriteIDs.contains(doctor.id),
-                            onFavorite: {
-                                Task { await viewModel.toggleFavorite(doctor.id, using: setFavorite) }
-                            },
-                            onOpenDoctor: { path.append(.detail(doctor)) }
-                        )
-                    }
+        if !viewModel.doctors.isEmpty || viewModel.phase == .loaded {
+            directoryResults
+        }
+    }
+
+    @ViewBuilder
+    private var directoryResults: some View {
+        let doctors = viewModel.filteredDoctors
+        if viewModel.doctors.isEmpty {
+            ContentUnavailableView {
+                Label("No Doctors Listed", systemImage: "stethoscope")
+            } description: {
+                Text("The clinic hasn’t added any doctors yet.")
+            } actions: {
+                Button("Refresh", action: viewModel.retry)
+                    .buttonStyle(.bordered)
+            }
+        } else if doctors.isEmpty {
+            ContentUnavailableView {
+                Label("No Matching Doctors", systemImage: "magnifyingglass")
+            } description: {
+                Text("Try a different search or clear your filters.")
+            } actions: {
+                Button("Clear Filters", action: viewModel.resetFilters)
+                    .buttonStyle(.bordered)
+            }
+        } else {
+            LazyVStack(alignment: .leading, spacing: 14) {
+                Text(doctors.count == 1 ? "1 specialist" : "\(doctors.count) specialists")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Color.themeSecondaryText)
+
+                ForEach(doctors) { doctor in
+                    DoctorCardView(
+                        doctor: doctor,
+                        isFavorite: viewModel.favoriteDoctorIDs.contains(doctor.id),
+                        isSavingFavorite: viewModel.savingFavoriteIDs.contains(doctor.id),
+                        isFavoriteDisabled: viewModel.phase == .loading,
+                        onFavorite: {
+                            Task { await viewModel.toggleFavorite(doctor.id, using: setFavorite) }
+                        },
+                        onOpenDoctor: { path.append(.detail(doctor)) }
+                    )
                 }
             }
         }

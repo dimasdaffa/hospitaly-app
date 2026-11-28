@@ -174,7 +174,7 @@ struct DoctorDetailView: View {
         } else {
             switch viewModel.phase {
             case .loading:
-                ProgressView("Loading doctor details and schedule…")
+                LoadingStateView("Loading doctor details and schedule…")
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 24)
             case .failed(let message):

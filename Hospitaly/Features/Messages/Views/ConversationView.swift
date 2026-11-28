@@ -29,6 +29,11 @@ struct ConversationView: View {
                     if !model.hasLoaded {
                         initialState
                     } else {
+                        if model.isLoading && !model.isLoadingEarlier {
+                            LoadingStateView("Refreshing conversation…")
+                                .frame(maxWidth: .infinity)
+                        }
+
                         if let error = model.loadError {
                             retryRow(error) { await refresh() }
                         }
@@ -109,7 +114,7 @@ struct ConversationView: View {
                     .buttonStyle(.borderedProminent)
             }
         } else {
-            ProgressView("Loading conversation…")
+            LoadingStateView("Loading conversation…")
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 38)
         }
@@ -118,7 +123,7 @@ struct ConversationView: View {
     @ContentBuilder
     private func earlierMessages(_ reader: ScrollViewProxy) -> some View {
         if model.isLoadingEarlier {
-            ProgressView("Loading earlier messages…")
+            LoadingStateView("Loading earlier messages…")
                 .font(.footnote)
                 .frame(maxWidth: .infinity)
         } else if model.hasEarlier {

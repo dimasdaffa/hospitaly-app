@@ -47,6 +47,7 @@ final class HealthTrackerViewModel {
 
     func load(using request: @MainActor (HealthMetric, ClosedRange<Date>) async throws -> [HealthReading]) async {
         guard !Task.isCancelled else { return }
+        let previous = phase
         let requestedFilter = filter
         let requestID = UUID()
         currentRequest = requestID
@@ -59,10 +60,10 @@ final class HealthTrackerViewModel {
             readings = newestFirst(result.filter { $0.measurement(for: requestedFilter.metric) != nil })
             phase = .loaded
         } catch is CancellationError {
-            return
+            if requestID == currentRequest, requestedFilter == filter { phase = previous }
         } catch {
-            guard !Task.isCancelled, requestID == currentRequest, requestedFilter == filter else { return }
-            phase = .failed(error.localizedDescription)
+            guard requestID == currentRequest, requestedFilter == filter else { return }
+            phase = Task.isCancelled ? previous : .failed(error.localizedDescription)
         }
     }
 

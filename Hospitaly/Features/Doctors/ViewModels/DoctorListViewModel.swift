@@ -27,6 +27,7 @@ final class DoctorListViewModel {
     private(set) var favoriteDoctorIDs: Set<Doctor.ID> = []
     private(set) var savingFavoriteIDs: Set<Doctor.ID> = []
     var favoriteError: String?
+    @ObservationIgnored private var currentRequest: UUID?
 
     init(doctors: [Doctor]? = nil) {
         if let doctors {
@@ -41,25 +42,29 @@ final class DoctorListViewModel {
     }
 
     func load(using request: @MainActor () async throws -> [Doctor]) async {
-        guard phase == .loading, !Task.isCancelled else { return }
+        guard savingFavoriteIDs.isEmpty, !Task.isCancelled else { return }
+        let previous = phase
+        let id = UUID()
+        currentRequest = id
+        phase = .loading
 
         do {
             let result = try await request()
             try Task.checkCancellation()
+            guard currentRequest == id else { return }
             doctors = result
             favoriteDoctorIDs = Set(result.filter(\.isFavorite).map(\.id))
             phase = .loaded
         } catch is CancellationError {
-            return
+            if currentRequest == id { phase = previous }
         } catch {
-            guard !Task.isCancelled else { return }
-            phase = .failed(error.localizedDescription)
+            guard currentRequest == id else { return }
+            phase = Task.isCancelled ? previous : .failed(error.localizedDescription)
         }
     }
 
     func retry() {
-        guard phase != .loading else { return }
-        phase = .loading
+        guard phase != .loading, savingFavoriteIDs.isEmpty else { return }
         loadAttempt += 1
     }
 
@@ -88,7 +93,7 @@ final class DoctorListViewModel {
     func toggleFavorite(
         _ doctorID: Doctor.ID, using request: (@MainActor (String, Bool) async throws -> Void)?
     ) async {
-        guard !Task.isCancelled, savingFavoriteIDs.insert(doctorID).inserted else { return }
+        guard phase != .loading, !Task.isCancelled, savingFavoriteIDs.insert(doctorID).inserted else { return }
         let shouldFavorite = !favoriteDoctorIDs.contains(doctorID)
         defer { savingFavoriteIDs.remove(doctorID) }
 

@@ -15,7 +15,7 @@ Read this guide and [TECHREQ.md](TECHREQ.md) before working on Hospitaly UI, mod
 - Use feature-first MVVM–Service. Put feature types under `Hospitaly/Features/<Feature>/` in `Models/`, `ViewModels/`, `Views/`, or `Services/`. Keep feature-only UI components in `Views/Components/`. Create folders as the feature needs them.
 - Views own presentation and input. ViewModels own observable feature state and actions. Services own feature-specific HTTP operations and mapping. Put shared HTTP mechanics under `Hospitaly/Core/Networking/` and app-wide session/navigation composition under `Hospitaly/App/`.
 - Keep tab destinations and the views that present them in `Hospitaly/App/Navigation/`. Keep routes owned by a single feature with that feature.
-- Reuse existing components. Keep cross-feature UI and formatting in `Hospitaly/Shared/`. Add semantic colors to [Theme.swift](../Hospitaly/Shared/Theme.swift). Follow the project's Observation and concurrency settings.
+- Reuse existing components. Keep cross-feature views in `Hospitaly/Shared/UI/Components/`, SwiftUI file export in `Hospitaly/Shared/UI/FileExport/`, and shared non-UI helpers in `Hospitaly/Shared/Logic/`. Add semantic colors to [Theme.swift](../Hospitaly/Shared/UI/Theme.swift). Follow the project's Observation and concurrency settings.
 - Include a `#Preview` in every new SwiftUI View file. Use synthetic local data and give screens with materially different states a preview for each condition. Use local Preview state for interactive controls as needed.
 - Give every data-driven screen an empty state and preview. Distinguish an empty collection from loading, request failures, and filtered results. Use a fallback when an optional image is missing or fails to load. When a records list is empty, show a message that explains what records would appear there.
 - Defer dedicated accessibility work during the current slicing phase as requested by the user. Preserve the project target and dependency choices unless the task calls for a change.
@@ -37,7 +37,7 @@ Use this header on every new Swift file. Substitute the filename and creation da
 - **Booking.** Preserve the same doctor and slot through the form, confirmation, and appointment list. Require a trimmed visit reason and accept optional complaints. In API-backed flows, display the status and reference returned by Vapor. Preserve the approval step for cancellation requests.
 - **Identity.** Use `Doctor.id` for detail, availability, and booking. Use `Doctor.userId` as the chat recipient. Decode live payloads using the actual server field types and map them into the client display model.
 - **Private data.** Store a real session's JWT in Keychain. Use synthetic fixtures and test accounts. Keep credentials, tokens, and private patient data out of source control, logs, and previews.
-- **Date and time.** Use [ClinicDate.swift](../Hospitaly/Shared/ClinicDate.swift) for clinic display. Check the API contract before emitting clinic dates, clock times, or ISO timestamps.
+- **Date and time.** Use [ClinicDate.swift](../Hospitaly/Shared/Logic/ClinicDate.swift) for clinic display. Check the API contract before emitting clinic dates, clock times, or ISO timestamps.
 
 ## Verification and handoff
 

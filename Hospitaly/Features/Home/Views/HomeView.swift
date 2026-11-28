@@ -22,6 +22,7 @@ struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @State private var carePlan = CarePlanViewModel()
     @State private var search = ""
+    @State private var isPullRefreshing = false
 
     let patientName: String
     let isActive: Bool
@@ -45,8 +46,24 @@ struct HomeView: View {
             }
             .scrollIndicators(.hidden)
             .scrollDismissesKeyboard(.interactively)
-            .refreshable { await refresh() }
+            .refreshable {
+                guard !isPullRefreshing else { return }
+                isPullRefreshing = true
+                defer { isPullRefreshing = false }
+                await refresh()
+            }
             .ignoresSafeArea(.container, edges: .top)
+        }
+        .overlay(alignment: .top) {
+            if isPullRefreshing {
+                LoadingStateView("Refreshing dashboard…")
+                    .foregroundStyle(Color.themeText)
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 10)
+                    .hospitalyPanel(cornerRadius: 20)
+                    .padding(.top, 8)
+                    .allowsHitTesting(false)
+            }
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .task(id: isActive) {
@@ -142,7 +159,7 @@ struct HomeView: View {
     private var appointmentContent: some View {
         switch viewModel.phase {
         case .loading:
-            ProgressView("Loading appointments…")
+            LoadingStateView("Loading appointments…", showsLightBackdrop: true)
                 .tint(.themeSurface)
                 .foregroundStyle(Color.themeSurface)
                 .frame(maxWidth: .infinity, minHeight: 125)
@@ -159,6 +176,9 @@ struct HomeView: View {
                     "No Upcoming Appointments", detail: "Book a visit to see it here.",
                     symbol: "calendar", actionTitle: "Find a Doctor", action: onBook
                 )
+            }
+            if let error = viewModel.refreshError {
+                RefreshFailureView(message: error, isRetrying: viewModel.isLoading, onRetry: retryAppointment)
             }
         case .failed(let error):
             appointmentState(
@@ -337,7 +357,26 @@ struct HomeView: View {
 #Preview("Couldn’t Load Appointments") {
     HomeView(
         patientName: "Demo Patient", isActive: true, hasUnreadNotifications: false,
-        loadAppointments: { throw APIError.connectionFailed },
+        loadAppointments: { throw APIError.offline },
+        onBook: {}, onSearchDoctors: { _ in }, onSeeAll: {}, onOpenAppointment: { _ in },
+        onOpenNotifications: {}
+    )
+    .tint(.themePrimary)
+}
+
+#Preview("Dashboard Refresh Failure") {
+    @Previewable @State var didLoad = false
+
+    HomeView(
+        patientName: "Demo Patient", isActive: true, hasUnreadNotifications: false,
+        loadAppointments: {
+            if didLoad {
+                try await Task.sleep(for: .seconds(2))
+                throw APIError.timedOut
+            }
+            didLoad = true
+            return Appointment.samples
+        },
         onBook: {}, onSearchDoctors: { _ in }, onSeeAll: {}, onOpenAppointment: { _ in },
         onOpenNotifications: {}
     )

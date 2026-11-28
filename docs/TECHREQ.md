@@ -23,6 +23,7 @@ The mockup folder, iOS repo, and Vapor repo are siblings in the current workspac
 | --- | --- |
 | Xcode | The `Hospitaly` app target uses bundle ID `com.dimasdaffa.Hospitaly` and an iOS 27.2 deployment target. The project sets `SWIFT_VERSION = 5.0`, `MainActor` default isolation, and approachable concurrency. The configured language mode and installed compiler are separate settings. [Project file](../Hospitaly.xcodeproj/project.xcproj) |
 | Presentation | SwiftUI, Observation through `@Observable`, typed navigation, a custom tab bar, and local `#Preview` fixtures. |
+| Loading animation | Lottie via Swift Package Manager. The Hospitaly target bundles `Resources/Animations/loading.json`. |
 | Networking | [APIClient.swift](../Hospitaly/Core/Networking/APIClient.swift) sends HTTP requests using `URLSession`, adds Bearer authorization when requested, and decodes JSON responses. Session tokens are stored in Keychain per API base URL. |
 | Local backend | Vapor and MySQL behind Nginx. Docker Compose publishes the API at `http://localhost:8081`, the default for the Debug build in Simulator. [Compose configuration](../../be-rumahsakit-swift/docker-compose.yml) |
 | Local design system | `Theme.swift` holds semantic colors, dashboard spacing, and shared glass surfaces. `ClinicDate.swift` formats clinic dates and times in `Asia/Jakarta`. Bundled sample portraits live in the app asset catalog. |
@@ -232,13 +233,19 @@ Hospitaly/                                  # iOS repository root
 │   │       ├── Views/NotificationsView.swift          # Patient appointment notification inbox
 │   │       └── Views/NotificationSettingsView.swift   # Appointment notification preference
 │   └── Shared/
-│       ├── Theme.swift                     # Color palette, layout tokens, and glass surfaces
-│       ├── CrimsonHeaderBackdrop.swift     # Crimson gradient and curved highlights
-│       ├── ClinicDate.swift                # Clinic time zone and date formatting
-│       ├── PrimaryActionButton.swift       # Shared primary action button
-│       ├── PrivateDocumentDownload.swift  # Authenticated file route and default export name
-│       ├── PrivateExportDocument.swift    # System writer for downloaded bytes
-│       └── PrivateFileExportModifier.swift # Download status, Files exporter, and errors
+│       ├── Logic/
+│       │   ├── ClinicDate.swift               # Clinic time zone and date formatting
+│       │   └── PrivateDocumentDownload.swift  # Authenticated download descriptor and safe filename
+│       └── UI/
+│           ├── Theme.swift                    # Color palette, layout tokens, and glass surfaces
+│           ├── Components/
+│           │   ├── CrimsonHeaderBackdrop.swift # Crimson gradient and curved highlights
+│           │   ├── LoadingStateView.swift       # Bundled Lottie loop with a system progress fallback
+│           │   ├── PrimaryActionButton.swift    # Shared primary action button
+│           │   └── RefreshFailureView.swift     # Recoverable error above previously loaded content
+│           └── FileExport/
+│               ├── PrivateExportDocument.swift    # SwiftUI document writer for downloaded bytes
+│               └── PrivateFileExportModifier.swift # Download status, Files exporter, and errors
 └── docs/
     ├── TECHREQ.md                          # Product and implementation reference
     ├── DESIGN.md                           # Crimson glass redesign and rollout
@@ -274,7 +281,7 @@ Password recovery needs backend support for issuing and consuming reset tokens a
 ```text
 Hospitaly/
 ├── Hospitaly/
-│   └── Shared/LoadErrorView.swift                        # Reusable retry state when screens need it
+│   └── Shared/UI/Components/LoadErrorView.swift           # Reusable retry state when screens need it
 └── HospitalyTests/                                      # Add a test target when asked
     ├── LoginViewModelTests.swift
     ├── DoctorListViewModelTests.swift
@@ -322,6 +329,7 @@ Use the [patient API contract](../../be-rumahsakit-swift/API_SPEC.md#kontrak-apl
 | Profile and preferences | Send changed biodata fields with `PUT /api/users/me` and apply the response to the session. Upload a selected JPEG with `POST /api/upload` and save the returned public URL as `avatarURL`. An empty `avatarURL` clears the photo from the profile. Read and save `appointmentUpdates` with `GET` and `PUT /api/users/me/notification-settings`. Load help topics with `GET /api/help-center`. |
 | Registration and password | Create patient accounts using `POST /api/auth/register` with `role: "patient"`, then return to sign-in. Change passwords with authenticated `POST /api/auth/change-password`. Vapor returns 401 for a wrong current password. Recheck the JWT through `GET /api/users/me` before clearing the local session. Email-based password recovery is pending in the backend. |
 | Presentation states | API-backed lists need loading, data, empty, and recoverable error states. Use API dates, availability, currency, statuses, and identifiers when the feature is integrated. Carry the server-created appointment from confirmation into refreshed history. |
+| Refresh and cancellation | Dashboard refresh awaits both appointment and care-plan requests. Lists keep previously loaded data during a refresh and show an inline Retry if it fails. Keep filtered results scoped to their query or date range. Treat request cancellation as a lifecycle event, and distinguish offline and timeout errors. Mutations retain their own submit state, retry policy, and reconciliation behavior. |
 
 ## 7. Delivery sequence and verification
 

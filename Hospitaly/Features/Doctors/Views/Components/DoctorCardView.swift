@@ -11,6 +11,7 @@ struct DoctorCardView: View {
     let doctor: Doctor
     let isFavorite: Bool
     var isSavingFavorite = false
+    var isFavoriteDisabled = false
     let onFavorite: () -> Void
     let onOpenDoctor: () -> Void
 
@@ -67,7 +68,7 @@ struct DoctorCardView: View {
             .background(Color.themeGlassRose.opacity(0.60), in: Circle())
         }
         .buttonStyle(.plain)
-        .disabled(isSavingFavorite)
+        .disabled(isSavingFavorite || isFavoriteDisabled)
     }
 
     private var availabilityBand: some View {

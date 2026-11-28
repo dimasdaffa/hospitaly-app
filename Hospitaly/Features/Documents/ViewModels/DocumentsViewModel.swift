@@ -17,16 +17,24 @@ final class DocumentsViewModel {
     private(set) var documents: [PatientDocument] = []
     private(set) var phase = Phase.loading
     private(set) var deletingID: UUID?
+    private(set) var isLoading = false
     @ObservationIgnored private var requestID: UUID?
 
     var insurance: [PatientDocument] { documents.filter { $0.category.isInsurance } }
     var otherDocuments: [PatientDocument] { documents.filter { !$0.category.isInsurance } }
 
     func load(using request: @MainActor () async throws -> [PatientDocument]) async {
-        guard !Task.isCancelled else { return }
+        guard deletingID == nil, !Task.isCancelled else { return }
         let id = UUID()
         requestID = id
+        isLoading = true
         if documents.isEmpty { phase = .loading }
+        defer {
+            if requestID == id {
+                requestID = nil
+                isLoading = false
+            }
+        }
 
         do {
             let rows = try await request()
@@ -43,6 +51,7 @@ final class DocumentsViewModel {
 
     func replace(with rows: [PatientDocument]) {
         requestID = nil
+        isLoading = false
         documents = rows
         phase = .loaded
     }

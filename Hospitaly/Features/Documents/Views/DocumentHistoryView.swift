@@ -18,7 +18,7 @@ struct DocumentHistoryView: View {
         Group {
             switch model.phase {
             case .loading:
-                ProgressView("Loading history…")
+                LoadingStateView("Loading history…")
             case .failed(let message):
                 if model.documents.isEmpty {
                     ContentUnavailableView {
@@ -34,10 +34,15 @@ struct DocumentHistoryView: View {
                 }
             case .loaded:
                 if model.documents.isEmpty {
-                    ContentUnavailableView(
-                        "No Document History", systemImage: "clock.arrow.circlepath",
-                        description: Text("Uploaded and deleted documents will appear here.")
-                    )
+                    ContentUnavailableView {
+                        Label("No Document History", systemImage: "clock.arrow.circlepath")
+                    } description: {
+                        Text("Uploaded and deleted documents will appear here.")
+                    } actions: {
+                        Button(model.isLoading ? "Refreshing…" : "Refresh") { loadAttempt += 1 }
+                            .buttonStyle(.bordered)
+                            .disabled(model.isLoading)
+                    }
                 } else {
                     history()
                 }
@@ -58,17 +63,11 @@ struct DocumentHistoryView: View {
 
         return ScrollView {
             VStack(alignment: .leading, spacing: 22) {
-                if let loadError {
-                    HStack(alignment: .firstTextBaseline) {
-                        Text(loadError)
-                            .foregroundStyle(Color.themeSecondaryText)
-                        Spacer()
-                        Button("Retry") { loadAttempt += 1 }
-                            .fontWeight(.semibold)
-                    }
-                    .font(.footnote)
-                    .padding(14)
-                    .hospitalyPanel()
+                if model.isLoading {
+                    LoadingStateView("Refreshing history…")
+                        .frame(maxWidth: .infinity)
+                } else if let loadError {
+                    RefreshFailureView(message: loadError) { loadAttempt += 1 }
                 }
 
                 if !active.isEmpty { documentGroup("Active", documents: active) }

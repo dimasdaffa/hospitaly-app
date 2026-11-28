@@ -31,7 +31,7 @@ struct LabResultDetailView: View {
                             .buttonStyle(.borderedProminent)
                     }
                 } else {
-                    ProgressView("Loading lab result…")
+                    LoadingStateView("Loading lab result…")
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 38)
                 }
