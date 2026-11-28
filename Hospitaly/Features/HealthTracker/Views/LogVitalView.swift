@@ -33,8 +33,6 @@ struct LogVitalView: View {
 
         ScrollView {
             VStack(spacing: 20) {
-                header
-
                 VStack(spacing: 22) {
                     VitalMetricTabs(selection: $model.metric)
 
@@ -95,31 +93,17 @@ struct LogVitalView: View {
             .overlay(alignment: .top) { Divider() }
         }
         .interactiveDismissDisabled(model.isSaving || model.saveUnconfirmed)
-        .task(id: model.metric) { await model.loadLatest(in: range, using: actions.load) }
-    }
-
-    private var header: some View {
-        VStack(spacing: 4) {
-            Text("Log Vitals")
-                .font(.title2.bold())
-                .foregroundStyle(Color.themeText)
-            Text("Enter your latest reading")
-                .font(.subheadline)
-                .foregroundStyle(Color.themeSecondaryText)
-        }
-        .frame(maxWidth: .infinity)
-        .overlay(alignment: .topTrailing) {
-            Button(action: close) {
-                Label("Close", systemImage: "xmark")
-                    .labelStyle(.iconOnly)
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(Color.themeCrimsonInk)
-                    .frame(width: 44, height: 44)
-                    .hospitalyGlassSurface(in: Circle())
+        .navigationTitle("Log Vitals")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if !model.saveUnconfirmed {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel", role: .cancel) { dismiss() }
+                        .disabled(model.isSaving)
+                }
             }
-            .buttonStyle(.plain)
-            .disabled(viewModel.isSaving)
         }
+        .task(id: model.metric) { await model.loadLatest(in: range, using: actions.load) }
     }
 
     @ViewBuilder

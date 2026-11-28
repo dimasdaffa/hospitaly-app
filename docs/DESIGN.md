@@ -44,7 +44,7 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 
 ## Appointment management
 
-- My Appointments highlights the earliest future visit in Upcoming. Other visits and history use compact rows led by the clinic date and time. Eligible visits offer shortcuts to reschedule or request cancellation.
+- My Appointments highlights the earliest future visit in Upcoming. Other visits and history use compact rows led by the clinic date and time. Patients open appointment details to reschedule or request cancellation.
 - The featured visit, details, forms, and confirmations share a crimson summary with a light panel for the date, time, location, and server reference and status when available. Details keep the reason and complaints in a separate panel. Reschedule and cancellation actions stay at the bottom of eligible details.
 - Reschedule displays the current visit before the replacement picker. The action bar shows the selected time before submission. The confirmation uses the returned time, reference, and status, including pending approval when applicable.
 - The cancellation form explains hospital review and makes the selected reason visible. Its confirmation shows the returned cancellation status. Both outcomes provide an action back to My Appointments.
@@ -52,15 +52,15 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 
 ## Medical records
 
-- Medical Records uses a crimson header with an overlapping glass search field. The Last Visit card highlights the diagnosis, date, and clinician when available. The remaining records are grouped by month, with a label and icon for each record type.
+- Medical Records places a glass search field and record type filter under its system navigation title. The Last Visit card highlights the diagnosis, date, and clinician when available. The remaining records are grouped by month, with a label and icon for each record type.
 - Diagnosis Details puts the diagnosis, reported severity, and symptoms first. The care provider, medicines, notes, and attachments follow in light panels. Book Follow-up and Chat Doctor stay in the bottom action bar when available.
 - Lab Results shows any published alert above the result panels. Measurements show their values, units, reference ranges, and reported statuses. Download PDF stays at the bottom when the report has a file.
 
 ## Health tracker
 
 - The tracker shows the selected metric and period above a selectable trend chart. The crimson summary contains the average and date range. The blood pressure curve follows systolic values, and selecting a point shows both pressures.
-- Recent Logs shows up to three of the newest readings. View All opens the selected metric and period, with entries grouped by clinic date, newest first. Both screens support pull-to-refresh and preserve loaded readings on refresh failure.
-- Log Vitals opens as a sheet with centered, scrollable number wheels. Blood pressure has one wheel for each pressure. Heart rate and weight use one wheel each, with a decimal step for weight. The sheet also shows the last reading and offers keyboard entry. If a save cannot be confirmed, Check Recent Logs opens the history and refreshes the readings.
+- Recent Logs shows up to three of the newest readings. View All pushes Vital Logs for the selected metric and period, with entries grouped by clinic date, newest first. Both screens support pull-to-refresh and preserve loaded readings on refresh failure.
+- Log Vitals opens as a single sheet with a system Cancel button and centered, scrollable number wheels. Blood pressure has one wheel for each pressure. Heart rate and weight use one wheel each, with a decimal step for weight. The sheet also shows the last reading and offers keyboard entry. If a save cannot be confirmed, Check Recent Logs dismisses the sheet, opens the history, and refreshes the readings.
 
 ## Other patient screens
 
@@ -75,7 +75,7 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 ## Main navigation
 
 - The native SwiftUI tab bar shows Home, Doctors, Chat, and Profile. Normal navigation within each tab keeps the system tab bar available, and Chat uses a system badge for the unread message count.
-- Home care shortcuts open Appointments, Health Tracker, Records, and Documents. Find a Doctor and doctor search lead to Doctors.
+- Home care shortcuts push Appointments, Health Tracker, Records, and Documents onto the Home navigation stack. Back returns to Home. Find a Doctor and doctor search lead to Doctors.
 
 ## Rollout
 

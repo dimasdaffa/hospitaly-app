@@ -9,9 +9,9 @@ import Foundation
 import SwiftUI
 
 struct MainTabView: View {
-    private enum HomeSheet: String, Identifiable {
-        case healthTracker, records
-        var id: Self { self }
+    private enum HomeRoute: Hashable {
+        case appointments(AppointmentPresentation?)
+        case healthTracker, records, documents
     }
 
     @State private var selection: MainTab = .home
@@ -19,7 +19,8 @@ struct MainTabView: View {
     @State private var doctorSearchRequest: DoctorListView.SearchRequest?
     @State private var chatPath: [MessagePeer] = []
     @State private var profilePath: [ProfileView.Route] = []
-    @State private var homeSheet: HomeSheet?
+    @State private var homePath = NavigationPath()
+    @State private var demoAppointments = Appointment.samples
     @State private var isNotificationsPresented = false
     @State private var notifications = NotificationsViewModel()
     @State private var inbox = InboxViewModel()
@@ -44,7 +45,6 @@ struct MainTabView: View {
 
     var body: some View {
         tabs
-            .sheet(item: $homeSheet, content: homeSheetContent)
             .task(id: profile.id) { await refreshInbox() }
             .task(id: selection) {
                 if selection == .home, let loadNotifications {
@@ -56,12 +56,17 @@ struct MainTabView: View {
     private var tabs: some View {
         TabView(selection: $selection) {
             Tab(MainTab.home.title, systemImage: MainTab.home.symbol, value: MainTab.home) {
-                home
+                NavigationStack(path: $homePath) {
+                    home
+                        .toolbarVisibility(.hidden, for: .navigationBar)
+                        .navigationDestination(for: HomeRoute.self, destination: homeDestination)
+                }
             }
 
             Tab(MainTab.doctors.title, systemImage: MainTab.doctors.symbol, value: MainTab.doctors) {
                 DoctorListView(
-                    path: $doctorPath, loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails,
+                    path: $doctorPath, demoAppointments: $demoAppointments,
+                    loadDoctors: loadDoctors, loadDoctorDetails: loadDoctorDetails,
                     setFavorite: setFavorite,
                     loadAppointments: loadAppointments, bookAppointment: bookAppointment,
                     appointmentManagement: appointmentManagement,
@@ -110,24 +115,29 @@ struct MainTabView: View {
         }
     }
 
-    @ViewBuilder
-    private func homeSheetContent(_ sheet: HomeSheet) -> some View {
-        switch sheet {
-        case .healthTracker:
-            if let healthTrackerActions {
-                NavigationStack {
+    private func homeDestination(_ route: HomeRoute) -> some View {
+        Group {
+            switch route {
+            case .appointments(let presentation):
+                MyAppointmentsView(
+                    appointments: loadAppointments == nil ? demoAppointments : (presentation.map { [$0.appointment] } ?? []),
+                    loadAppointments: loadAppointments, management: appointmentManagement, presenting: presentation
+                )
+            case .healthTracker:
+                if let healthTrackerActions {
                     HealthTrackerView(actions: healthTrackerActions)
                 }
-                .tint(Color.themePrimary)
-            }
-        case .records:
-            if let medicalRecordsActions {
-                NavigationStack {
+            case .records:
+                if let medicalRecordsActions {
                     MedicalRecordsView(actions: medicalRecordsActions, onFollowUp: openFollowUp, onChat: openChatAction)
                 }
-                .tint(Color.themePrimary)
+            case .documents:
+                if let documentsActions {
+                    DocumentsView(actions: documentsActions)
+                }
             }
         }
+        .toolbarVisibility(.visible, for: .navigationBar)
     }
 
     private var home: some View {
@@ -135,7 +145,7 @@ struct MainTabView: View {
 
         return HomeView(
             patientName: profile.name,
-            isActive: selection == .home,
+            isActive: selection == .home && homePath.isEmpty,
             hasUnreadNotifications: notifications.hasUnread,
             loadAppointments: loadAppointments ?? { [] },
             onBook: { openDoctorSearch("") },
@@ -165,16 +175,16 @@ struct MainTabView: View {
         ]
         if healthTrackerActions != nil {
             shortcuts.append(.init(
-                title: "Health Tracker", symbol: "waveform.path.ecg", action: { homeSheet = .healthTracker }
+                title: "Health Tracker", symbol: "waveform.path.ecg", action: { homePath.append(HomeRoute.healthTracker) }
             ))
         }
         if medicalRecordsActions != nil {
             shortcuts.append(.init(
-                title: "Records", symbol: "folder", action: { homeSheet = .records }
+                title: "Records", symbol: "folder", action: { homePath.append(HomeRoute.records) }
             ))
         }
         if documentsActions != nil {
-            shortcuts.append(.init(title: "Documents", symbol: "doc.text", action: { openProfile(.documents) }))
+            shortcuts.append(.init(title: "Documents", symbol: "doc.text", action: { homePath.append(HomeRoute.documents) }))
         }
         return shortcuts
     }
@@ -185,20 +195,13 @@ struct MainTabView: View {
         selection = .doctors
     }
 
-    private func openProfile(_ route: ProfileView.Route) {
-        profilePath = [route]
-        selection = .profile
-    }
-
     private func openAppointments(presenting presentation: AppointmentPresentation? = nil) {
-        doctorPath = [.appointments(seed: presentation?.appointment, presenting: presentation)]
-        selection = .doctors
+        homePath.append(HomeRoute.appointments(presentation))
     }
 
     private func openFollowUp(_ doctor: Doctor) {
         doctorPath = [.detail(doctor)]
         selection = .doctors
-        homeSheet = nil
     }
 
     private var openChatAction: ((Doctor) -> Void)? {
@@ -213,7 +216,6 @@ struct MainTabView: View {
         inbox.query = ""
         chatPath = [peer]
         selection = .chat
-        homeSheet = nil
     }
 
     private func refreshInbox() async {

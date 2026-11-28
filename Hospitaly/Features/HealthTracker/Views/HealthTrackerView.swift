@@ -8,14 +8,9 @@
 import SwiftUI
 
 struct HealthTrackerView: View {
-    private enum Sheet: String, Identifiable {
-        case log, history
-        var id: Self { self }
-    }
-
-    @Environment(\.dismiss) private var dismiss
     @State private var viewModel = HealthTrackerViewModel()
-    @State private var sheet: Sheet?
+    @State private var showsLogEntry = false
+    @State private var showsHistory = false
     @State private var opensHistoryAfterEntry = false
 
     let actions: HealthTrackerActions
@@ -38,7 +33,7 @@ struct HealthTrackerView: View {
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .safeAreaInset(edge: .bottom, alignment: .trailing, spacing: 0) {
             Button {
-                sheet = .log
+                showsLogEntry = true
             } label: {
                 Label("Log Vitals", systemImage: "plus")
                     .labelStyle(.iconOnly)
@@ -57,9 +52,6 @@ struct HealthTrackerView: View {
         .navigationTitle("Health Tracker")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Close") { dismiss() }
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Picker("Date Range", selection: $model.days) {
@@ -72,24 +64,18 @@ struct HealthTrackerView: View {
                 }
             }
         }
-        .sheet(item: $sheet, onDismiss: openPendingHistory) { selection in
-            switch selection {
-            case .log:
+        .sheet(isPresented: $showsLogEntry, onDismiss: openPendingHistory) {
+            NavigationStack {
                 LogVitalView(
                     metric: model.metric, latestReading: model.readings.first, range: model.range,
                     actions: actions, onSaved: applySaved, onCheckLogs: checkLogs
                 )
-                .presentationDetents([.fraction(0.80), .large])
-                .presentationDragIndicator(.visible)
-                .presentationCornerRadius(32)
-                .presentationBackground(Color.themeGlassCanvas)
-            case .history:
-                NavigationStack {
-                    VitalLogHistoryView(model: viewModel) {
-                        await viewModel.load(using: actions.load)
-                    }
-                }
-                .tint(Color.themePrimary)
+            }
+            .presentationDragIndicator(.visible)
+        }
+        .navigationDestination(isPresented: $showsHistory) {
+            VitalLogHistoryView(model: viewModel) {
+                await viewModel.load(using: actions.load)
             }
         }
         .task(id: model.filter) { await model.load(using: actions.load) }
@@ -122,7 +108,7 @@ struct HealthTrackerView: View {
                 } description: {
                     Text("There are no readings in the last \(viewModel.days) days.")
                 } actions: {
-                    Button("Log a Reading") { sheet = .log }
+                    Button("Log a Reading") { showsLogEntry = true }
                         .buttonStyle(.borderedProminent)
                 }
             }
@@ -140,7 +126,7 @@ struct HealthTrackerView: View {
                         .font(.title3.bold())
                         .foregroundStyle(Color.themeText)
                     Spacer()
-                    Button("View All") { sheet = .history }
+                    Button("View All") { showsHistory = true }
                         .font(.subheadline.weight(.semibold))
                         .tint(Color.themeCrimsonInk)
                 }
@@ -175,7 +161,7 @@ struct HealthTrackerView: View {
     private func openPendingHistory() {
         guard opensHistoryAfterEntry else { return }
         opensHistoryAfterEntry = false
-        sheet = .history
+        showsHistory = true
     }
 }
 

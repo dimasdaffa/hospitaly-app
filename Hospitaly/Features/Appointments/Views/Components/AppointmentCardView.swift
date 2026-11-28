@@ -12,45 +12,27 @@ struct AppointmentCardView: View {
     let appointment: Appointment
     let onOpen: () -> Void
     var isFeatured = false
-    var onReschedule: (() -> Void)? = nil
-    var onCancel: (() -> Void)? = nil
 
     var body: some View {
         if isFeatured {
-            VStack(spacing: 10) {
-                Button(action: onOpen) {
-                    AppointmentSummaryView(appointment: appointment, heading: "Next Appointment", showsDetailsLink: true)
-                        .contentShape(.rect(cornerRadius: Theme.cardRadius))
-                }
-                .buttonStyle(.plain)
-
-                if let onReschedule, let onCancel {
-                    managementActions(onReschedule: onReschedule, onCancel: onCancel)
-                        .padding(8)
-                        .hospitalyPanel(cornerRadius: 18)
-                }
+            Button(action: onOpen) {
+                AppointmentSummaryView(appointment: appointment, heading: "Next Appointment", showsDetailsLink: true)
+                    .contentShape(.rect(cornerRadius: Theme.cardRadius))
             }
+            .buttonStyle(.plain)
         } else {
             timelineCard
         }
     }
 
     private var timelineCard: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Button(action: onOpen) {
-                detailsLabel
-                    .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            if let onReschedule, let onCancel {
-                Divider()
-
-                managementActions(onReschedule: onReschedule, onCancel: onCancel)
-            }
+        Button(action: onOpen) {
+            detailsLabel
+                .padding(16)
+                .hospitalyPanel()
+                .contentShape(.rect(cornerRadius: Theme.cardRadius))
         }
-        .padding(16)
-        .hospitalyPanel()
+        .buttonStyle(.plain)
     }
 
     private var detailsLabel: some View {
@@ -118,31 +100,6 @@ struct AppointmentCardView: View {
         .frame(minWidth: 56)
         .background(Color.themeGlassRose.opacity(0.72), in: .rect(cornerRadius: 14))
     }
-
-    private func managementActions(onReschedule: @escaping () -> Void, onCancel: @escaping () -> Void) -> some View {
-        HStack(spacing: 8) {
-            Button(action: onReschedule) {
-                Label("Reschedule", systemImage: "calendar")
-                    .frame(maxWidth: .infinity, minHeight: 44)
-                    .padding(.horizontal, 6)
-                    .background(Color.themeGlassRose.opacity(0.72), in: Capsule())
-            }
-
-            Button(role: .destructive, action: onCancel) {
-                Label(
-                    appointment.status == .pending ? "Cancel Request" : "Cancel Appointment",
-                    systemImage: "xmark.circle"
-                )
-                .frame(maxWidth: .infinity, minHeight: 44)
-                .padding(.horizontal, 6)
-                .background(Color.themeGlassCanvas, in: Capsule())
-            }
-        }
-        .font(.footnote.weight(.semibold))
-        .foregroundStyle(Color.themeCrimsonInk)
-        .multilineTextAlignment(.center)
-        .buttonStyle(.plain)
-    }
 }
 
 #Preview {
@@ -152,7 +109,7 @@ struct AppointmentCardView: View {
 }
 
 #Preview("Next Appointment") {
-    AppointmentCardView(appointment: .sample, onOpen: {}, isFeatured: true, onReschedule: {}, onCancel: {})
+    AppointmentCardView(appointment: .sample, onOpen: {}, isFeatured: true)
         .padding()
         .background(Theme.roseCanvas)
 }

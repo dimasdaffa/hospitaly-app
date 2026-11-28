@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct MedicalRecordsView: View {
-    @Environment(\.dismiss) private var dismiss
     @State private var model = MedicalRecordsViewModel()
     @State private var loadAttempt = 0
 
@@ -17,55 +16,25 @@ struct MedicalRecordsView: View {
     var onChat: ((Doctor) -> Void)? = nil
 
     var body: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                VStack(spacing: -Theme.heroOverlap) {
-                    header
-                        .hospitalyPageHero(topInset: geometry.safeAreaInsets.top)
-
-                    LazyVStack(alignment: .leading, spacing: 16) {
-                        searchBar
-                        filters
-                        content
-                    }
-                    .padding(.horizontal, Theme.contentInset)
-                    .frame(maxWidth: Theme.dashboardWidth)
-                    .padding(.bottom, 24)
-                }
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 16) {
+                searchBar
+                filters
+                content
             }
-            .scrollDismissesKeyboard(.interactively)
-            .pullToRefresh(isEnabled: model.phase != .loading) {
-                await model.load(using: actions.loadHistory)
-            }
-            .ignoresSafeArea(.container, edges: .top)
+            .padding(.horizontal, Theme.contentInset)
+            .padding(.top, 12)
+            .padding(.bottom, 24)
+            .frame(maxWidth: Theme.dashboardWidth)
+            .frame(maxWidth: .infinity)
         }
+        .scrollDismissesKeyboard(.interactively)
+        .pullToRefresh(isEnabled: model.phase != .loading) { await model.load(using: actions.loadHistory) }
         .background { Theme.roseCanvas.ignoresSafeArea() }
-        .toolbarVisibility(.hidden, for: .navigationBar)
+        .navigationTitle("Medical Records")
+        .navigationBarTitleDisplayMode(.inline)
         .navigationDestination(for: MedicalRecordEntry.Route.self, destination: destination)
         .task(id: loadAttempt) { await model.load(using: actions.loadHistory) }
-    }
-
-    private var header: some View {
-        HStack(spacing: 12) {
-            Text("Medical Records")
-                .font(.largeTitle.bold())
-                .tracking(-0.8)
-                .foregroundStyle(Color.themeSurface)
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-            Button {
-                dismiss()
-            } label: {
-                Label("Close", systemImage: "xmark")
-                    .labelStyle(.iconOnly)
-                    .font(.headline)
-                    .foregroundStyle(Color.themeSurface)
-                    .frame(width: 44, height: 44)
-                    .glassEffect(.regular.tint(Color.themeCrimsonDeep.opacity(0.35)).interactive(), in: Circle())
-                    .environment(\.colorScheme, .dark)
-            }
-            .buttonStyle(.plain)
-        }
     }
 
     private var searchBar: some View {

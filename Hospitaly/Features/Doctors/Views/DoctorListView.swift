@@ -15,10 +15,10 @@ struct DoctorListView: View {
     }
 
     @State private var viewModel = DoctorListViewModel()
-    @State private var demoAppointments = Appointment.samples
     @State private var availabilityRevision = 0
 
     @Binding var path: [DoctorRoute]
+    @Binding var demoAppointments: [Appointment]
     let loadDoctors: @MainActor () async throws -> [Doctor]
     var loadDoctorDetails: (@MainActor (String, ClosedRange<Date>) async throws -> DoctorDetailData)? = nil
     var setFavorite: (@MainActor (String, Bool) async throws -> Void)? = nil
@@ -238,15 +238,16 @@ struct DoctorListView: View {
 
 #Preview("Directory") {
     @Previewable @State var path: [DoctorRoute] = []
-    DoctorListView(path: $path, loadDoctors: { Doctor.samples })
+    @Previewable @State var appointments = Appointment.samples
+    DoctorListView(path: $path, demoAppointments: $appointments, loadDoctors: { Doctor.samples })
 }
 
 #Preview("Empty Directory") {
     @Previewable @State var path: [DoctorRoute] = []
-    DoctorListView(path: $path, loadDoctors: { [] })
+    DoctorListView(path: $path, demoAppointments: .constant([]), loadDoctors: { [] })
 }
 
 #Preview("Request Failed") {
     @Previewable @State var path: [DoctorRoute] = []
-    DoctorListView(path: $path, loadDoctors: { throw APIError.connectionFailed })
+    DoctorListView(path: $path, demoAppointments: .constant([]), loadDoctors: { throw APIError.connectionFailed })
 }

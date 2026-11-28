@@ -150,13 +150,10 @@ struct MyAppointmentsView: View {
     }
 
     private func appointmentCard(_ appointment: Appointment, isFeatured: Bool = false) -> AppointmentCardView {
-        let showsActions = canManage(appointment)
-        return AppointmentCardView(
+        AppointmentCardView(
             appointment: appointment,
             onOpen: { change = .details(appointment) },
-            isFeatured: isFeatured,
-            onReschedule: showsActions ? { change = .reschedule(appointment) } : nil,
-            onCancel: showsActions ? { change = .cancel(appointment) } : nil
+            isFeatured: isFeatured
         )
     }
 

@@ -8,8 +8,6 @@
 import SwiftUI
 
 struct VitalLogHistoryView: View {
-    @Environment(\.dismiss) private var dismiss
-
     let model: HealthTrackerViewModel
     let onRefresh: @MainActor () async -> Void
 
@@ -28,11 +26,6 @@ struct VitalLogHistoryView: View {
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle("Vital Logs")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }
-            }
-        }
     }
 
     private var header: some View {
