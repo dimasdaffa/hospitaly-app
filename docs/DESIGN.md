@@ -23,12 +23,14 @@ Use the system segmented picker for fixed choices such as vital metrics, appoint
 
 Use the bundled Lottie loader for asynchronous screen states and compact in-progress controls. Pull-to-refresh displays one loading indicator while the request runs. Static screens display their bundled content immediately.
 
+Full-width crimson headers extend their background into the exposed area when the user pulls past the top of the scroll view. Header content keeps its normal size and safe-area spacing.
+
 ## Home layout and behavior
 
 1. The crimson header extends behind the status bar and Dynamic Island. The greeting, notification inbox, and Help Center controls sit below the top safe area.
 2. The next-appointment card shows the actual doctor, status, clinic date and time, and existing detail and reschedule actions. The page includes loading, empty, and recoverable error states.
 3. The search field overlaps the header edge and sends the entered doctor or specialty query to the existing directory.
-4. Care shortcuts open Appointments, Health Tracker, Medical Records, and Documents & BPJS. Labels can wrap, and the grid uses two columns at accessibility text sizes.
+4. Care shortcuts open Appointments, Health Tracker, Medical Records, and Documents & BPJS. Icons and the first line of each label align at the top of the grid row. Labels can wrap, and the grid uses two columns at accessibility text sizes.
 5. Today’s Care Plan shows doses from Vapor in a horizontally scrolling row with light panels. The row leaves space around card shadows and keeps the first card aligned with the section title. Mark as Taken shows progress until Vapor confirms it.
 
 The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and events describe separate features. Those sections require their own product decisions and backend contracts before they can represent live patient data.

@@ -273,7 +273,7 @@ struct HomeView: View {
 
     private var careShortcuts: some View {
         let columnCount = dynamicTypeSize.isAccessibilitySize ? 2 : 4
-        let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: columnCount)
+        let rowStarts = Array(stride(from: 0, to: shortcuts.count, by: columnCount))
 
         return VStack(alignment: .leading, spacing: 12) {
             Text("Care Shortcuts")
@@ -281,31 +281,39 @@ struct HomeView: View {
                 .foregroundStyle(Color.themeText)
                 .accessibilityAddTraits(.isHeader)
 
-            LazyVGrid(columns: columns, alignment: .center, spacing: 14) {
-                ForEach(shortcuts) { shortcut in
-                    Button(action: shortcut.action) {
-                        VStack(spacing: 7) {
-                            Image(systemName: shortcut.symbol)
-                                .font(.system(size: 19, weight: .medium))
-                                .foregroundStyle(Color.themeCrimsonInk)
-                                .frame(width: 44, height: 44)
-                                .background(Color.themeGlassRose, in: .rect(cornerRadius: 15))
-
-                            Text(shortcut.title)
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(Color.themeText)
-                                .multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
+            Grid(horizontalSpacing: 8, verticalSpacing: 14) {
+                ForEach(rowStarts, id: \.self) { start in
+                    GridRow(alignment: .top) {
+                        ForEach(shortcuts[start..<min(start + columnCount, shortcuts.count)]) { shortcut in
+                            shortcutButton(shortcut)
                         }
-                        .frame(maxWidth: .infinity, alignment: .top)
-                        .contentShape(.rect)
                     }
-                    .buttonStyle(.plain)
                 }
             }
             .padding(12)
             .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
         }
+    }
+
+    private func shortcutButton(_ shortcut: Shortcut) -> some View {
+        Button(action: shortcut.action) {
+            VStack(spacing: 7) {
+                Image(systemName: shortcut.symbol)
+                    .font(.system(size: 19, weight: .medium))
+                    .foregroundStyle(Color.themeCrimsonInk)
+                    .frame(width: 44, height: 44)
+                    .background(Color.themeGlassRose, in: .rect(cornerRadius: 15))
+
+                Text(shortcut.title)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(Color.themeText)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .top)
+            .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
     }
 
     private func searchDoctors() {

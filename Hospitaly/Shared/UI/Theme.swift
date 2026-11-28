@@ -77,12 +77,19 @@ extension View {
             .frame(maxWidth: Theme.dashboardWidth)
             .frame(maxWidth: .infinity)
             .background {
-                CrimsonHeaderBackdrop()
-                    .clipShape(
-                        UnevenRoundedRectangle(
-                            bottomLeadingRadius: Theme.heroRadius, bottomTrailingRadius: Theme.heroRadius
+                GeometryReader { geometry in
+                    let pull = max(0, geometry.frame(in: .scrollView(axis: .vertical)).minY)
+
+                    CrimsonHeaderBackdrop()
+                        .frame(height: geometry.size.height + pull)
+                        .clipShape(
+                            UnevenRoundedRectangle(
+                                bottomLeadingRadius: Theme.heroRadius, bottomTrailingRadius: Theme.heroRadius
+                            )
                         )
-                    )
+                        .offset(y: -pull)
+                }
+                .allowsHitTesting(false)
             }
     }
 
