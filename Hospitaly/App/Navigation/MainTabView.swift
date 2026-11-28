@@ -9,8 +9,8 @@ import Foundation
 import SwiftUI
 
 struct MainTabView: View {
-    private enum ShortcutSheet: String, Identifiable {
-        case menu, healthTracker, records
+    private enum HomeSheet: String, Identifiable {
+        case healthTracker, records
         var id: Self { self }
     }
 
@@ -19,7 +19,7 @@ struct MainTabView: View {
     @State private var doctorSearchRequest: DoctorListView.SearchRequest?
     @State private var chatPath: [MessagePeer] = []
     @State private var profilePath: [ProfileView.Route] = []
-    @State private var shortcutSheet: ShortcutSheet?
+    @State private var homeSheet: HomeSheet?
     @State private var isNotificationsPresented = false
     @State private var notifications = NotificationsViewModel()
     @State private var inbox = InboxViewModel()
@@ -44,14 +44,7 @@ struct MainTabView: View {
 
     var body: some View {
         tabs
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                if showsTabBar {
-                    MainTabBar(selection: $selection, hasUnreadMessages: inbox.hasUnread) {
-                        shortcutSheet = .menu
-                    }
-                }
-            }
-            .sheet(item: $shortcutSheet, content: shortcutContent)
+            .sheet(item: $homeSheet, content: homeSheetContent)
             .task(id: profile.id) { await refreshInbox() }
             .task(id: selection) {
                 if selection == .home, let loadNotifications {
@@ -60,20 +53,10 @@ struct MainTabView: View {
             }
     }
 
-    private var showsTabBar: Bool {
-        switch selection {
-        case .doctors: doctorPath.isEmpty
-        case .chat: chatPath.isEmpty
-        case .profile: profilePath.isEmpty
-        default: true
-        }
-    }
-
     private var tabs: some View {
         TabView(selection: $selection) {
             Tab(MainTab.home.title, systemImage: MainTab.home.symbol, value: MainTab.home) {
                 home
-                    .toolbarVisibility(.hidden, for: .tabBar)
             }
 
             Tab(MainTab.doctors.title, systemImage: MainTab.doctors.symbol, value: MainTab.doctors) {
@@ -84,17 +67,15 @@ struct MainTabView: View {
                     appointmentManagement: appointmentManagement,
                     searchRequest: doctorSearchRequest
                 )
-                .toolbarVisibility(.hidden, for: .tabBar)
             }
 
             Tab(MainTab.chat.title, systemImage: MainTab.chat.symbol, value: MainTab.chat) {
                 chat
-                    .toolbarVisibility(.hidden, for: .tabBar)
             }
+            .badge(inbox.unreadCount)
 
             Tab(MainTab.profile.title, systemImage: MainTab.profile.symbol, value: MainTab.profile) {
                 profileTab
-                    .toolbarVisibility(.hidden, for: .tabBar)
             }
         }
     }
@@ -130,16 +111,8 @@ struct MainTabView: View {
     }
 
     @ViewBuilder
-    private func shortcutContent(_ sheet: ShortcutSheet) -> some View {
+    private func homeSheetContent(_ sheet: HomeSheet) -> some View {
         switch sheet {
-        case .menu:
-            QuickAccessSheet(
-                onOpenTab: openTab,
-                onOpenAppointments: openAppointmentsFromMenu,
-                onOpenHealthTracker: openHealthTrackerAction,
-                onOpenRecords: openRecordsAction,
-                hasUnreadMessages: inbox.hasUnread
-            )
         case .healthTracker:
             if let healthTrackerActions {
                 NavigationStack {
@@ -155,16 +128,6 @@ struct MainTabView: View {
                 .tint(Color.themePrimary)
             }
         }
-    }
-
-    private var openHealthTrackerAction: (@MainActor () -> Void)? {
-        guard healthTrackerActions != nil else { return nil }
-        return { shortcutSheet = .healthTracker }
-    }
-
-    private var openRecordsAction: (@MainActor () -> Void)? {
-        guard medicalRecordsActions != nil else { return nil }
-        return { shortcutSheet = .records }
     }
 
     private var home: some View {
@@ -198,13 +161,17 @@ struct MainTabView: View {
 
     private var homeShortcuts: [HomeView.Shortcut] {
         var shortcuts = [
-            HomeView.Shortcut(title: "Appointments", symbol: "calendar.badge.clock", action: openAppointmentsFromMenu)
+            HomeView.Shortcut(title: "Appointments", symbol: "calendar.badge.clock", action: { openAppointments() })
         ]
-        if let openHealthTrackerAction {
-            shortcuts.append(.init(title: "Health Tracker", symbol: "waveform.path.ecg", action: openHealthTrackerAction))
+        if healthTrackerActions != nil {
+            shortcuts.append(.init(
+                title: "Health Tracker", symbol: "waveform.path.ecg", action: { homeSheet = .healthTracker }
+            ))
         }
-        if let openRecordsAction {
-            shortcuts.append(.init(title: "Records", symbol: "folder", action: openRecordsAction))
+        if medicalRecordsActions != nil {
+            shortcuts.append(.init(
+                title: "Records", symbol: "folder", action: { homeSheet = .records }
+            ))
         }
         if documentsActions != nil {
             shortcuts.append(.init(title: "Documents", symbol: "doc.text", action: { openProfile(.documents) }))
@@ -213,34 +180,14 @@ struct MainTabView: View {
     }
 
     private func openDoctorSearch(_ query: String) {
-        openTab(.doctors)
+        doctorPath.removeAll()
         doctorSearchRequest = DoctorListView.SearchRequest(query: query)
+        selection = .doctors
     }
 
     private func openProfile(_ route: ProfileView.Route) {
         profilePath = [route]
         selection = .profile
-        shortcutSheet = nil
-    }
-
-    private func openTab(_ tab: MainTab) {
-        if tab == .doctors {
-            doctorPath.removeAll()
-            doctorSearchRequest = nil
-        }
-        if tab == .chat {
-            inbox.query = ""
-            chatPath.removeAll()
-        }
-        if tab == .profile { profilePath.removeAll() }
-
-        selection = tab
-        shortcutSheet = nil
-    }
-
-    private func openAppointmentsFromMenu() {
-        shortcutSheet = nil
-        openAppointments()
     }
 
     private func openAppointments(presenting presentation: AppointmentPresentation? = nil) {
@@ -251,7 +198,7 @@ struct MainTabView: View {
     private func openFollowUp(_ doctor: Doctor) {
         doctorPath = [.detail(doctor)]
         selection = .doctors
-        shortcutSheet = nil
+        homeSheet = nil
     }
 
     private var openChatAction: ((Doctor) -> Void)? {
@@ -266,7 +213,7 @@ struct MainTabView: View {
         inbox.query = ""
         chatPath = [peer]
         selection = .chat
-        shortcutSheet = nil
+        homeSheet = nil
     }
 
     private func refreshInbox() async {
@@ -294,4 +241,5 @@ struct MainTabView: View {
         documentsActions: .preview,
         profileSettings: .preview
     )
+    .tint(Color.themePrimary)
 }

@@ -68,6 +68,11 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 - Help Center presents the hospital's FAQ as expandable reading panels. Previously loaded topics remain visible during a refresh and after a refresh failure.
 - Register pairs a crimson hospital header with a glass form. Field labels stay visible while typing, and the action bar shows submission progress. A confirmed registration returns to sign-in with the registered email filled in.
 
+## Main navigation
+
+- The native SwiftUI tab bar shows Home, Doctors, Chat, and Profile. Normal navigation within each tab keeps the system tab bar available, and Chat uses a system badge for the unread message count.
+- Home care shortcuts open Appointments, Health Tracker, Records, and Documents. Find a Doctor and doctor search lead to Doctors.
+
 ## Rollout
 
 | Phase | Screen direction |
@@ -76,6 +81,6 @@ The reference’s queue number, estimated turn, QR check-in, pharmacy queue, and
 | 2 · Doctors and booking | Give the clinician’s portrait and specialty a prominent header. Keep dates and slots easy to scan, with clear selected and unavailable states. |
 | 3 · Visits and clinical records | Put visit status and timing ahead of secondary actions. Use lighter surfaces for reports, attachments, and lab values. |
 | 4 · Chat and account | Apply the palette to inbox navigation and account rows. Keep message threads and patient forms quiet with light reading surfaces. |
-| Last · Main navigation | Revisit the tab bar and Quick Access after the patient screens have been reviewed. |
+| Last · Main navigation | Use the system tab bar for the four main destinations and keep care shortcuts on Home. |
 
 Keep route behavior, authorization, and clinical date handling consistent with [TECHREQ.md](TECHREQ.md).

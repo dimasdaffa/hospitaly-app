@@ -24,7 +24,7 @@ final class InboxViewModel {
     var query = ""
 
     var searchTerm: String { query.trimmingCharacters(in: .whitespacesAndNewlines) }
-    var hasUnread: Bool { conversations.contains { $0.unreadCount > 0 } }
+    var unreadCount: Int { conversations.reduce(0) { $0 + $1.unreadCount } }
 
     func load(using request: @MainActor (String) async throws -> [Conversation]) async {
         guard !Task.isCancelled else { return }

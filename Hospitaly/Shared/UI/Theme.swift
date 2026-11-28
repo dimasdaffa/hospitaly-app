@@ -54,7 +54,6 @@ extension Color {
     static let themeOutline = Color(hex: 0xDCE4F1)
     static let themeDivider = Color(hex: 0xECEEF1)
     static let themeCardBorder = Color(hex: 0xEFEDF0)
-    static let themeCardShadow = Color(hex: 0x0F172A, opacity: 0.12)
 
     static let themeAvailableText = Color(hex: 0x138344)
     static let themeAvailableDot = Color(hex: 0x19BE66)
@@ -65,12 +64,9 @@ extension Color {
 
     static let themeExperienceAccent = Color(hex: 0x4D8DFB)
     static let themeExperienceBackground = Color(hex: 0xEDF4FF)
-    static let themePurpleAccent = Color(hex: 0xA55EF5)
-    static let themePurpleBackground = Color(hex: 0xF7EFFF)
 
     static let themeRecordsAccent = Color(hex: 0xDA5210)
     static let themeRecordsBackground = Color(hex: 0xFFF3E6)
-    static let themeQuickBook = Color(hex: 0xFFBD09)
 }
 
 extension View {
