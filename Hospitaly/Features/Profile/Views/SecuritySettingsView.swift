@@ -16,14 +16,25 @@ struct SecuritySettingsView: View {
 
         Form {
             Section {
+                Label("Change Password", systemImage: "lock.shield")
+                    .font(.title3.bold())
+                    .foregroundStyle(Color.themeSurface)
+                    .padding(18)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background {
+                        CrimsonHeaderBackdrop().clipShape(.rect(cornerRadius: Theme.cardRadius))
+                    }
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
+            }
+
+            Section {
                 SecureField("Current Password", text: $model.currentPassword)
                     .textContentType(.password)
                 SecureField("New Password", text: $model.newPassword)
                     .textContentType(.newPassword)
                 SecureField("Confirm New Password", text: $model.confirmation)
                     .textContentType(.newPassword)
-            } header: {
-                Text("Change Password")
             } footer: {
                 Text("Use at least 8 characters for your new password.")
             }

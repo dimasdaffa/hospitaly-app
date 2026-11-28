@@ -1,5 +1,5 @@
 //
-//  HomeHeaderBackdrop.swift
+//  CrimsonHeaderBackdrop.swift
 //  Hospitaly
 //
 //  Created by DIMAS DAFFA ERNANDA on 27/11/26.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct HomeHeaderBackdrop: View {
+struct CrimsonHeaderBackdrop: View {
     var body: some View {
         Theme.crimsonGradient
             .overlay {
@@ -46,6 +46,6 @@ struct HomeHeaderBackdrop: View {
 }
 
 #Preview {
-    HomeHeaderBackdrop()
+    CrimsonHeaderBackdrop()
         .frame(height: 320)
 }

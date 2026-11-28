@@ -153,8 +153,7 @@ Hospitaly/                                  # iOS repository root
 │   │   │       ├── HomeView.swift                    # Crimson dashboard, next visit, search, and shortcuts
 │   │   │       ├── CarePlanView.swift                # Scheduled doses and Mark as Taken
 │   │   │       └── Components/
-│   │   │           ├── HomeAppointmentCardView.swift # Next visit date, status, and actions
-│   │   │           └── HomeHeaderBackdrop.swift      # Crimson gradient and curved highlights
+│   │   │           └── HomeAppointmentCardView.swift # Next visit date, status, and actions
 │   │   ├── HealthTracker/
 │   │   │   ├── Models/
 │   │   │   │   ├── HealthMetric.swift                  # Metric filters, units, and display formatting
@@ -234,6 +233,7 @@ Hospitaly/                                  # iOS repository root
 │   │       └── Views/NotificationSettingsView.swift   # Appointment notification preference
 │   └── Shared/
 │       ├── Theme.swift                     # Color palette, layout tokens, and glass surfaces
+│       ├── CrimsonHeaderBackdrop.swift     # Crimson gradient and curved highlights
 │       ├── ClinicDate.swift                # Clinic time zone and date formatting
 │       ├── PrimaryActionButton.swift       # Shared primary action button
 │       ├── PrivateDocumentDownload.swift  # Authenticated file route and default export name

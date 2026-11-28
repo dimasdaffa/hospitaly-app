@@ -56,9 +56,9 @@ struct DocumentHistoryView: View {
         let active = model.documents.filter { $0.deletedAt == nil }
         let deleted = model.documents.filter { $0.deletedAt != nil }
 
-        return List {
-            if let loadError {
-                Section {
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                if let loadError {
                     HStack(alignment: .firstTextBaseline) {
                         Text(loadError)
                             .foregroundStyle(Color.themeSecondaryText)
@@ -67,36 +67,51 @@ struct DocumentHistoryView: View {
                             .fontWeight(.semibold)
                     }
                     .font(.footnote)
+                    .padding(14)
+                    .hospitalyPanel()
                 }
-            }
 
-            if !active.isEmpty {
-                Section("Active") {
-                    ForEach(active) { document in
-                        if let file = document.download {
-                            Button {
-                                download = file
-                            } label: {
-                                row(document)
-                                    .contentShape(.rect)
-                            }
-                            .buttonStyle(.plain)
-                            .disabled(download != nil)
-                        } else {
+                if !active.isEmpty { documentGroup("Active", documents: active) }
+                if !deleted.isEmpty { documentGroup("Deleted", documents: deleted) }
+            }
+            .padding(Theme.contentInset)
+            .frame(maxWidth: Theme.dashboardWidth)
+            .frame(maxWidth: .infinity)
+        }
+        .scrollIndicators(.hidden)
+    }
+
+    private func documentGroup(_ title: LocalizedStringKey, documents: [PatientDocument]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title)
+                .font(.title3.bold())
+                .foregroundStyle(Color.themeText)
+
+            VStack(spacing: 0) {
+                ForEach(documents) { document in
+                    if document.id != documents.first?.id {
+                        Rectangle()
+                            .fill(Color.themeDivider)
+                            .frame(height: 1)
+                            .padding(.leading, 64)
+                    }
+
+                    if document.deletedAt == nil, let file = document.download {
+                        Button {
+                            download = file
+                        } label: {
                             row(document)
+                                .contentShape(.rect)
                         }
+                        .buttonStyle(.plain)
+                        .disabled(download != nil)
+                    } else {
+                        row(document)
                     }
                 }
             }
-            if !deleted.isEmpty {
-                Section("Deleted") {
-                    ForEach(deleted) { document in row(document) }
-                }
-            }
+            .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
         }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .environment(\.colorScheme, .light)
     }
 
     private func row(_ document: PatientDocument) -> some View {
@@ -126,7 +141,8 @@ struct DocumentHistoryView: View {
                     .foregroundStyle(Color.themePrimary)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
     }
 
     private func timelineLabel(_ document: PatientDocument) -> String? {

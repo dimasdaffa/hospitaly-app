@@ -48,8 +48,9 @@ struct DoctorSearchBar: View {
         }
         .padding(.leading, 15)
         .padding(.trailing, 10)
-        .frame(minHeight: 52)
+        .frame(minHeight: Theme.heroOverlap * 2)
         .hospitalyGlassSurface(in: Capsule())
+        .environment(\.colorScheme, .light)
     }
 }
 

@@ -12,52 +12,47 @@ struct DoctorCardMetricsView: View {
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 8) {
-                ratingBadge
-                experienceBadge
+            HStack(spacing: 12) {
+                rating
+                experience
             }
 
             VStack(alignment: .leading, spacing: 4) {
-                ratingBadge
-                experienceBadge
+                rating
+                experience
             }
         }
     }
 
-    private var ratingBadge: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "star")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color.themeRatingAccent)
+    private var rating: some View {
+        Label {
+            HStack(spacing: 4) {
+                Text(doctor.rating, format: .number.precision(.fractionLength(1)))
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.themeText)
 
-            Text(doctor.rating, format: .number.precision(.fractionLength(1)))
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Color.themeText)
-
-            if let count = doctor.reviewCount {
-                Text("(\(count))")
-                    .font(.system(size: 10))
-                    .foregroundStyle(Color.themeMutedText)
+                if let count = doctor.reviewCount {
+                    Text("(\(count))")
+                        .foregroundStyle(Color.themeSecondaryText)
+                }
             }
+        } icon: {
+            Image(systemName: "star.fill")
+                .foregroundStyle(Color.themeCrimsonInk)
         }
-        .padding(.horizontal, 8)
-        .frame(height: 24)
-        .background(Color.themeRatingBackground, in: .rect(cornerRadius: 6))
+        .font(.footnote)
         .fixedSize(horizontal: true, vertical: false)
     }
 
-    private var experienceBadge: some View {
-        HStack(spacing: 4) {
-            Image(systemName: "briefcase")
-                .foregroundStyle(Color.themeExperienceAccent)
-
-            Text("\(doctor.experienceYears) Years")
+    private var experience: some View {
+        Label {
+            Text("\(doctor.experienceYears) years")
                 .foregroundStyle(Color.themeSecondaryText)
+        } icon: {
+            Image(systemName: "briefcase")
+                .foregroundStyle(Color.themeCrimsonInk)
         }
-        .font(.system(size: 12, weight: .medium))
-        .padding(.horizontal, 8)
-        .frame(height: 24)
-        .background(Color.themeExperienceBackground, in: .rect(cornerRadius: 6))
+        .font(.footnote)
         .fixedSize(horizontal: true, vertical: false)
     }
 }

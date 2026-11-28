@@ -51,54 +51,55 @@ struct ProfileView: View {
     var documents: DocumentsActions?
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                identity
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: -Theme.heroOverlap) {
+                    identity
+                        .hospitalyPageHero(topInset: geometry.safeAreaInsets.top)
 
-                if settings != nil || documents != nil {
-                    VStack(alignment: .leading, spacing: 10) {
-                        heading("Account Management")
-                        if settings != nil { routeLink(.personal) }
-                        if documents != nil { routeLink(.documents) }
-                        if settings != nil {
-                            routeLink(.security)
-                            routeLink(.notifications)
-                        }
-                    }
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    heading("Other")
-                    if settings != nil { routeLink(.help) }
-                    Button(role: .destructive, action: signOut) {
-                        row("Log Out", symbol: "rectangle.portrait.and.arrow.right", accent: .themePrimary,
-                            titleColor: .themePrimary)
-                    }
-                    .buttonStyle(.plain)
-
-                    if let signOutError {
-                        Text(signOutError)
-                            .font(.footnote)
-                            .foregroundStyle(Color.themePrimary)
-                    }
+                    settingsContent
+                        .padding(.horizontal, Theme.contentInset)
+                        .frame(maxWidth: Theme.dashboardWidth)
+                        .padding(.bottom, 24)
                 }
             }
-            .frame(maxWidth: Theme.dashboardWidth)
-            .padding(24)
-            .frame(maxWidth: .infinity)
+            .scrollBounceBehavior(.basedOnSize)
+            .scrollIndicators(.hidden)
+            .ignoresSafeArea(.container, edges: .top)
         }
-        .scrollBounceBehavior(.basedOnSize)
         .background { Theme.roseCanvas.ignoresSafeArea() }
-        .navigationTitle("Profile Settings")
-        .navigationBarTitleDisplayMode(.inline)
+        .toolbarVisibility(.hidden, for: .navigationBar)
         .navigationDestination(for: Route.self, destination: destination)
     }
 
     private var identity: some View {
-        VStack(spacing: 8) {
+        HStack(alignment: .center, spacing: 16) {
+            VStack(alignment: .leading, spacing: 7) {
+                Text("Profile Settings")
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(Color.themeSurface.opacity(0.86))
+
+                Text(profile.name)
+                    .font(.largeTitle.bold())
+                    .tracking(-0.8)
+                    .foregroundStyle(Color.themeSurface)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let patientNumber = profile.patientNumber {
+                    Label("Patient ID #\(patientNumber)", systemImage: "person.text.rectangle")
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(Color.themeSurface.opacity(0.90))
+                }
+
+                Text(profile.email)
+                    .font(.footnote)
+                    .foregroundStyle(Color.themeSurface.opacity(0.86))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
             if settings != nil {
                 NavigationLink(value: Route.personal) {
-                    ProfileAvatar(url: avatarURL)
+                    ProfileAvatar(url: avatarURL, size: 86)
                         .overlay(alignment: .bottomTrailing) {
                             Image(systemName: "camera.fill")
                                 .font(.caption.weight(.semibold))
@@ -110,44 +111,74 @@ struct ProfileView: View {
                 }
                 .buttonStyle(.plain)
             } else {
-                ProfileAvatar(url: avatarURL)
+                ProfileAvatar(url: avatarURL, size: 86)
             }
-
-            Text(profile.name)
-                .font(.title.bold())
-                .foregroundStyle(Color.themeSurface)
-
-            if let patientNumber = profile.patientNumber {
-                Text("Patient ID #\(patientNumber)")
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(Color.themeSurface.opacity(0.88))
-            }
-
-            Text(profile.email)
-                .font(.footnote)
-                .foregroundStyle(Color.themeSurface.opacity(0.84))
-        }
-        .multilineTextAlignment(.center)
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 24)
-        .padding(.horizontal, 16)
-        .background {
-            RoundedRectangle(cornerRadius: Theme.heroRadius)
-                .fill(Theme.crimsonGradient)
-                .shadow(color: Color.themeCrimsonDeep.opacity(0.22), radius: 12, y: 6)
         }
     }
 
-    private func heading(_ title: String) -> some View {
-        Text(title.uppercased())
-            .font(.caption.weight(.semibold))
-            .foregroundStyle(Color.themeSecondaryText)
-            .padding(.horizontal, 4)
+    private var accountRoutes: [Route] {
+        var routes: [Route] = []
+        if settings != nil { routes.append(.personal) }
+        if documents != nil { routes.append(.documents) }
+        if settings != nil { routes.append(contentsOf: [.security, .notifications]) }
+        return routes
+    }
+
+    private var settingsContent: some View {
+        let routes = accountRoutes
+
+        return VStack(alignment: .leading, spacing: 18) {
+            if !routes.isEmpty {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Account")
+                        .font(.headline)
+                        .foregroundStyle(Color.themeText)
+                        .padding(.horizontal, 16)
+                        .padding(.top, 16)
+                        .padding(.bottom, 7)
+
+                    ForEach(routes, id: \.self) { route in
+                        if route != routes.first { rowDivider }
+                        routeLink(route)
+                    }
+                }
+                .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+            }
+
+            VStack(spacing: 0) {
+                if settings != nil {
+                    routeLink(.help)
+                    rowDivider
+                }
+
+                Button(role: .destructive, action: signOut) {
+                    row(
+                        "Log Out", symbol: "rectangle.portrait.and.arrow.right", accent: .themeCrimsonInk,
+                        titleColor: .themeCrimsonInk
+                    )
+                }
+                .buttonStyle(.plain)
+            }
+            .hospitalyPanel()
+
+            if let signOutError {
+                Text(signOutError)
+                    .font(.footnote)
+                    .foregroundStyle(Color.themeCrimsonInk)
+            }
+        }
+    }
+
+    private var rowDivider: some View {
+        Rectangle()
+            .fill(Color.themeDivider)
+            .frame(height: 1)
+            .padding(.leading, 64)
     }
 
     private func routeLink(_ route: Route) -> some View {
         NavigationLink(value: route) {
-            row(route.title, symbol: route.icon, accent: route == .help ? .themeSecondaryText : .themePrimary,
+            row(route.title, symbol: route.icon, accent: route == .help ? .themeSecondaryText : .themeCrimsonInk,
                 subtitle: route.subtitle, showsChevron: true)
         }
         .buttonStyle(.plain)
@@ -181,29 +212,31 @@ struct ProfileView: View {
                     .foregroundStyle(Color.themeMutedText)
             }
         }
-        .padding(14)
-        .hospitalyPanel(cornerRadius: 20)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
         .contentShape(.rect)
     }
 
-    @ContentBuilder
     private func destination(_ route: Route) -> some View {
-        switch route {
-        case .personal:
-            if let settings { PersonalInfoView(profile: profile, avatarURL: avatarURL, actions: settings) }
-        case .documents:
-            if let documents { DocumentsView(actions: documents) }
-        case .security:
-            if let settings { SecuritySettingsView(changePassword: settings.changePassword) }
-        case .notifications:
-            if let settings {
-                NotificationSettingsView(
-                    loadSettings: settings.loadNotificationSettings, saveSettings: settings.saveNotificationSettings
-                )
+        Group {
+            switch route {
+            case .personal:
+                if let settings { PersonalInfoView(profile: profile, avatarURL: avatarURL, actions: settings) }
+            case .documents:
+                if let documents { DocumentsView(actions: documents) }
+            case .security:
+                if let settings { SecuritySettingsView(changePassword: settings.changePassword) }
+            case .notifications:
+                if let settings {
+                    NotificationSettingsView(
+                        loadSettings: settings.loadNotificationSettings, saveSettings: settings.saveNotificationSettings
+                    )
+                }
+            case .help:
+                if let settings { HelpCenterView(loadTopics: settings.loadHelp) }
             }
-        case .help:
-            if let settings { HelpCenterView(loadTopics: settings.loadHelp) }
         }
+        .toolbarVisibility(.visible, for: .navigationBar)
     }
 
     private func signOut() {

@@ -29,78 +29,9 @@ struct DoctorListView: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            VStack(spacing: 0) {
-                HStack(spacing: 12) {
-                    Text("Our Specialists")
-                        .font(.largeTitle.bold())
-                        .tracking(-0.8)
-                        .foregroundStyle(Color.themeText)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    Button {
-                        path.append(.appointments(seed: nil))
-                    } label: {
-                        Label("My Appointments", systemImage: "calendar")
-                            .labelStyle(.iconOnly)
-                            .font(.headline)
-                            .foregroundStyle(Color.themeCrimsonInk)
-                            .frame(width: 46, height: 46)
-                            .glassEffect(.regular.tint(Color.themeGlassRose).interactive(), in: Circle())
-                            .environment(\.colorScheme, .light)
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, Theme.contentInset)
-                .padding(.top, 12)
-
-                DoctorSearchBar(
-                    searchText: $viewModel.searchText,
-                    favoritesOnly: $viewModel.favoritesOnly,
-                    availableOnly: $viewModel.availableOnly
-                )
-                .padding(.horizontal, Theme.contentInset)
-                .padding(.top, 16)
-
-                DoctorSpecialtyFilters(
-                    specialties: viewModel.specialties,
-                    selection: $viewModel.selectedSpecialty
-                )
-                .padding(.top, 16)
-
-                ScrollView {
-                    directoryContent
-                }
-                .scrollIndicators(.hidden)
-                .scrollDismissesKeyboard(.interactively)
-            }
-            .frame(maxWidth: Theme.dashboardWidth)
-            .frame(maxWidth: .infinity)
-            .background { Theme.roseCanvas.ignoresSafeArea() }
-            .toolbarVisibility(.hidden, for: .navigationBar)
-            .navigationDestination(for: DoctorRoute.self) { route in
-                switch route {
-                case .detail(let doctor):
-                    DoctorDetailView(doctor: doctor, appointments: demoAppointments, loadDetails: loadDoctorDetails) {
-                        updatedDoctor, slot in
-                        path.append(.booking(updatedDoctor, slot))
-                    }
-                    .id(availabilityRevision)
-                case .booking(let doctor, let slot):
-                    bookingForm(doctor: doctor, slot: slot)
-                case .confirmation(let appointment):
-                    BookingConfirmationView(
-                        appointment: appointment,
-                        onViewAppointments: { path = [.appointments(seed: appointment)] },
-                        onBackToDoctors: { path.removeAll() }
-                    )
-                case .appointments(let seed, let presentation):
-                    MyAppointmentsView(
-                        appointments: loadAppointments == nil ? demoAppointments : (seed.map { [$0] } ?? []),
-                        loadAppointments: loadAppointments,
-                        management: appointmentManagement, presenting: presentation
-                    )
-                }
-            }
+            directory
+                .toolbarVisibility(.hidden, for: .navigationBar)
+                .navigationDestination(for: DoctorRoute.self, destination: destination)
         }
         .tint(Color.themePrimary)
         .onChange(of: searchRequest, initial: true) { _, request in
@@ -113,6 +44,89 @@ struct DoctorListView: View {
             Button("OK", role: .cancel) {}
         } message: { message in
             Text(message)
+        }
+    }
+
+    @ContentBuilder
+    private func destination(_ route: DoctorRoute) -> some View {
+        switch route {
+        case .detail(let doctor):
+            DoctorDetailView(doctor: doctor, appointments: demoAppointments, loadDetails: loadDoctorDetails) {
+                updatedDoctor, slot in
+                path.append(.booking(updatedDoctor, slot))
+            }
+            .id(availabilityRevision)
+        case .booking(let doctor, let slot):
+            bookingForm(doctor: doctor, slot: slot)
+        case .confirmation(let appointment):
+            BookingConfirmationView(
+                appointment: appointment,
+                onViewAppointments: { path = [.appointments(seed: appointment)] },
+                onBackToDoctors: { path.removeAll() }
+            )
+        case .appointments(let seed, let presentation):
+            MyAppointmentsView(
+                appointments: loadAppointments == nil ? demoAppointments : (seed.map { [$0] } ?? []),
+                loadAppointments: loadAppointments,
+                management: appointmentManagement, presenting: presentation
+            )
+        }
+    }
+
+    private var directory: some View {
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: -Theme.heroOverlap) {
+                    directoryHeader
+                        .hospitalyPageHero(topInset: geometry.safeAreaInsets.top)
+
+                    VStack(alignment: .leading, spacing: 16) {
+                        DoctorSearchBar(
+                            searchText: $viewModel.searchText,
+                            favoritesOnly: $viewModel.favoritesOnly,
+                            availableOnly: $viewModel.availableOnly
+                        )
+                        .padding(.horizontal, Theme.contentInset)
+
+                        DoctorSpecialtyFilters(
+                            specialties: viewModel.specialties,
+                            selection: $viewModel.selectedSpecialty
+                        )
+
+                        directoryContent
+                            .padding(.horizontal, Theme.contentInset)
+                    }
+                    .frame(maxWidth: Theme.dashboardWidth)
+                    .padding(.bottom, 24)
+                }
+            }
+            .scrollIndicators(.hidden)
+            .scrollDismissesKeyboard(.interactively)
+            .ignoresSafeArea(.container, edges: .top)
+        }
+        .background { Theme.roseCanvas.ignoresSafeArea() }
+    }
+
+    private var directoryHeader: some View {
+        HStack(spacing: 12) {
+            Text("Our Specialists")
+                .font(.largeTitle.bold())
+                .tracking(-0.8)
+                .foregroundStyle(Color.themeSurface)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                path.append(.appointments(seed: nil))
+            } label: {
+                Label("My Appointments", systemImage: "calendar.badge.clock")
+                    .labelStyle(.iconOnly)
+                    .font(.headline)
+                    .foregroundStyle(Color.themeSurface)
+                    .frame(width: 44, height: 44)
+                    .glassEffect(.regular.tint(Color.themeCrimsonDeep.opacity(0.35)).interactive(), in: Circle())
+                    .environment(\.colorScheme, .dark)
+            }
+            .buttonStyle(.plain)
         }
     }
 
@@ -153,7 +167,11 @@ struct DoctorListView: View {
                         .buttonStyle(.bordered)
                 }
             } else {
-                LazyVStack(spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 14) {
+                    Text(doctors.count == 1 ? "1 specialist" : "\(doctors.count) specialists")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(Color.themeSecondaryText)
+
                     ForEach(doctors) { doctor in
                         DoctorCardView(
                             doctor: doctor,
@@ -166,9 +184,6 @@ struct DoctorListView: View {
                         )
                     }
                 }
-                .padding(.horizontal, Theme.contentInset)
-                .padding(.top, 24)
-                .padding(.bottom, 20)
             }
         }
     }

@@ -63,42 +63,41 @@ struct UploadDocumentView: View {
             Button {
                 showsFileImporter = true
             } label: {
-                VStack(spacing: 8) {
-                    if model.isPicking {
-                        ProgressView()
-                            .frame(height: 44)
-                    } else {
-                        Image(systemName: model.file == nil ? "icloud.and.arrow.up.fill" : "checkmark.circle.fill")
-                            .font(.title2.weight(.semibold))
-                            .foregroundStyle(Color.themePrimary)
-                            .frame(width: 48, height: 48)
-                            .background(Color.themePrimary.opacity(0.08), in: Circle())
+                HStack(spacing: 14) {
+                    Group {
+                        if model.isPicking {
+                            ProgressView().tint(.themeSurface)
+                        } else {
+                            Image(systemName: model.file == nil ? "doc.badge.plus" : "checkmark")
+                                .font(.title3.weight(.semibold))
+                        }
                     }
+                    .frame(width: 48, height: 48)
+                    .background(Color.themeSurface.opacity(0.17), in: .rect(cornerRadius: 16))
 
-                    if let file = model.file {
-                        Text(file.name)
-                            .font(.headline)
-                            .foregroundStyle(Color.themeText)
-                            .lineLimit(2)
-                        Text("\(file.data.count.formatted(.byteCount(style: .file))) · Tap to change")
-                            .font(.caption)
-                            .foregroundStyle(Color.themeSecondaryText)
-                    } else {
-                        Text(filePickerTitle)
-                            .font(.headline)
-                            .foregroundStyle(Color.themeText)
+                    VStack(alignment: .leading, spacing: 5) {
+                        Group {
+                            if let file = model.file {
+                                Text(file.name).lineLimit(2)
+                            } else {
+                                Text(filePickerTitle)
+                            }
+                        }
+                        .font(.title3.bold())
+
                         Text(filePickerDetail)
-                            .font(.caption)
-                            .foregroundStyle(Color.themeSecondaryText)
+                            .font(.footnote)
+                            .foregroundStyle(Color.themeSurface.opacity(0.87))
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline.weight(.semibold))
                 }
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity, minHeight: 154)
-                .padding(12)
-                .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: 20))
-                .overlay {
-                    RoundedRectangle(cornerRadius: 20)
-                        .strokeBorder(Color.themePrimary, style: StrokeStyle(lineWidth: 1.2, dash: [5, 4]))
+                .foregroundStyle(Color.themeSurface)
+                .padding(18)
+                .background {
+                    CrimsonHeaderBackdrop().clipShape(.rect(cornerRadius: Theme.cardRadius))
                 }
                 .contentShape(.rect)
             }
@@ -119,10 +118,13 @@ struct UploadDocumentView: View {
 
     private var filePickerTitle: LocalizedStringKey {
         if model.isPicking { return "Opening File…" }
-        return model.original == nil ? "Tap to Upload" : "Choose Replacement File"
+        return model.original == nil ? "Choose a File" : "Choose Replacement File"
     }
 
     private var filePickerDetail: String {
+        if let file = model.file {
+            return "\(file.data.count.formatted(.byteCount(style: .file))) · Tap to change"
+        }
         if let original = model.original {
             return "Current file · \(original.size.formatted(.byteCount(style: .file)))\nPDF, JPEG, or PNG · up to 5 MiB"
         }
@@ -133,6 +135,10 @@ struct UploadDocumentView: View {
         @Bindable var model = model
 
         return VStack(alignment: .leading, spacing: 15) {
+            Text("Document Details")
+                .font(.title3.bold())
+                .foregroundStyle(Color.themeText)
+
             field("Document Name", placeholder: "e.g. Health Insurance Policy", icon: "doc.text", text: $model.name)
             field(
                 "Card Number / ID Number", placeholder: "Optional", icon: "creditcard",
@@ -146,6 +152,8 @@ struct UploadDocumentView: View {
                     .foregroundStyle(Color.themePrimary)
             }
         }
+        .padding(16)
+        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
     }
 
     private func field(_ title: String, placeholder: String, icon: String, text: Binding<String>) -> some View {
@@ -156,7 +164,7 @@ struct UploadDocumentView: View {
 
             HStack(spacing: 10) {
                 Image(systemName: icon)
-                    .foregroundStyle(Color.themeMutedText)
+                    .foregroundStyle(Color.themeCrimsonInk)
                     .frame(width: 19)
 
                 TextField(placeholder, text: text)
@@ -164,19 +172,21 @@ struct UploadDocumentView: View {
                     .foregroundStyle(Color.themeText)
             }
             .padding(13)
-            .background(Color.themeSurface, in: .rect(cornerRadius: 14))
-            .overlay { RoundedRectangle(cornerRadius: 14).strokeBorder(Color.themeOutline) }
+            .background(Color.themeGlassCanvas, in: .rect(cornerRadius: 14))
+            .overlay { RoundedRectangle(cornerRadius: 14).strokeBorder(Color.themeGlassRose) }
         }
     }
 
     private var categories: some View {
-        VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("Document Category")
-                .font(.subheadline.weight(.semibold))
+                .font(.title3.bold())
                 .foregroundStyle(Color.themeText)
 
-            ForEach(DocumentCategory.uploadCategories) { category in
-                categoryButton(category)
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 132), spacing: 10)], spacing: 10) {
+                ForEach(DocumentCategory.uploadCategories) { category in
+                    categoryButton(category)
+                }
             }
         }
     }
@@ -187,24 +197,30 @@ struct UploadDocumentView: View {
         return Button {
             model.category = category
         } label: {
-            HStack(spacing: 12) {
-                DocumentCategoryIcon(category: category, size: 36)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    DocumentCategoryIcon(category: category, size: 32)
+                    Spacer(minLength: 6)
+                    Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                        .foregroundStyle(selected ? Color.themeCrimsonInk : Color.themeMutedText)
+                }
+
                 Text(category.title)
                     .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.themeText)
-                Spacer(minLength: 8)
-                Image(systemName: selected ? "largecircle.fill.circle" : "circle")
-                    .foregroundStyle(selected ? Color.themePrimary : .themeOutline)
+                    .foregroundStyle(selected ? Color.themeCrimsonInk : Color.themeText)
+                    .multilineTextAlignment(.leading)
             }
-            .padding(11)
-            .background(selected ? Color.themeGlassRose : Color.themeSurface, in: .rect(cornerRadius: 14))
+            .padding(12)
+            .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
+            .background(selected ? Color.themeGlassRose : Color.themeSurface, in: .rect(cornerRadius: 18))
             .overlay {
-                RoundedRectangle(cornerRadius: 14)
-                    .strokeBorder(selected ? Color.themePrimary : .themeOutline, lineWidth: selected ? 1.5 : 1)
+                RoundedRectangle(cornerRadius: 18)
+                    .strokeBorder(selected ? Color.themeCrimsonInk : .themeCardBorder, lineWidth: 1)
             }
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 
     private var submitBar: some View {

@@ -28,6 +28,8 @@ struct PersonalInfoView: View {
         Form {
             Section {
                 photoEditor
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(Color.clear)
             }
 
             Section("Personal Details") {
@@ -100,47 +102,59 @@ struct PersonalInfoView: View {
     }
 
     private var photoEditor: some View {
-        VStack(spacing: 12) {
-            ProfileAvatar(url: model.removesPhoto ? nil : avatarURL, photo: model.photo?.thumbnail)
-            if model.isPreparingPhoto {
-                ProgressView("Opening photo…")
-                    .font(.footnote)
-            }
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 14) {
+                ProfileAvatar(url: model.removesPhoto ? nil : avatarURL, photo: model.photo?.thumbnail, size: 66)
 
-            PhotosPicker(selection: $selection, matching: .images) {
-                Label("Choose Profile Photo", systemImage: "photo")
-                    .font(.subheadline.weight(.semibold))
-            }
-            .buttonStyle(.borderless)
+                VStack(alignment: .leading, spacing: 4) {
+                    PhotosPicker(selection: $selection, matching: .images) {
+                        Label("Choose Profile Photo", systemImage: "photo")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(Color.themeSurface)
+                            .frame(minHeight: 44, alignment: .leading)
+                    }
+                    .buttonStyle(.borderless)
 
-            if model.photo != nil || model.removesPhoto {
-                Button("Use Current Photo") {
-                    selection = nil
-                    model.restoreCurrentPhoto()
+                    if model.isPreparingPhoto {
+                        ProgressView("Opening photo…")
+                            .font(.footnote)
+                            .tint(.themeSurface)
+                    }
+
+                    if model.photo != nil || model.removesPhoto {
+                        Button("Use Current Photo") {
+                            selection = nil
+                            model.restoreCurrentPhoto()
+                        }
+                        .font(.footnote)
+                        .buttonStyle(.borderless)
+                    } else if model.original.avatarURL != nil {
+                        Button("Remove from Profile", role: .destructive) {
+                            selection = nil
+                            model.removePhoto()
+                        }
+                        .font(.footnote)
+                        .buttonStyle(.borderless)
+                    }
                 }
-                .font(.footnote)
-                .buttonStyle(.borderless)
-            } else if model.original.avatarURL != nil {
-                Button("Remove from Profile", role: .destructive) {
-                    selection = nil
-                    model.removePhoto()
-                }
-                .font(.footnote)
-                .buttonStyle(.borderless)
+                .tint(.themeSurface)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             Text("Anyone with the photo link can view it.")
                 .font(.caption)
-                .foregroundStyle(Color.themeSecondaryText)
+                .foregroundStyle(Color.themeSurface.opacity(0.88))
 
             if let message = model.photoError {
-                Text(message)
+                Label(message, systemImage: "exclamationmark.circle")
                     .font(.footnote)
-                    .foregroundStyle(Color.themePrimary)
             }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
+        .foregroundStyle(Color.themeSurface)
+        .padding(16)
+        .background {
+            CrimsonHeaderBackdrop().clipShape(.rect(cornerRadius: Theme.cardRadius))
+        }
     }
 }
 

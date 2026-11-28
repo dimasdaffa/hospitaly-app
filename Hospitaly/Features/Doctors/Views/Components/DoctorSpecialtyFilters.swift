@@ -40,7 +40,7 @@ struct DoctorSpecialtyFilters: View {
                 .background(isSelected ? Color.themeCrimsonInk : Color.themeSurface.opacity(0.88), in: Capsule())
                 .overlay {
                     Capsule()
-                        .strokeBorder(Color.themeOutline, lineWidth: isSelected ? 0 : 1)
+                        .strokeBorder(Color.themeGlassRose, lineWidth: isSelected ? 0 : 1)
                 }
                 .shadow(color: isSelected ? Color.themePrimary.opacity(0.20) : .clear, radius: 4, y: 2)
         }

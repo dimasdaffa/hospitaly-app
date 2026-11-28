@@ -17,7 +17,7 @@ enum Theme {
     static let sectionSpacing: CGFloat = 28
     static let cardRadius: CGFloat = 24
     static let heroRadius: CGFloat = 34
-    static let searchOverlap: CGFloat = 27
+    static let heroOverlap: CGFloat = 27
 
     static var crimsonGradient: LinearGradient {
         LinearGradient(
@@ -63,8 +63,6 @@ extension Color {
     static let themePendingText = Color(hex: 0x9C6208)
     static let themePendingBackground = Color(hex: 0xFFF5CD)
 
-    static let themeRatingAccent = Color(hex: 0xEEA800)
-    static let themeRatingBackground = Color(hex: 0xFFF9E4)
     static let themeExperienceAccent = Color(hex: 0x4D8DFB)
     static let themeExperienceBackground = Color(hex: 0xEDF4FF)
     static let themePurpleAccent = Color(hex: 0xA55EF5)
@@ -76,6 +74,22 @@ extension Color {
 }
 
 extension View {
+    func hospitalyPageHero(topInset: CGFloat) -> some View {
+        padding(.horizontal, Theme.contentInset)
+            .padding(.top, topInset + 21)
+            .padding(.bottom, Theme.heroOverlap + 21)
+            .frame(maxWidth: Theme.dashboardWidth)
+            .frame(maxWidth: .infinity)
+            .background {
+                CrimsonHeaderBackdrop()
+                    .clipShape(
+                        UnevenRoundedRectangle(
+                            bottomLeadingRadius: Theme.heroRadius, bottomTrailingRadius: Theme.heroRadius
+                        )
+                    )
+            }
+    }
+
     func hospitalyGlassSurface<S: InsettableShape>(
         in shape: S, tone: Theme.GlassTone = .light
     ) -> some View {

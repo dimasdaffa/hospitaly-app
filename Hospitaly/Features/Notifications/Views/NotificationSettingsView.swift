@@ -42,26 +42,44 @@ struct NotificationSettingsView: View {
     private var settingsForm: some View {
         @Bindable var model = model
 
-        return Form {
-            Section {
-                Toggle(isOn: $model.appointmentUpdates) {
-                    Label("Appointment Updates", systemImage: "bell.badge")
-                }
-                .tint(Color.themePrimary)
-            } footer: {
-                Text("Receive updates in the app when the hospital reviews your appointments.")
-            }
+        return ScrollView {
+            VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 12) {
+                    Toggle(isOn: $model.appointmentUpdates) {
+                        Label {
+                            Text("Appointment Updates")
+                                .font(.headline)
+                                .foregroundStyle(Color.themeText)
+                        } icon: {
+                            Image(systemName: "bell.badge")
+                                .foregroundStyle(Color.themeCrimsonInk)
+                                .frame(width: 40, height: 40)
+                                .background(Color.themeGlassRose, in: .rect(cornerRadius: 12))
+                        }
+                    }
+                    .tint(Color.themePrimary)
 
-            if let error = model.saveError {
-                Text(error)
-                    .font(.footnote)
-                    .foregroundStyle(Color.themePrimary)
-            } else if model.didSave && !model.canSave {
-                Label("Preferences saved.", systemImage: "checkmark.circle")
-                    .foregroundStyle(Color.themeAvailableText)
+                    Text("Receive updates in the app when the hospital reviews your appointments.")
+                        .font(.subheadline)
+                        .foregroundStyle(Color.themeSecondaryText)
+                }
+                .padding(16)
+                .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+
+                if let error = model.saveError {
+                    Text(error)
+                        .font(.footnote)
+                        .foregroundStyle(Color.themeCrimsonInk)
+                } else if model.didSave && !model.canSave {
+                    Label("Preferences saved.", systemImage: "checkmark.circle")
+                        .font(.footnote)
+                        .foregroundStyle(Color.themeAvailableText)
+                }
             }
+            .padding(Theme.contentInset)
+            .frame(maxWidth: Theme.dashboardWidth)
+            .frame(maxWidth: .infinity)
         }
-        .scrollContentBackground(.hidden)
         .environment(\.colorScheme, .light)
         .disabled(model.isSaving)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -69,8 +87,10 @@ struct NotificationSettingsView: View {
                 Task { await model.save(using: saveSettings) }
             }
             .disabled(!model.canSave)
-            .padding(.horizontal, 20)
+            .frame(maxWidth: Theme.dashboardWidth)
+            .padding(.horizontal, Theme.contentInset)
             .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
             .hospitalyActionBar()
         }
     }

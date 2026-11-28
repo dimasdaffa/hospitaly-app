@@ -120,19 +120,16 @@ struct DocumentsView: View {
 
     @ContentBuilder
     private var sections: some View {
+        uploadButton
+
         VStack(alignment: .leading, spacing: 10) {
             sectionTitle("Insurance")
 
             if model.insurance.isEmpty {
                 emptyRow("Your BPJS card and other insurance files will appear here.", symbol: "cross.case")
             } else {
-                ForEach(model.insurance) { document in insuranceRow(document) }
+                documentGroup(model.insurance)
             }
-        }
-
-        VStack(alignment: .leading, spacing: 10) {
-            sectionTitle("Upload")
-            uploadButton
         }
 
         VStack(alignment: .leading, spacing: 12) {
@@ -141,9 +138,7 @@ struct DocumentsView: View {
             if model.otherDocuments.isEmpty {
                 emptyRow("Your ID cards and supporting documents will appear here.", symbol: "folder")
             } else {
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    ForEach(model.otherDocuments) { document in fileCard(document) }
-                }
+                documentGroup(model.otherDocuments)
             }
         }
     }
@@ -152,27 +147,28 @@ struct DocumentsView: View {
         Button {
             form = .upload
         } label: {
-            VStack(spacing: 8) {
-                Image(systemName: "plus")
-                    .font(.title2.weight(.semibold))
-                    .foregroundStyle(Color.themePrimary)
-                    .frame(width: 44, height: 44)
-                    .background(Color.themePrimary.opacity(0.08), in: Circle())
+            HStack(spacing: 14) {
+                Image(systemName: "doc.badge.plus")
+                    .font(.title3.weight(.semibold))
+                    .frame(width: 48, height: 48)
+                    .background(Color.themeSurface.opacity(0.17), in: .rect(cornerRadius: 16))
 
-                Text("Upload New Document")
-                    .font(.headline)
-                    .foregroundStyle(Color.themeText)
-                Text("PDF, JPEG, or PNG · up to 5 MiB")
-                    .font(.caption)
-                    .foregroundStyle(Color.themeSecondaryText)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Upload New Document")
+                        .font(.title3.bold())
+                    Text("PDF, JPEG, or PNG · up to 5 MiB")
+                        .font(.footnote)
+                        .foregroundStyle(Color.themeSurface.opacity(0.87))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                Image(systemName: "arrow.right")
+                    .font(.subheadline.weight(.semibold))
             }
-            .multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity, minHeight: 140)
-            .padding(10)
-            .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: 20))
-            .overlay {
-                RoundedRectangle(cornerRadius: 20)
-                    .strokeBorder(Color.themePrimary, style: StrokeStyle(lineWidth: 1.2, dash: [5, 4]))
+            .foregroundStyle(Color.themeSurface)
+            .padding(18)
+            .background {
+                CrimsonHeaderBackdrop().clipShape(.rect(cornerRadius: Theme.cardRadius))
             }
             .contentShape(.rect)
         }
@@ -180,8 +176,26 @@ struct DocumentsView: View {
         .disabled(isBusy)
     }
 
-    private func insuranceRow(_ document: PatientDocument) -> some View {
-        HStack(spacing: 12) {
+    private func documentGroup(_ documents: [PatientDocument]) -> some View {
+        VStack(spacing: 0) {
+            ForEach(documents) { document in
+                if document.id != documents.first?.id {
+                    Rectangle()
+                        .fill(Color.themeDivider)
+                        .frame(height: 1)
+                        .padding(.leading, 62)
+                }
+                documentRow(document)
+            }
+        }
+        .hospitalyGlassSurface(in: RoundedRectangle(cornerRadius: Theme.cardRadius))
+    }
+
+    private func documentRow(_ document: PatientDocument) -> some View {
+        let categoryTitle = document.category.title
+        let subtitle = document.category.isInsurance ? (document.cardNumber ?? categoryTitle) : categoryTitle
+
+        return HStack(spacing: 8) {
             Button {
                 download = document.download
             } label: {
@@ -191,10 +205,15 @@ struct DocumentsView: View {
                         Text(document.name)
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.themeText)
-                        Text(document.cardNumber ?? document.category.title)
-                            .font(.caption)
+                        Text(subtitle)
                             .foregroundStyle(Color.themeSecondaryText)
+
+                        if !document.category.isInsurance {
+                            Text(fileDetails(document))
+                                .foregroundStyle(Color.themeSecondaryText)
+                        }
                     }
+                    .font(.caption)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                     downloadIcon(document)
@@ -206,56 +225,15 @@ struct DocumentsView: View {
 
             managementMenu(document)
         }
-        .padding(14)
-        .hospitalyPanel(cornerRadius: 20)
-    }
-
-    private func fileCard(_ document: PatientDocument) -> some View {
-        Button {
-            download = document.download
-        } label: {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    DocumentCategoryIcon(category: document.category, size: 43)
-                    Spacer()
-                    downloadIcon(document)
-                }
-                .padding(.trailing, document.canManage ? 32 : 0)
-
-                Text(document.name)
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(Color.themeText)
-                    .lineLimit(2)
-
-                Text(document.category.title)
-                    .font(.caption2.weight(.medium))
-                    .foregroundStyle(Color.themeSecondaryText)
-                    .lineLimit(1)
-
-                Text(fileDetails(document))
-                    .font(.caption2)
-                    .foregroundStyle(Color.themeSecondaryText)
-                    .lineLimit(1)
-            }
-            .padding(13)
-            .frame(maxWidth: .infinity, minHeight: 133, alignment: .topLeading)
-            .hospitalyPanel(cornerRadius: 20)
-            .overlay { RoundedRectangle(cornerRadius: 17).strokeBorder(Color.themeCardBorder) }
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-        .disabled(isBusy || document.download == nil)
-        .overlay(alignment: .topTrailing) {
-            managementMenu(document)
-                .padding(9)
-        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 9)
     }
 
     @ContentBuilder
     private func managementMenu(_ document: PatientDocument) -> some View {
         if model.deletingID == document.id {
             ProgressView()
-                .frame(width: 30, height: 32)
+                .frame(width: 44, height: 44)
         } else if document.canManage {
             Menu {
                 Button("Edit", systemImage: "pencil") { form = .edit(document) }
@@ -265,7 +243,7 @@ struct DocumentsView: View {
                     .labelStyle(.iconOnly)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(Color.themeSecondaryText)
-                    .frame(width: 30, height: 32)
+                    .frame(width: 44, height: 44)
                     .contentShape(.rect)
             }
             .disabled(isBusy)
@@ -286,7 +264,7 @@ struct DocumentsView: View {
 
     private func sectionTitle(_ title: String) -> some View {
         Text(title)
-            .font(.headline)
+            .font(.title3.bold())
             .foregroundStyle(Color.themeText)
     }
 

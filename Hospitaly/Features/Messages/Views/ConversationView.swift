@@ -63,6 +63,7 @@ struct ConversationView: View {
         .background { Theme.roseCanvas.ignoresSafeArea() }
         .navigationTitle(model.peer.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbarVisibility(.visible, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .principal) { header }
             ToolbarItem(placement: .topBarTrailing) {

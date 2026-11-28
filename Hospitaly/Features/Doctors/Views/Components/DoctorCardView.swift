@@ -15,83 +15,95 @@ struct DoctorCardView: View {
     let onOpenDoctor: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top, spacing: 8) {
-                DoctorAvatarView(doctor: doctor)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                DoctorAvatarView(doctor: doctor, size: 72, height: 80, showsAvailability: false)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(doctor.name)
-                            .font(.headline.bold())
-                            .foregroundStyle(Color.themeText)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(doctor.name)
+                        .font(.headline)
+                        .foregroundStyle(Color.themeText)
 
-                        Text(doctor.specialty)
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(Color.themeCrimsonInk)
+                    Text(doctor.specialty)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Color.themeCrimsonInk)
 
+                    if !doctor.hospital.isEmpty {
                         Label(doctor.hospital, systemImage: "mappin")
                             .font(.caption)
-                            .foregroundStyle(Color.themeMutedText)
+                            .foregroundStyle(Color.themeSecondaryText)
                     }
-                    .padding(.trailing, 40)
-
-                    DoctorCardMetricsView(doctor: doctor)
                 }
-                .padding(.top, 4)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .frame(minHeight: 104, alignment: .topLeading)
-            .overlay(alignment: .topTrailing) {
-                Button(action: onFavorite) {
-                    Group {
-                        if isSavingFavorite {
-                            ProgressView()
-                                .controlSize(.small)
-                        } else {
-                            Image(systemName: isFavorite ? "heart.fill" : "heart")
-                                .font(.system(size: 17, weight: .medium))
-                                .foregroundStyle(isFavorite ? Color.themePrimary : Color.themeMutedText)
-                        }
-                    }
-                    .frame(width: 44, height: 44)
-                    .background(Color.themeGlassRose.opacity(0.65), in: Circle())
-                }
-                .buttonStyle(.plain)
-                .disabled(isSavingFavorite)
-                .padding(.top, 4)
+
+                favoriteButton
             }
 
-            Rectangle()
-                .fill(Color.themeDivider)
-                .frame(height: 1)
+            DoctorCardMetricsView(doctor: doctor)
 
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(doctor.isAvailable ? "NEXT AVAILABLE" : "AVAILABILITY")
-                        .font(.system(size: 10, weight: .semibold))
-                        .tracking(0.5)
-                        .foregroundStyle(Color.themeSecondaryText)
-
-                    Text(doctor.nextAvailable ?? (doctor.usesDemoSchedule ? "Full Today" : "No upcoming slots"))
-                        .font(.subheadline.bold())
-                        .foregroundStyle(Color.themeText)
-                }
-
-                Spacer(minLength: 0)
-
-                Button(action: onOpenDoctor) {
-                    Text(doctor.isAvailable ? "Book" : "Details")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(doctor.isAvailable ? Color.themeSurface : Color.themeSecondaryText)
-                        .frame(minWidth: doctor.isAvailable ? 83 : 95, minHeight: 44)
-                        .background(doctor.isAvailable ? Color.themePrimary : Color.themeSubtleSurface, in: Capsule())
-                        .shadow(color: doctor.isAvailable ? Color.themePrimary.opacity(0.25) : .clear, radius: 4, y: 3)
-                }
-                .buttonStyle(.plain)
-            }
+            availabilityBand
         }
-        .padding(16)
+        .padding(14)
         .hospitalyPanel()
+    }
+
+    private var favoriteButton: some View {
+        Button(action: onFavorite) {
+            Group {
+                if isSavingFavorite {
+                    ProgressView()
+                        .controlSize(.small)
+                } else {
+                    Label(
+                        isFavorite ? "Remove Favorite" : "Add Favorite",
+                        systemImage: isFavorite ? "heart.fill" : "heart"
+                    )
+                    .labelStyle(.iconOnly)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(isFavorite ? Color.themeCrimsonInk : Color.themeSecondaryText)
+                }
+            }
+            .frame(width: 44, height: 44)
+            .background(Color.themeGlassRose.opacity(0.60), in: Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isSavingFavorite)
+    }
+
+    private var availabilityBand: some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 3) {
+                Label(
+                    doctor.isAvailable ? "Next available" : "Availability",
+                    systemImage: doctor.isAvailable ? "calendar.badge.clock" : "calendar"
+                )
+                .font(.caption)
+                .foregroundStyle(Color.themeCrimsonInk)
+
+                Text(doctor.nextAvailable ?? (doctor.usesDemoSchedule ? "Full Today" : "No upcoming slots"))
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Color.themeText)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button(action: onOpenDoctor) {
+                HStack(spacing: 6) {
+                    Text(doctor.isAvailable ? "Book" : "Details")
+                    Image(systemName: "chevron.right")
+                        .font(.caption2.weight(.semibold))
+                }
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(doctor.isAvailable ? Color.themeSurface : Color.themeCrimsonInk)
+                .padding(.horizontal, 14)
+                .frame(minHeight: 44)
+                .background(doctor.isAvailable ? Color.themeCrimsonInk : Color.themeSurface, in: Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 6)
+        .padding(.vertical, 6)
+        .background(Color.themeGlassRose.opacity(0.65), in: .rect(cornerRadius: 18))
     }
 }
 

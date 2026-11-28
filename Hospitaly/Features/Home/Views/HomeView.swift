@@ -38,7 +38,7 @@ struct HomeView: View {
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
-                VStack(spacing: -Theme.searchOverlap) {
+                VStack(spacing: -Theme.heroOverlap) {
                     hero(topInset: geometry.safeAreaInsets.top)
                     services
                 }
@@ -59,17 +59,7 @@ struct HomeView: View {
             header
             nextAppointment
         }
-        .padding(.horizontal, Theme.contentInset)
-        .padding(.top, topInset + 21)
-        .padding(.bottom, Theme.searchOverlap + 21)
-        .frame(maxWidth: Theme.dashboardWidth)
-        .frame(maxWidth: .infinity)
-        .background { HomeHeaderBackdrop() }
-        .clipShape(
-            UnevenRoundedRectangle(
-                bottomLeadingRadius: Theme.heroRadius, bottomTrailingRadius: Theme.heroRadius
-            )
-        )
+        .hospitalyPageHero(topInset: topInset)
     }
 
     private var header: some View {
@@ -258,7 +248,7 @@ struct HomeView: View {
         }
         .padding(.leading, 17)
         .padding(.trailing, 6)
-        .frame(minHeight: Theme.searchOverlap * 2)
+        .frame(minHeight: Theme.heroOverlap * 2)
         .hospitalyGlassSurface(in: Capsule())
     }
 

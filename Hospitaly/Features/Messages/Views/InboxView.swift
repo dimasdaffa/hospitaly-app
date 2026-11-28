@@ -26,25 +26,28 @@ struct InboxView: View {
     let onOpenPeer: (MessagePeer) -> Void
 
     var body: some View {
-        @Bindable var model = model
+        GeometryReader { geometry in
+            ScrollView {
+                VStack(spacing: -Theme.heroOverlap) {
+                    header
+                        .hospitalyPageHero(topInset: geometry.safeAreaInsets.top)
 
-        ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                content
+                    VStack(alignment: .leading, spacing: 14) {
+                        searchBar
+                        content
+                    }
+                    .padding(.horizontal, Theme.contentInset)
+                    .frame(maxWidth: Theme.dashboardWidth)
+                    .padding(.bottom, 12)
+                }
             }
-            .frame(maxWidth: 540)
-            .padding(.horizontal, 20)
-            .frame(maxWidth: .infinity)
+            .scrollIndicators(.hidden)
+            .scrollDismissesKeyboard(.interactively)
+            .refreshable { await refresh() }
+            .ignoresSafeArea(.container, edges: .top)
         }
         .background { Theme.roseCanvas.ignoresSafeArea() }
-        .navigationTitle("Messages")
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button("New Message", systemImage: "square.and.pencil") { showsCompose = true }
-            }
-        }
-        .searchable(text: $model.query, prompt: "Search doctor or message")
+        .toolbarVisibility(.hidden, for: .navigationBar)
         .sheet(isPresented: $showsCompose, onDismiss: openSelectedPeer) {
             NavigationStack {
                 MessageDoctorPickerView(loadDoctors: loadDoctors, patientID: patientID) { peer in
@@ -62,7 +65,61 @@ struct InboxView: View {
             guard isActive else { return }
             await model.search(using: actions.loadInbox)
         }
-        .refreshable { await refresh() }
+    }
+
+    private var header: some View {
+        HStack(spacing: 12) {
+            Text("Messages")
+                .font(.largeTitle.bold())
+                .tracking(-0.8)
+                .foregroundStyle(Color.themeSurface)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button {
+                showsCompose = true
+            } label: {
+                Label("New Message", systemImage: "square.and.pencil")
+                    .labelStyle(.iconOnly)
+                    .font(.headline)
+                    .foregroundStyle(Color.themeSurface)
+                    .frame(width: 44, height: 44)
+                    .glassEffect(.regular.tint(Color.themeCrimsonDeep.opacity(0.35)).interactive(), in: Circle())
+                    .environment(\.colorScheme, .dark)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var searchBar: some View {
+        @Bindable var model = model
+
+        return HStack(spacing: 10) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Color.themeCrimsonInk)
+
+            TextField("Search doctor or message", text: $model.query)
+                .autocorrectionDisabled()
+                .submitLabel(.search)
+                .foregroundStyle(Color.themeText)
+
+            if !model.query.isEmpty {
+                Button {
+                    model.query = ""
+                } label: {
+                    Label("Clear Search", systemImage: "xmark.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .foregroundStyle(Color.themeSecondaryText)
+                        .frame(width: 44, height: 44)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .font(.subheadline)
+        .padding(.leading, 16)
+        .padding(.trailing, 6)
+        .frame(minHeight: Theme.heroOverlap * 2)
+        .hospitalyGlassSurface(in: Capsule())
+        .environment(\.colorScheme, .light)
     }
 
     @ContentBuilder
